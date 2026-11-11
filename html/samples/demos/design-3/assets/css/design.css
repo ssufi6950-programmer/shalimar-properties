@@ -1,0 +1,26 @@
+/* demo chip (link back to the chooser) */
+.demo-chip{position:fixed;left:12px;bottom:calc(var(--tabbar,0px) + 12px);z-index:70;display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:99px;background:#0D1511;color:#DCC598;font:700 10.5px/1 var(--sans);letter-spacing:.12em;text-transform:uppercase;box-shadow:0 10px 24px -10px rgba(0,0,0,.6);opacity:.92;transition:opacity .3s,transform .3s}
+.demo-chip:hover{opacity:1;transform:translateY(-2px)}
+.demo-chip i{color:#fff;font-size:11px}
+
+@media(max-width:860px){.demo-chip .dc-n{display:none}.demo-chip{padding:7px 10px;font-size:10px}}
+/* DESIGN 3 — Framed Slider */
+:root{--hfont:"Sora",var(--sans);--hweight:500}
+.dz-3 .hd-title{font-size:clamp(36px,3.8vw,54px)!important;letter-spacing:-.045em!important}
+.dz-3 .hd-title em{background:linear-gradient(90deg,var(--green-deep),var(--green-bright));-webkit-background-clip:text;background-clip:text;color:transparent}
+.dz-3 .display-sm{font-family:var(--hfont);font-weight:600;letter-spacing:-.04em;font-size:clamp(28px,3vw,42px)}
+.dz-3 .display-sm em{font-style:normal;color:var(--green)}
+.dz-3 .page-hero h1{font-family:var(--hfont);font-weight:600;letter-spacing:-.04em}
+body.dz-3.photo-hero .page-hero{border-bottom:3px solid var(--gold-2)}
+body.dz-3.photo-hero .page-hero::after{background:linear-gradient(100deg,rgba(7,13,10,.9) 0%,rgba(14,75,49,.7) 60%,rgba(7,13,10,.35) 100%)}
+.dz-3 .card{border-radius:16px;border-top:3px solid transparent;transition:border-color .4s,transform .4s var(--ease),box-shadow .4s}
+.dz-3 .card:hover{border-top-color:var(--green)}
+.dz-3 footer::before{height:3px;background:linear-gradient(90deg,var(--green-deep),var(--gold-2),var(--green-deep))}
+/* stories — night with gold */
+.dz-3 .sw{background:#0D1511}
+.dz-3 .sw mark{background:none;color:var(--gold-soft)}
+.dz-3 .sw .c-scount b{color:var(--gold-soft)}
+.dz-3 .sw .c-story{background:#141E18;border-color:rgba(220,197,152,.12);border-radius:16px}
+.dz-3 .sw .c-story:hover{border-color:var(--gold-2);background:#18241D}
+.dz-3 .sw .c-sp{color:var(--gold-soft)}
+.dz-3 .sw .c-sw .av{background:var(--gold-soft)}

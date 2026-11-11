@@ -1,0 +1,1 @@
+<?= $this->extend('admin/layouts/main') ?><?= $this->section('content') ?><section class="card p-4"><h1 class="h4">Records unavailable</h1><p><?= esc($message) ?></p><a class="btn btn-outline-primary" href="<?= esc($returnUrl,'attr') ?>">Back to records</a></section><?= $this->endSection() ?>

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 96"><defs><linearGradient id="z" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#D9B66F"/><stop offset="1" stop-color="#B8893B"/></linearGradient></defs>
+<g transform="translate(8 6)"><rect width="84" height="84" rx="16" fill="#1E2421"/>
+<path d="M22 16h13l27 52H49z" fill="url(#z)"/><path d="M62 16H49L22 68h13z" fill="#fff" opacity=".92"/>
+<path d="M22 74h40" stroke="#D9B66F" stroke-width="2"/></g>
+<text x="108" y="50" font-family="'Playfair Display',Georgia,'Times New Roman',serif" font-size="34" font-weight="700" fill="#1E2421">Zalmi <tspan fill="#B8893B">X</tspan></text>
+<text x="110" y="72" font-family="'Plus Jakarta Sans','Segoe UI',Arial,sans-serif" font-size="10" letter-spacing="3.6" font-weight="600" fill="#6B6F70">PINE AVENUE · LAHORE</text></svg>

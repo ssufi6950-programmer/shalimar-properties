@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 96">
+<g transform="translate(48 48)"><circle r="42" fill="#0E4B31"/><circle r="36" fill="none" stroke="#D9B66F" stroke-width="1.2" stroke-dasharray="2 4"/>
+<path d="M0 -24c-9 4.5-14 12-14 21V20h28V-3C14 -12 9 -19.5 0 -24z" fill="none" stroke="#fff" stroke-width="2.6" stroke-linejoin="round"/>
+<path d="M-6 20V8a6 6 0 0 1 12 0v12" fill="none" stroke="#D9B66F" stroke-width="2.4"/>
+<g stroke="#D9B66F" stroke-width="1.6" fill="#D9B66F"><path d="M-14 4h-12M14 4h12M-14 -6h-8l-6-6M14 -6h8l6-6" fill="none"/><circle cx="-27" cy="4" r="2"/><circle cx="27" cy="4" r="2"/><circle cx="-29" cy="-13" r="2"/><circle cx="29" cy="-13" r="2"/></g></g>
+<text x="104" y="45" font-family="'Playfair Display',Georgia,'Times New Roman',serif" font-size="28" font-weight="700" fill="#1E2421">Shalimar</text>
+<text x="105" y="68" font-family="'Plus Jakarta Sans','Segoe UI',Arial,sans-serif" font-size="12.5" letter-spacing="5.5" font-weight="700" fill="#166D47">SMART CITY</text>
+<text x="105" y="84" font-family="'Plus Jakarta Sans','Segoe UI',Arial,sans-serif" font-size="9" letter-spacing="2.6" fill="#B8893B">SARGODHA</text></svg>

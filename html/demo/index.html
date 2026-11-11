@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Shalimar Properties — Choose a design</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="sp-app-icon.svg?v=5" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--green:#166D47;--green-deep:#0E4B31;--green-bright:#2FA06B;--gold:#B08D57;--gold-2:#C9A86A;--ink:#0D1511;--soft:#3D4A43;--muted:#6B766F;--ease:cubic-bezier(.22,1,.36,1)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Plus Jakarta Sans",system-ui,sans-serif;color:var(--ink);background:radial-gradient(60% 50% at 90% 0%,rgba(201,168,106,.16),transparent 70%),linear-gradient(180deg,#FCFAF5,#F4EDE0);min-height:100vh;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+.wrap{max-width:1240px;margin:0 auto;padding:30px 28px 40px}
+header{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:12px}
+.brand img{width:42px;height:42px}
+.brand b{display:block;font-family:"Cormorant Garamond",serif;font-size:23px;letter-spacing:.2em;line-height:1;color:var(--green-deep)}
+.brand small{display:block;font-size:9px;font-weight:700;letter-spacing:.42em;color:var(--gold);margin-top:5px;padding-top:4px;border-top:1px solid rgba(201,168,106,.6)}
+.top-l{display:flex;gap:8px;flex-wrap:wrap}
+.top-l a{font-size:12.5px;font-weight:600;padding:9px 14px;border-radius:99px;border:1px solid rgba(201,168,106,.5);background:rgba(255,255,255,.7);color:var(--green-deep)}
+.top-l a:hover{background:#fff}
+.intro{margin:46px 0 30px;max-width:720px;animation:up .9s var(--ease) both}
+.kick{font-size:11px;font-weight:700;letter-spacing:.24em;text-transform:uppercase;color:var(--gold)}
+h1{font-weight:500;font-size:clamp(32px,4vw,50px);letter-spacing:-.04em;line-height:1.08;margin:12px 0}
+h1 em{font-style:normal;color:var(--green)}
+.intro p{color:var(--soft);font-size:15.5px;line-height:1.7}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+.opt{position:relative;display:flex;flex-direction:column;background:#fff;border:1px solid rgba(201,168,106,.3);border-radius:22px;overflow:hidden;box-shadow:0 20px 44px -36px rgba(14,75,49,.6);transition:transform .5s var(--ease),box-shadow .5s,border-color .5s;animation:up .9s var(--ease) both;animation-delay:calc(var(--i)*80ms + 150ms)}
+.opt:hover{transform:translateY(-6px);box-shadow:0 34px 60px -36px rgba(14,75,49,.7);border-color:var(--gold-2)}
+.shot{position:relative;aspect-ratio:16/10;overflow:hidden;background:#EEE7DA;border-bottom:1px solid rgba(201,168,106,.25)}
+.shot img{width:100%;height:100%;object-fit:cover;object-position:top;transition:transform 1.2s var(--ease)}
+.opt:hover .shot img{transform:scale(1.05)}
+.no{position:absolute;left:14px;top:14px;padding:6px 11px;border-radius:99px;background:rgba(13,21,17,.82);color:#DCC598;font-size:10.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase}
+.body{display:flex;flex-direction:column;gap:6px;padding:18px 20px 20px;flex:1}
+.body b{font-size:19px;font-weight:600;letter-spacing:-.02em}
+.body p{font-size:13.5px;color:var(--muted);line-height:1.6;flex:1}
+.go{display:inline-flex;align-items:center;gap:8px;margin-top:10px;font-size:13px;font-weight:700;color:var(--green);transition:gap .4s var(--ease)}
+.opt:hover .go{gap:14px}
+.tag{display:inline-block;margin-left:8px;padding:3px 8px;border-radius:99px;background:rgba(201,168,106,.18);color:var(--gold);font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;vertical-align:middle}
+footer{margin-top:36px;padding-top:18px;border-top:1px solid rgba(201,168,106,.35);display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;font-size:12.5px;color:var(--muted)}
+footer a{color:var(--green-deep);font-weight:600}
+@keyframes up{from{opacity:0;transform:translateY(18px)}}
+@media(max-width:1000px){.grid{grid-template-columns:1fr 1fr}}
+@media(max-width:640px){.wrap{padding:18px 16px 30px}.grid{grid-template-columns:1fr;gap:16px}.intro{margin:30px 0 22px}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a class="brand" href="../"><img src="sp-logo.svg?v=6" alt="Shalimar Properties" style="width:auto;height:50px"></a>
+    <nav class="top-l"><a href="../coming-soon.php">Coming-soon page</a><a href="../">Main site</a><a href="../samples/index.html">Earlier concepts</a></nav>
+  </header>
+  <section class="intro">
+    <span class="kick">Website design options</span>
+    <h1>Six directions for <em>Shalimar Properties.</em></h1>
+    <p>Each option is a complete, working demo — home page plus buy, rent, projects, insights, agencies, blog, events, wanted, calculator, listing, post-property and admin. Open one, click around, and use the “Design” chip at the bottom-left to come back here.</p>
+  </section>
+  <div class="grid">
+    <a class="opt" style="--i:0" href="../samples/demos/design-1/"><span class="shot"><img src="thumbs/design-1.webp" alt="Design 1 preview" loading="lazy"><span class="no">Design 1</span></span><span class="body"><b>Ivory Arch <span class="tag">Latest</span></b><p>Warm ivory and gold — villa slider in an offset arch, compact project pills, editorial community chapters.</p><span class="go">Open design <span>→</span></span></span></a>
+    <a class="opt" style="--i:1" href="../samples/demos/design-2/"><span class="shot"><img src="thumbs/design-2.webp" alt="Design 2 preview" loading="lazy"><span class="no">Design 2</span></span><span class="body"><b>Mosaic</b><p>Three offset photo frames with mask reveals, expanding community panels and a public price chart.</p><span class="go">Open design <span>→</span></span></span></a>
+    <a class="opt" style="--i:2" href="../samples/demos/design-3/"><span class="shot"><img src="thumbs/design-3.webp" alt="Design 3 preview" loading="lazy"><span class="no">Design 3</span></span><span class="body"><b>Framed Slider</b><p>A framed four-villa slider with brand cards, tall community cards and a dark stories wall.</p><span class="go">Open design <span>→</span></span></span></a>
+    <a class="opt" style="--i:3" href="../samples/demos/design-4/"><span class="shot"><img src="thumbs/design-4.webp" alt="Design 4 preview" loading="lazy"><span class="no">Design 4</span></span><span class="body"><b>Full-bleed</b><p>A full-height villa slider with a curved edge, listings first, and an editorial list of communities.</p><span class="go">Open design <span>→</span></span></span></a>
+    <a class="opt" style="--i:4" href="../samples/demos/design-5/"><span class="shot"><img src="thumbs/design-5.webp" alt="Design 5 preview" loading="lazy"><span class="no">Design 5</span></span><span class="body"><b>Glass Orbit</b><p>The Shalimar mark with the three communities orbiting it, a project spotlight and glass-style cards.</p><span class="go">Open design <span>→</span></span></span></a>
+    <a class="opt" style="--i:5" href="../samples/shalimar-property1/"><span class="shot"><img src="thumbs/design-6.webp" alt="Design 6 preview" loading="lazy"><span class="no">Design 6</span></span><span class="body"><b>Classic</b><p>The earlier site in a clean, classic portal layout with an illustrated project carousel.</p><span class="go">Open design <span>→</span></span></span></a>
+  </div>
+  <footer><span>© 2026 Shalimar Properties · Design review (local)</span><a href="../coming-soon.php">View the coming-soon page →</a></footer>
+</div>
+</body>
+</html>

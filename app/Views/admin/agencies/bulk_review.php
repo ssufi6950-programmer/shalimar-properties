@@ -1,0 +1,8 @@
+<?= $this->extend('admin/layouts/main') ?><?= $this->section('content') ?>
+<div class="page-heading"><div><div class="eyebrow">AUTHORIZED AGENCIES</div><h1>Review <?= count($rows) ?> Agency Mappings</h1><p>Check each ERP agency and its selected portal agency before confirming.</p></div></div>
+<div class="alert alert-info">No agencies or mappings have been saved. Only the <?= count($rows) ?> selected links below will be confirmed.</div>
+<section class="card mb-4" data-agency-bulk-review><div class="table-responsive"><table class="table align-middle mb-0"><thead><tr><th>ERP Source</th><th>ERP Agency</th><th>Portal Agency / Action</th><th>ERP Authorization</th></tr></thead><tbody>
+<?php foreach($rows as$row): ?><tr><td><?= esc($row['source_name']) ?></td><td><?= esc($row['erp_agency_name']) ?><small class="d-block text-muted">ERP #<?= esc($row['erp_agency_id']) ?></small></td><td><strong><?= esc($row['portal_agency_name']) ?></strong><small class="d-block text-muted"><?php if(($row['action']??'map')==='create'): ?>Create New Portal Agency<?php else: ?>Map to Portal #<?= $row['portal_agency_id'] ?><?= !$row['portal_active']?' - Disabled':'' ?><?php endif ?></small></td><td><?= esc($row['authorization']) ?></td></tr><?php endforeach ?>
+</tbody></table></div></section>
+<form method="post" action="<?= site_url('admin/agency-links/bulk-map') ?>" data-agency-bulk-confirm><?= csrf_field() ?><input type="hidden" name="review_token" value="<?= esc($reviewToken,'attr') ?>"><div class="d-flex gap-2 flex-wrap"><button class="btn btn-primary" type="submit">Confirm <?= count($rows) ?> Mappings</button><a class="btn btn-outline-secondary" href="<?= site_url('admin/agencies?tab=unmapped') ?>">Back to Agency Selection</a></div></form>
+<?= $this->endSection() ?>

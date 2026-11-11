@@ -1,0 +1,103 @@
+.agency-app{--agency-green:#14604c;--agency-green-deep:#0e4e3c;--agency-ink:#173b35;--agency-muted:#71827d;--agency-line:#e2eae5;--agency-paper:#f5f8f6;min-height:100vh;background:#f5f8f6;color:var(--agency-ink);padding-bottom:env(safe-area-inset-bottom)}
+.agency-app .agency-header{position:sticky;top:0;z-index:100;background:rgba(255,255,255,.97);border-bottom:1px solid var(--agency-line);box-shadow:0 2px 12px rgba(15,52,43,.04)}
+.agency-header-inner{max-width:1240px;margin:0 auto;min-height:76px;padding:10px 24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.agency-brand{display:flex;flex-direction:column;align-items:flex-start;gap:4px;text-decoration:none;color:var(--agency-ink);font-size:10px;font-weight:800;letter-spacing:.12em}
+.agency-brand img{width:150px;height:auto}.agency-desktop-nav{display:flex;align-items:center;gap:8px;margin-left:auto}
+.agency-desktop-nav a,.agency-account a,.agency-account button{padding:10px 12px;border:0;border-radius:12px;background:transparent;color:#49645b;text-decoration:none;font-size:14px;font-weight:650}
+.agency-desktop-nav a.active,.agency-desktop-nav a:hover,.agency-account a:hover,.agency-account button:hover{background:#edf4ef;color:var(--agency-green)}
+.agency-account{display:flex;align-items:center;gap:4px;border-left:1px solid var(--agency-line);padding-left:14px}
+.agency-account .agency-name{max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;font-weight:750}
+.agency-account form{margin:0}.agency-account button{cursor:pointer}
+.agency-main{max-width:1240px;margin:0 auto;padding:36px 24px 56px}
+.agency-welcome{padding:32px 36px;border-radius:24px;background:#e8f1e8;margin-bottom:24px}
+.agency-kicker{display:block;color:#648177;font-size:10px;font-weight:800;letter-spacing:.16em;text-transform:uppercase}
+.agency-welcome h1,.agency-page-heading h1{font-size:clamp(26px,3vw,36px);font-weight:760;letter-spacing:-.035em;color:var(--agency-ink);margin:10px 0 8px;overflow-wrap:anywhere}
+.agency-welcome p,.agency-page-heading p,.agency-content-panel p{color:#687d75;margin:0;line-height:1.55}
+.agency-stat-grid{display:grid;grid-template-columns:minmax(0,1fr);max-width:520px;margin-bottom:24px}
+.agency-stat{display:flex;align-items:center;gap:16px;background:#fff;border:1px solid var(--agency-line);border-radius:18px;padding:22px;text-decoration:none;color:inherit;box-shadow:0 6px 20px rgba(15,52,43,.04)}
+.agency-stat-icon{width:48px;height:48px;border-radius:14px;background:#edf4ef;color:var(--agency-green);display:grid;place-items:center;font-size:22px}
+.agency-stat small,.agency-stat strong,.agency-stat span span{display:block}.agency-stat small{font-size:12px;color:#6b8078}.agency-stat strong{font-size:30px;line-height:1.2;color:var(--agency-ink)}.agency-stat span span{font-size:12px;color:#809089}.agency-stat>i:last-child{margin-left:auto;color:#8aa098}
+.agency-content-panel{background:#fff;border:1px solid var(--agency-line);border-radius:18px;padding:24px;box-shadow:0 6px 20px rgba(15,52,43,.035)}
+.agency-content-panel h2{font-size:18px;font-weight:750;margin:0 0 10px;color:var(--agency-ink)}
+.agency-content-panel .btn-primary,.agency-auth-panel .btn-primary{background:var(--agency-green);border-color:var(--agency-green);color:#fff}.agency-content-panel .btn-primary:hover,.agency-auth-panel .btn-primary:hover{background:var(--agency-green-deep);border-color:var(--agency-green-deep)}
+.agency-page-heading{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;margin:4px 0 22px}
+.agency-count{display:inline-flex;white-space:nowrap;padding:9px 14px;border-radius:999px;background:#e7f2eb;color:var(--agency-green);font-size:13px;font-weight:750}
+.agency-listing-panel{padding:0;overflow:hidden}.agency-filters{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;padding:18px;border-bottom:1px solid var(--agency-line)}
+.agency-filters>div{min-width:140px}.agency-filters .agency-search{flex:1;min-width:min(100%,260px)}.agency-filters label{display:block;margin:0 0 5px;font-size:12px;font-weight:700;color:#536d64}
+.agency-filters .form-control,.agency-filters .form-select{min-height:44px;border-color:#d9e4de;border-radius:11px}
+.agency-table-scroll{width:100%;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:thin}
+.agency-data-table{min-width:1130px;margin:0;white-space:normal}.agency-data-table th{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#667e75;background:#f8faf8;border-bottom-color:var(--agency-line);padding:13px 12px;vertical-align:middle}
+.agency-data-table td,.agency-data-table tbody th{font-size:13px;color:#334f46;padding:13px 12px;vertical-align:middle;border-color:#edf1ee}
+.agency-data-table tbody th{font-weight:750;text-transform:none;letter-spacing:0;background:white}
+.agency-data-table td:nth-child(6){white-space:nowrap;font-weight:700}.agency-data-table .btn{min-height:36px}
+.agency-status{display:inline-flex;align-items:center;padding:5px 9px;border-radius:999px;background:#e7f2eb;color:#176a4e;font-size:11px;font-weight:800;white-space:nowrap}
+.agency-table-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;min-height:190px;text-align:center;color:#7a8b84}.agency-table-empty i{font-size:25px;color:#89a096}.agency-table-empty strong{color:#3a5b4f}
+.agency-pagination{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:16px 18px;color:#70817a;font-size:13px}.agency-pagination>div{display:flex;align-items:center;gap:10px}.agency-pagination .btn{min-height:36px}
+.agency-back{display:inline-flex;gap:8px;align-items:center;margin-bottom:18px;color:#537166;text-decoration:none}.agency-back:hover{color:var(--agency-green)}
+.agency-detail-grid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(280px,.9fr);gap:18px;align-items:start}
+.agency-detail-list{display:grid;grid-template-columns:minmax(130px,.65fr) minmax(0,1fr);gap:10px 18px;margin:18px 0 0;font-size:14px}
+.agency-detail-list dt{color:#77877f;font-weight:600}.agency-detail-list dd{margin:0;color:#203f35;font-weight:700;overflow-wrap:anywhere}
+.agency-detail-subhead{margin-top:24px!important}.agency-description{white-space:pre-line;overflow-wrap:anywhere}
+.agency-photo-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.agency-photo-grid a{display:block;aspect-ratio:4/3;overflow:hidden;border-radius:12px;background:#eef2ef}.agency-photo-grid img{width:100%;height:100%;object-fit:cover}
+.agency-footer{max-width:1240px;margin:0 auto;padding:0 24px 22px;color:#83918b;font-size:12px}
+.agency-bottom-nav{display:none}
+.agency-auth-page{display:grid;grid-template-rows:1fr;min-height:100vh}
+.agency-auth-wrap{width:min(100% - 32px,480px);margin:auto;padding:40px 0}
+.agency-auth-panel{background:#fff;border:1px solid var(--agency-line);border-radius:24px;padding:32px;box-shadow:0 18px 48px rgba(15,52,43,.08)}
+.agency-auth-panel h1{margin:8px 0;font-size:32px;font-weight:760;letter-spacing:-.035em;color:var(--agency-ink)}.agency-auth-panel>p{color:#70817a;line-height:1.55}
+.agency-auth-panel .form-control{border-color:#dae5df;border-radius:12px}.agency-auth-panel .form-control:focus{border-color:#6aa18b;box-shadow:0 0 0 .2rem rgba(20,96,76,.12)}
+.agency-login-logo{width:190px;height:auto;display:block;margin:0 0 26px}.agency-login-help{margin:20px 0 0;text-align:center;font-size:12px}
+@media(max-width:760px){
+ .agency-header-inner{min-height:68px;padding:8px 14px;gap:8px}.agency-brand{gap:8px;font-size:8px;letter-spacing:.1em}.agency-brand img{width:118px}
+ .agency-desktop-nav{display:none}.agency-account{margin-left:auto;padding-left:8px;border:0;gap:0;flex-wrap:wrap;justify-content:flex-end;max-width:52%}.agency-account .agency-name{display:block;flex-basis:100%;max-width:100%;font-size:11px}.agency-account>a{display:none}.agency-account form button{font-size:12px;padding:8px;min-height:44px}
+ .agency-main{padding:22px 14px 96px}.agency-welcome{padding:22px 20px;border-radius:18px}.agency-stat{padding:17px}.agency-content-panel{padding:18px}
+ .agency-page-heading{align-items:flex-start;flex-direction:column;margin-bottom:15px}.agency-page-heading h1{font-size:28px}
+ .agency-filters{display:grid;grid-template-columns:1fr 1fr;padding:14px;gap:10px}.agency-filters .agency-search{grid-column:1/-1;min-width:0}.agency-filters>div{min-width:0}.agency-filters .btn{min-height:42px}.agency-listing-panel{border-radius:15px}
+ .agency-data-table{min-width:1080px}.agency-data-table .btn,.agency-pagination .btn{min-height:44px;display:inline-flex;align-items:center}.agency-pagination{align-items:flex-start;flex-direction:column;padding:13px 14px}.agency-pagination>div{width:100%;justify-content:space-between}
+ .agency-detail-grid{grid-template-columns:1fr}.agency-detail-list{grid-template-columns:minmax(105px,.7fr) minmax(0,1fr);gap:9px 12px;font-size:13px}.agency-photo-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .agency-footer{padding:4px 14px 88px}.agency-bottom-nav{position:fixed;z-index:100;left:0;right:0;bottom:0;display:grid;grid-template-columns:repeat(3,1fr);padding:8px 10px calc(8px + env(safe-area-inset-bottom));background:rgba(255,255,255,.97);border-top:1px solid var(--agency-line);box-shadow:0 -4px 18px rgba(15,52,43,.06)}
+ .agency-bottom-nav a{display:flex;min-height:48px;flex-direction:column;justify-content:center;align-items:center;gap:3px;color:#789087;text-decoration:none;font-size:11px;font-weight:650}.agency-bottom-nav a i{font-size:18px}.agency-bottom-nav a.active{color:var(--agency-green)}
+ .agency-auth-wrap{width:min(100% - 24px,480px);padding:20px 0}.agency-auth-panel{padding:24px 20px;border-radius:20px}.agency-auth-panel h1{font-size:28px}.agency-login-logo{width:165px}
+}
+@media(max-width:380px){.agency-brand span{max-width:100px;white-space:normal;line-height:1.25}.agency-detail-list{grid-template-columns:1fr;gap:3px}.agency-detail-list dd{margin-bottom:7px}}
+
+/* Align both sides of the phone header on the same two rows. */
+@media(max-width:767px){
+ .agency-app .agency-header-inner{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;padding:8px 14px;align-items:stretch}
+ .agency-app .agency-brand{display:grid;grid-template-rows:44px 44px;gap:0;min-width:0;align-items:center}
+ .agency-app .agency-brand img{width:118px;max-width:100%;height:auto}
+ .agency-app .agency-brand span{max-width:none;white-space:normal;font-size:8px;line-height:1.3;letter-spacing:.08em}
+ .agency-app .agency-account{display:grid;grid-template-rows:44px 44px;gap:0;margin:0;padding:0;border:0;min-width:0;max-width:none;align-items:center;justify-items:end}
+ .agency-app .agency-account .agency-name{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;max-width:100%;white-space:normal;overflow-wrap:anywhere;text-align:right;font-size:12px;line-height:1.4}
+ .agency-app .agency-account>a{display:none}
+ .agency-app .agency-account form{margin:0}
+ .agency-app .agency-account form button{display:flex;align-items:center;justify-content:flex-end;min-height:44px;padding:0;font-size:12px;line-height:1.4}
+}
+
+/* Phone records follow the customer portal's continuous list presentation. */
+@media(max-width:767px){
+ .agency-app .agency-listing-panel{padding:0}
+ .agency-app .agency-table-scroll{overflow:visible;max-width:100%}
+ .agency-app .agency-data-table{display:block;min-width:0;width:100%;max-width:100%;margin:0}
+ .agency-app .agency-data-table>thead{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+ .agency-app .agency-data-table>tbody{display:block;width:100%;min-width:0}
+ .agency-app .agency-data-table>tbody>tr{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-areas:"title source" "project project" "reference status" "price negotiable" "published published" "actions actions";gap:6px 12px;position:relative;width:100%;min-width:0;padding:16px;background:#fff;border:0;border-bottom:1px solid var(--agency-line);border-radius:0;box-shadow:none;margin:0}
+ .agency-app .agency-data-table>tbody>tr:last-child{border-bottom:0}
+ .agency-app .agency-data-table>tbody>tr>td,.agency-app .agency-data-table>tbody>tr>th{display:block;width:auto;min-width:0;max-width:100%;padding:0;border:0;background:transparent;box-shadow:none;white-space:normal;overflow-wrap:anywhere;font-size:12px;line-height:1.5}
+ .agency-app .agency-data-table [data-label]::before{content:attr(data-label) ": ";font-size:10px;font-weight:400;color:var(--agency-muted)}
+ .agency-app .agency-data-table .agency-record-index{position:absolute;top:17px;right:16px;font-size:10px;color:var(--agency-muted)}
+ .agency-app .agency-data-table .agency-record-index::before{content:"#"}
+ .agency-app .agency-record-title{grid-area:title;font-size:15px!important;font-weight:750}
+ .agency-app .agency-record-project{grid-area:project;color:#687d75}
+ .agency-app .agency-record-reference{grid-area:reference;font-size:11px!important;font-weight:500!important}
+ .agency-app .agency-record-source{grid-area:source;justify-self:end;padding-right:24px!important;font-size:11px!important;font-weight:700}
+ .agency-app .agency-record-price{grid-area:price;font-size:16px!important;font-weight:750;color:var(--agency-green)!important}
+ .agency-app .agency-record-negotiable{grid-area:negotiable;align-self:center;text-align:right;font-size:11px!important}
+ .agency-app .agency-record-status{grid-area:status;justify-self:end}
+ .agency-app .agency-record-published{grid-area:published;font-size:10px!important;color:var(--agency-muted)!important}
+ .agency-app .agency-record-actions{grid-area:actions;padding-top:5px!important}
+ .agency-app .agency-record-actions .btn{display:flex;align-items:center;justify-content:center;min-height:44px;width:100%;white-space:normal}
+ .agency-app .agency-record-title::before,.agency-app .agency-record-project::before,.agency-app .agency-record-source::before,.agency-app .agency-record-price::before,.agency-app .agency-record-status::before,.agency-app .agency-record-actions::before{display:none}
+ .agency-app .agency-data-table>tbody>tr.agency-record-empty{display:block;padding:0;border:0}
+ .agency-app .agency-record-empty>td{width:100%!important}
+}

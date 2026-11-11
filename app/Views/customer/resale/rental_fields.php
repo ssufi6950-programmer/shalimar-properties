@@ -1,0 +1,6 @@
+<div class="app-rental-fields" aria-label="Optional rental terms">
+    <div class="field"><label for="rentDeposit">Security deposit (PKR, optional)</label><input class="form-control" id="rentDeposit" name="security_deposit" type="number" inputmode="numeric" min="0" max="999999999999" step="1" placeholder="Not specified"></div>
+    <div class="field"><label for="rentAdvance">Advance rent (PKR, optional)</label><input class="form-control" id="rentAdvance" name="advance_rent" type="number" inputmode="numeric" min="0" max="999999999999" step="1" placeholder="Not specified"></div>
+    <div class="field"><label for="rentFurnishing">Furnishing (optional)</label><select class="form-select" id="rentFurnishing" name="furnishing"><option value="">Not specified</option><option value="furnished">Furnished</option><option value="unfurnished">Unfurnished</option><option value="partially_furnished">Partially Furnished</option></select></div>
+    <div class="field"><label for="rentLease">Lease duration (months, optional)</label><input class="form-control" id="rentLease" name="lease_duration_months" type="number" inputmode="numeric" min="1" max="120" step="1" placeholder="Not specified"></div>
+</div>

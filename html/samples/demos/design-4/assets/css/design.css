@@ -1,0 +1,29 @@
+/* demo chip (link back to the chooser) */
+.demo-chip{position:fixed;left:12px;bottom:calc(var(--tabbar,0px) + 12px);z-index:70;display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:99px;background:#0D1511;color:#DCC598;font:700 10.5px/1 var(--sans);letter-spacing:.12em;text-transform:uppercase;box-shadow:0 10px 24px -10px rgba(0,0,0,.6);opacity:.92;transition:opacity .3s,transform .3s}
+.demo-chip:hover{opacity:1;transform:translateY(-2px)}
+.demo-chip i{color:#fff;font-size:11px}
+
+@media(max-width:860px){.demo-chip .dc-n{display:none}.demo-chip{padding:7px 10px;font-size:10px}}
+/* DESIGN 4 — Full-bleed */
+:root{--hfont:"Urbanist",var(--sans);--hweight:600}
+.dz-4 .hd-title{font-size:clamp(38px,4.2vw,60px)!important;letter-spacing:-.03em!important}
+.dz-4 .hd-title em{color:var(--green-deep);font-weight:800}
+.dz-4 .d-kicker{text-transform:uppercase}
+.dz-4 .display-sm{font-family:var(--hfont);font-weight:700;letter-spacing:-.03em}
+.dz-4 .display-sm em{font-style:normal;color:var(--green)}
+.dz-4 .page-hero h1{font-family:var(--hfont);font-weight:700;letter-spacing:-.03em}
+body.dz-4.photo-hero .page-hero{clip-path:ellipse(140% 100% at 50% 0);padding-bottom:48px}
+body.dz-4.photo-hero .page-hero::after{background:linear-gradient(180deg,rgba(14,75,49,.82),rgba(7,13,10,.78))}
+.dz-4 .card{border-radius:14px;box-shadow:none}
+.dz-4 .card:hover{box-shadow:0 24px 40px -28px rgba(14,75,49,.6)}
+.dz-4 footer{background:linear-gradient(160deg,#0E4B31,#082a1c)}
+/* stories — deep green & gold */
+.dz-4 .sw{background:linear-gradient(160deg,#0E4B31,#0a3624 60%,#082a1c)}
+.dz-4 .sw::before{content:"";position:absolute;inset:0;background:radial-gradient(40% 60% at 15% 30%,rgba(201,168,106,.18),transparent 70%);pointer-events:none}
+.dz-4 .sw mark{background:linear-gradient(transparent 60%,rgba(201,168,106,.45) 60%)}
+.dz-4 .sw .c-scount b{color:var(--gold-soft)}
+.dz-4 .sw .c-story{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.12);border-radius:18px}
+.dz-4 .sw .c-story:hover{background:rgba(255,255,255,.11);border-color:var(--gold-2)}
+.dz-4 .sw .c-sp{color:var(--gold-soft)}
+.dz-4 .sw .c-sw .av{background:var(--gold-soft)}
+.dz-4 .sw .c-story blockquote{font-family:var(--hfont);font-weight:500;font-size:15.5px}

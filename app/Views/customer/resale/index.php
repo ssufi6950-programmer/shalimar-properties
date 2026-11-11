@@ -1,0 +1,4 @@
+<?= $this->extend('customer/layouts/main') ?>
+<?= $this->section('content') ?>
+<main class="portal-main portal-container" id="main-content"><div class="page-header"><div><span class="eyebrow">YOUR OPPORTUNITIES, MOVING FORWARD</span><h1>My Resale Listings</h1><p>Follow every listing, from your first step to a fresh start.</p></div><a class="btn btn-primary" href="<?= url_to('customer.resale.create') ?>"><i class="bi bi-plus-lg"></i> List a Property</a></div><div class="listing-status-tabs" role="group" aria-label="Filter listing status"><button class="active" data-listing-status="">All listings <span data-listing-count>5</span></button><?php foreach(['Pending Approval','Active','Sold','Rejected','Cancelled'] as $status): ?><button data-listing-status="<?= esc($status,'attr') ?>"><?= $status ?></button><?php endforeach; ?></div><div class="listing-list" id="customerListings"></div></main>
+<?= $this->endSection() ?>

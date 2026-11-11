@@ -1,0 +1,4 @@
+-- Superseded: Market Intelligence must use authenticated ERP reporting APIs.
+-- Former Portal-listing-based reference queries have been removed.
+-- See ERP-MARKET-INTELLIGENCE.md and each ERP API src/MarketIntelligence.php.
+-- No SQL import/migration is required.

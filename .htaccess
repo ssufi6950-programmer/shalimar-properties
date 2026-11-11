@@ -1,0 +1,7 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^html/(?:includes|samples/.*/includes)(?:/|$) - [F,L,NC]
+    RewriteRule ^html/bootstrap\.php$ - [F,L,NC]
+    RewriteRule ^(?:app|vendor|writable|\.qa)(?:/|$) - [F,L,NC]
+    RewriteRule ^(?:\.env|composer\.(?:json|lock)|spark)$ - [F,L,NC]
+</IfModule>

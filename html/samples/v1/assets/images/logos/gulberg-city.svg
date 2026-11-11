@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 96">
+<g transform="translate(48 48)"><circle r="42" fill="#F7F4EC" stroke="#D9B66F" stroke-width="1.5"/><ellipse cx="0" cy="-17" rx="9.5" ry="17" transform="rotate(0)" fill="#166D47"/><ellipse cx="0" cy="-17" rx="9.5" ry="17" transform="rotate(72)" fill="#0E4B31"/><ellipse cx="0" cy="-17" rx="9.5" ry="17" transform="rotate(144)" fill="#166D47"/><ellipse cx="0" cy="-17" rx="9.5" ry="17" transform="rotate(216)" fill="#0E4B31"/><ellipse cx="0" cy="-17" rx="9.5" ry="17" transform="rotate(288)" fill="#166D47"/><circle r="8" fill="#D9B66F"/><circle r="3.4" fill="#fff"/></g>
+<text x="104" y="48" font-family="'Playfair Display',Georgia,'Times New Roman',serif" font-size="30" font-weight="700" fill="#0E4B31">Gulberg</text>
+<text x="105" y="71" font-family="'Plus Jakarta Sans','Segoe UI',Arial,sans-serif" font-size="12.5" letter-spacing="7" font-weight="700" fill="#B8893B">CITY</text>
+<text x="172" y="71" font-family="'Plus Jakarta Sans','Segoe UI',Arial,sans-serif" font-size="9" letter-spacing="2" fill="#6B6F70">SARGODHA</text></svg>

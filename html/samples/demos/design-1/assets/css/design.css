@@ -1,0 +1,40 @@
+/* demo chip (link back to the chooser) */
+.demo-chip{position:fixed;left:12px;bottom:calc(var(--tabbar,0px) + 12px);z-index:70;display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:99px;background:#0D1511;color:#DCC598;font:700 10.5px/1 var(--sans);letter-spacing:.12em;text-transform:uppercase;box-shadow:0 10px 24px -10px rgba(0,0,0,.6);opacity:.92;transition:opacity .3s,transform .3s}
+.demo-chip:hover{opacity:1;transform:translateY(-2px)}
+.demo-chip i{color:#fff;font-size:11px}
+
+@media(max-width:860px){.demo-chip .dc-n{display:none}.demo-chip{padding:7px 10px;font-size:10px}}
+/* DESIGN 1 — Ivory Arch */
+:root{--hfont:"Plus Jakarta Sans",var(--sans);--hweight:500}
+body.dz-1{background:#FBF8F2}
+.dz-1 .hd-title em{font-weight:600}
+.dz-1 .hdr{background:rgba(252,250,245,.86);border-bottom:1px solid rgba(201,168,106,.28)}
+.dz-1 .hdr.stuck{background:rgba(252,250,245,.94)}
+/* inner banner: ivory with arch ornament */
+.dz-1 .page-hero{background:linear-gradient(180deg,#FCFAF5,#F4EDE0);border-bottom:1px solid rgba(201,168,106,.35)}
+.dz-1 .page-hero::after{content:"";position:absolute;right:7%;bottom:-1px;width:220px;height:250px;border:1px solid var(--gold-2);border-bottom:0;border-radius:999px 999px 0 0;opacity:.45;z-index:-1;box-shadow:inset 0 0 0 10px rgba(252,250,245,.6),inset 0 0 0 11px rgba(201,168,106,.35)}
+.dz-1 .page-hero h1{font-family:var(--hfont);font-weight:500;letter-spacing:-.03em}
+.dz-1 .card{border-color:rgba(201,168,106,.3);border-radius:20px}
+.dz-1 .card:hover{border-color:var(--gold-2)}
+.dz-1 footer{background:#0E4B31}
+.dz-1 footer::after{border-color:rgba(220,197,152,.2)}
+/* stories — ivory & gold */
+.dz-1 .sw{background:linear-gradient(180deg,#F4EDE0,#EFE5D2);color:var(--ink)}
+.dz-1 .sw::before{content:"";position:absolute;inset:0;background:var(--jaali);background-size:56px;opacity:.4;pointer-events:none}
+.dz-1 .sw .c-sintro h2{color:var(--ink)}
+.dz-1 .sw mark{background:none;color:var(--green)}
+.dz-1 .sw .c-sintro p{color:var(--ink-soft)}
+.dz-1 .sw .c-tag.light{background:#fff;border-color:rgba(201,168,106,.5);color:var(--ink-soft)}
+.dz-1 .sw .c-scount b{color:var(--green)}.dz-1 .sw .c-scount span{color:var(--muted)}
+.dz-1 .sw .c-story{background:#fff;border:1px solid rgba(201,168,106,.35);box-shadow:0 14px 30px -24px rgba(14,75,49,.5)}
+.dz-1 .sw .c-story:hover{background:#fff;border-color:var(--gold-2)}
+.dz-1 .sw .c-story blockquote{color:var(--ink);font-family:var(--serif);font-size:18px;font-weight:600;line-height:1.35}
+.dz-1 .sw .c-sp{color:var(--gold)}
+.dz-1 .sw .c-sw .av{background:var(--green);color:#fff}
+.dz-1 .sw .c-sw small{color:var(--muted)}
+.dz-1 .sw .c-story.ph blockquote,.dz-1 .sw .c-story.ph .c-sw b{color:#fff}.dz-1 .sw .c-story.ph .c-sw small{color:rgba(255,255,255,.7)}.dz-1 .sw .c-story.ph .c-sp{color:var(--gold-soft)}
+.dz-1 .sw .c-story.ph{border-color:transparent}
+.dz-1 .sw .c-story.ph>img{opacity:.6}
+.dz-1 .sw .c-col .c-story{border-radius:22px}
+.dz-1 .sw .c-col:nth-child(2) .c-story.ph{border-radius:120px 120px 22px 22px}
+@media(max-width:860px){.dz-1 .a-feats{display:none}.dz-1 .a-ph{height:230px!important;border-radius:140px 140px 16px 16px}.dz-1 .a-chap{gap:14px!important;padding:22px 0!important}}

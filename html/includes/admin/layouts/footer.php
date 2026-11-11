@@ -1,0 +1,1 @@
+<footer class="workspace-footer"><span>© 2026 Shalimar Properties. All rights reserved.</span><span><span class="status-dot"></span> Frontend demo <span class="footer-separator">·</span> <a href="admin.php?tab=components">Design system</a><span class="footer-separator">·</span> <a href="index.php">Visit website <i class="bi bi-arrow-up-right"></i></a></span></footer>

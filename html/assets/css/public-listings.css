@@ -1,0 +1,13 @@
+.public-purpose{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0}
+.public-discovery .public-filter-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+.public-filter-grid .find-field{min-width:0}.public-filter-grid input,.public-filter-grid select{width:100%;min-width:0;min-height:44px}
+.public-discovery .find-extra{gap:12px;align-items:center;flex-wrap:wrap}.public-discovery .find-extra select{max-width:125px;border:0;background:transparent;min-height:32px}
+.public-pagination{display:flex;justify-content:center;align-items:center;gap:18px;flex-wrap:wrap;margin:30px 0}
+.public-pagination a,.public-purpose a{min-height:44px}.public-card-seller{font-size:12px;margin:12px 0 0;display:grid;gap:4px;overflow-wrap:anywhere}.public-card-seller span{color:var(--green-deep);font-weight:600}.public-card-seller b{font-weight:500}
+.contact-card .vbadge{max-width:65%;white-space:normal;text-align:center}.rental-facts{margin-top:18px}.rental-facts dl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.rental-facts dt{font-size:12px;color:var(--muted)}.rental-facts dd{margin:5px 0 0;font-weight:600}
+.gallery img{width:100%;object-fit:cover}.gthumbs button{min-height:44px}.public-photo-placeholder{font-size:12px;color:var(--muted);margin:6px 0}
+.public-discovery .listing-grid{align-items:stretch}.public-discovery .card-body{min-width:0;overflow-wrap:anywhere}
+.public-discovery .listing-grid .card.rv{opacity:1;transform:none}
+:focus-visible{outline:3px solid var(--gold,#b68b3d);outline-offset:3px}
+@media(max-width:980px){.public-discovery .public-filter-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:560px){.public-discovery .public-filter-grid{grid-template-columns:minmax(0,1fr)}.public-discovery .find-extra>.btn{width:100%}.public-pagination{gap:10px}.rental-facts dl{grid-template-columns:minmax(0,1fr)}}

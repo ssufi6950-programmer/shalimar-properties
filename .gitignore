@@ -1,0 +1,41 @@
+# Dependencies and machine-specific configuration
+/vendor/
+/node_modules/
+/.env
+/.env.*
+!/.env.example
+/.vscode/
+/.idea/
+**/includes/config.php
+
+# Private runtime state, backups, uploads and local verification artifacts
+/writable/**
+!/writable/**/
+!/writable/**/.htaccess
+!/writable/**/index.html
+/html/uploads/**
+!/html/uploads/**/
+!/html/uploads/**/.htaccess
+!/html/uploads/**/index.html
+/.qa/
+**/data/*.json.php
+
+# Generated deployment bundles and obsolete patch copies
+/deploy/
+/live-files/
+
+# Private configuration, archives and local tooling output
+**/catalog.local.php
+**/auth.json
+*.log
+*.pid
+*.zip
+*.sql.gz
+*.pem
+*.key
+*.p12
+*.pfx
+__pycache__/
+*.py[cod]
+.DS_Store
+Thumbs.db
