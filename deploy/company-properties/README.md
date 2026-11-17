@@ -35,3 +35,6 @@ Back up every destination first. Merge folders; replace only the listed files. U
 - GET `{configured ERP API base URL}/company-properties.php?after_id=0`. Cursor: next_after_id; fixed 50-record pages. Only read-only SELECTs.
 - All 16 source PHP files linted successfully. Mock database strict-selection and 50-record keyset pagination checks passed; static Admin permission check passed. The two endpoint implementations are identical. Real authenticated ERP fetch, real database contents and browser UI are unverified.
 - No live upload or SQL execution. No automatic listing creation. Refresh starts a new live read; no inventory cache or local inventory table is created.
+
+
+Combined-table follow-up: current package copies include the summary update. For the four-file update paths, owner rules and focused checks see `D:/xampp/htdocs/shalimar-properties/deploy/company-properties-summary/README.md`.

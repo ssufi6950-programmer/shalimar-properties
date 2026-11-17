@@ -8,7 +8,9 @@ final class CompanyProperties extends \App\Controllers\BaseController
         if(!can('properties.view')) return admin_denied();
         $db=db_connect();
         $client=new \App\Services\ExplorerErpClient(new \App\Models\ErpSourceModel($db),config('ErpConnections'));
-        $sections=[];
+        $sections=[];$rows=[];
+        $mappings=$db->table('erp_project_mappings m')->select('m.erp_source_id,m.erp_head_id,m.erp_subhead_id,p.name AS project_name')->join('portal_projects p','p.slug=m.project_slug')->where('m.is_active',1)->get()->getResultArray();
+        $projects=[];foreach($mappings as$mapping)$projects[$mapping['erp_source_id'].':'.$mapping['erp_head_id'].':'.$mapping['erp_subhead_id']][]=$mapping['project_name'];
         foreach(['SGC','ZALMI'] as $code){
             $section=['code'=>$code,'rows'=>[],'error'=>null,'more'=>false,'next'=>'0'];
             try {
@@ -25,13 +27,19 @@ final class CompanyProperties extends \App\Controllers\BaseController
                     $last=(int)$row['id'];
                 }
                 if((string)$last!==(string)$data['next_after_id']||($data['has_more']&&!$data['records'])) throw new \RuntimeException('invalid_cursor');
-                $section['rows']=$data['records'];$section['more']=$data['has_more'];$section['next']=(string)$last;
+                foreach($data['records'] as &$record){
+                    $names=array_unique($projects[$sources[0]['id'].':'.($record['head']??'').':'.($record['sub_head']??'')]??[]);
+                    $record['project_name']=count($names)===1?reset($names):($record['head_name']??'');
+                    $record['source_code']=$code;
+                }unset($record);
+                $section['rows']=$data['records'];
+                $rows=array_merge($rows,$data['records']);$section['more']=$data['has_more'];$section['next']=(string)$last;
             } catch(\Throwable $e){
                 log_message('error','Company properties fetch failed: source={source} type={type}',['source'=>$code,'type'=>get_class($e)]);
                 $section['error']='Selected inventory could not be fetched. Check the enabled source, bearer credentials, company-properties.php API upload and pro_inventory.smp_active column.';
             }
             $sections[]=$section;
         }
-        return view('admin/company_properties',['pageTitle'=>'Company Properties','tab'=>'company-properties','sections'=>$sections]);
+        return view('admin/company_properties',['pageTitle'=>'Company Properties','tab'=>'company-properties','sections'=>$sections,'rows'=>$rows]);
     }
 }
