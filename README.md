@@ -29,3 +29,15 @@ Customer access is disabled in the example environment until a private identity 
 - Root Markdown documents: module behavior, integration contracts and implementation notes. For current market counting rules, see [ERP-MARKET-TRANSFER-DATE.md](ERP-MARKET-TRANSFER-DATE.md).
 
 Git excludes `.env`, local `includes/config.php` files, file-based runtime datasets, database backups, uploaded files, logs, sessions, caches, Composer dependencies, `.qa` test runtimes/artifacts, generated `deploy` bundles and obsolete `live-files` patch copies. These remain on the existing local machine; pushing Git does not deploy the live websites or copy their business databases. Generated deployment ZIPs referenced by historical documents must be obtained separately or rebuilt from the current source.
+
+## Required change and deployment handoff
+
+For every future implementation task in this project, finish with both a concise final report and a task-specific deployment folder at `deploy/<task-name>/README.md`. The package README must list **every changed file** with its exact full local source path and exact live destination path, plus clear FTP instructions (merge/replace), any backup requirement, and whether SQL, `.env`, or other manual steps are required. Mirror the live directory structure for package files so the user can locate and upload them directly. If no live upload is needed, say so explicitly; never invent a deployment path.
+
+Use the currently confirmed locations as defaults when applicable:
+
+- Local project: `D:\xampp\htdocs\shalimar-properties\`
+- Live project root: `/home/propertys_user11/www/`
+- Website files served from the existing live `html` directory: `/home/propertys_user11/www/html/`
+
+Verify actual changed files and hosting layout before writing paths; if a task targets another ERP/project or the live root differs, document that exact target instead. Deployment notes are instructions only: do not upload to live unless the user explicitly asks. For each task, push the approved project changes to the configured GitHub repository after checking that `.env`, credentials, private data, and unrelated local files are excluded. The `deploy/` directory is Git-ignored by default; when a task handoff package should accompany the project push, add only that task's package files deliberately (do not add unrelated generated bundles).
