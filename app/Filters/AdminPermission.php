@@ -10,6 +10,7 @@ class AdminPermission implements FilterInterface
     public static function permissionFor(string $path,string $method): ?string
     {
         $path=trim($path,'/');
+        if($path==='admin/company-properties'&&$method==='GET')return 'properties.view';
         if($path==='admin/dealer-credential-activity'&&$method==='GET')return 'audit_logs.view';
         if($method==='GET'&&preg_match('~^admin/dealer-logins/\d+(?:/login)?$~D',$path))return 'agencies.edit';
         if($method==='POST'&&preg_match('~^admin/dealer-logins/\d+/login/(create|username|reset|enable|disable|revoke)$~D',$path,$credential))return $credential[1]==='revoke'?'agencies.deactivate':'agencies.edit';

@@ -23,6 +23,20 @@ class ExplorerErpClient extends ErpConnectionService
         return $this->request($base . '/filter-options.php?' . http_build_query($query), $host, $addresses[0], $this->authenticationHeaders($source));
     }
 
+    public function companyProperties(array $source, string $after): array
+    {
+        if (!preg_match('/\A(?:0|[1-9][0-9]{0,9})\z/D',$after)) throw new \InvalidArgumentException('Invalid inventory cursor.');
+        if (($source['auth_type'] ?? '') !== 'bearer' || (int) ($source['is_active'] ?? 0) !== 1) throw new \App\Exceptions\ExplorerMetadataException('Enable an ERP source with server-side bearer credentials.');
+        $base = self::normaliseBaseUrl($source['base_url'] ?? null);
+        if (!$base) throw new \App\Exceptions\ExplorerMetadataException('Configure the ERP API base URL.');
+        $host = strtolower((string) parse_url($base, PHP_URL_HOST));
+        if (!in_array($host, array_map('strtolower', $this->settings->allowedHosts), true)) throw new \App\Exceptions\ExplorerMetadataException('ERP host is not approved.');
+        $addresses = $this->connectionAddresses($host);
+        if (!$addresses) throw new \App\Exceptions\ExplorerMetadataException('ERP hostname could not be resolved.');
+        foreach ($addresses as $address) if (!self::isPublicAddress($address)) throw new \App\Exceptions\ExplorerMetadataException('Non-public ERP destination blocked.');
+        return $this->request($base.'/company-properties.php?'.http_build_query(['after_id'=>$after]),$host,$addresses[0],$this->authenticationHeaders($source));
+    }
+
     protected function request(string $url, string $host, string $address, array $headers): array
     {
         return $this->send($url,$host,$address,$headers);
@@ -61,7 +75,7 @@ class ExplorerErpClient extends ErpConnectionService
         try {
             if (curl_exec($handle) === false) throw new \App\Exceptions\ExplorerMetadataException('ERP metadata request failed, timed out or exceeded 2 MiB.');
             $status = (int) curl_getinfo($handle, CURLINFO_RESPONSE_CODE);
-            if ($status === 404) throw new \App\Exceptions\ExplorerMetadataException('ERP '.($payload===null?'filter-options.php':'filter-tree.php').' endpoint is unavailable. The matching SMP API upload is required.');
+            if ($status === 404) throw new \App\Exceptions\ExplorerMetadataException('ERP endpoint is unavailable. Upload the matching SMP API endpoint files.');
             if($payload!==null&&$status!==200){
                 $failure=json_decode($body,true);
                 $messages=['schema_unavailable'=>'ERP inventory schema inspection is unavailable.','high_cardinality'=>'Selected field exceeds the 128-value category limit.','empty_branch'=>'No inventory property satisfies this complete ancestor branch.','field_not_allowed'=>'Selected field is excluded or no longer available.','unsupported_value'=>'A source value cannot be preserved within the existing schema.','unsafe_value'=>'This field contains unsuitable or potentially sensitive values.','metadata_budget'=>'ERP metadata inspection exceeded its operational time budget.'];

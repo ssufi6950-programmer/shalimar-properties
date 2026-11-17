@@ -27,5 +27,5 @@ function admin_denied()
 }
 function admin_nav_url(string $tab): string
 {
-    return site_url(match($tab){'dealer-activity'=>'admin/dealer-credential-activity','explorer-layer2'=>'admin/property-explorer','customers'=>'admin/customers','properties'=>'admin/properties','resale'=>'admin/listings','agents'=>'admin/agents','agencies'=>'admin/agencies','sources'=>'admin/erp-sources','users'=>'admin/users','roles'=>'admin/roles','activity'=>'admin/audit-logs','dashboard'=>'admin/dashboard',default=>'admin/workspace/'.rawurlencode($tab)});
+    return site_url(match($tab){'company-properties'=>'admin/company-properties','dealer-activity'=>'admin/dealer-credential-activity','explorer-layer2'=>'admin/property-explorer','customers'=>'admin/customers','properties'=>'admin/properties','resale'=>'admin/listings','agents'=>'admin/agents','agencies'=>'admin/agencies','sources'=>'admin/erp-sources','users'=>'admin/users','roles'=>'admin/roles','activity'=>'admin/audit-logs','dashboard'=>'admin/dashboard',default=>'admin/workspace/'.rawurlencode($tab)});
 }

@@ -2,7 +2,7 @@
 // Shared navigation metadata; no mock records or database access.
 $adminNav = [
  'Overview' => ['dashboard'=>['Dashboard','grid-1x2'],'analytics'=>['Analytics','bar-chart-line']],
- 'Property management' => ['projects'=>['Projects','buildings'],'properties'=>['Properties','house-door'],'resale'=>['Property Listings','arrow-left-right'],'customers'=>['Customers','people']],
+ 'Property management' => ['projects'=>['Projects','buildings'],'properties'=>['Properties','house-door'],'company-properties'=>['Company Properties','building-check'],'resale'=>['Property Listings','arrow-left-right'],'customers'=>['Customers','people']],
  'Property Explorer' => ['explorer-layer2'=>['Filter Builder','sliders']],
  'ERP management' => ['sources'=>['ERP Sources','database'],'mapping'=>['Project Mapping','diagram-3'],'heads'=>['Head / Subhead','collection'],'synchronization'=>['Synchronization','arrow-repeat']],
  'Sales network' => ['agents'=>['Shalimar Agents','person-badge'],'agencies'=>['Authorized Agencies','briefcase'],'inquiries'=>['Leads & Inquiries','chat-square-text']],

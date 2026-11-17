@@ -30,6 +30,7 @@ $routes->group('admin', ['namespace'=>'App\Controllers\Admin'], static function 
     $routes->get('customer-identity-check','CustomerIdentityCheck::index');
     $routes->post('customer-identity-check','CustomerIdentityCheck::check');
     $routes->get('customers/(:num)','PortalRecords::customer/$1');
+    $routes->get('company-properties','CompanyProperties::index');
     $routes->get('properties','PortalRecords::properties');
     $routes->get('properties/(:num)','PortalRecords::property/$1');
     $routes->get('listings','ListingReview::index');

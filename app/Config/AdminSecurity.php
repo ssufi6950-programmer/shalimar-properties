@@ -28,6 +28,7 @@ class AdminSecurity extends BaseConfig
     public const TABS = [
         'dealer-activity'=>'audit_logs.view',
         'explorer-layer2'=>'projects.view',
+        'company-properties'=>'properties.view',
         'dashboard'=>'dashboard.view','analytics'=>'reports.view','projects'=>'projects.view','project-form'=>'projects.create',
         'properties'=>'properties.view','property-details'=>'properties.view','resale'=>'resale_listings.view',
         'resale-details'=>'resale_listings.view','customers'=>'customers.view','sources'=>'erp_sources.view',
