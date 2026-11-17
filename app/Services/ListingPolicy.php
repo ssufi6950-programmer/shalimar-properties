@@ -23,12 +23,12 @@ final class ListingPolicy
         foreach(['record_version','payload','portal_customer_id','erp_source_id','erp_property_id','mapping_id','project_slug','asking_price','selling_method','portal_agent_id','agent_erp_link_id','agent_source_id','portal_agency_id','agency_erp_link_id','resale_verification_id','owner_verification','listing_purpose'] as $column) {
             $matches[]="(BINARY CAST($alias.$column AS CHAR) <=> BINARY NULLIF(JSON_UNQUOTE(JSON_EXTRACT(public_approval.next_record,'$.$column')),'null'))";
         }
-        $approval="(NOT EXISTS (SELECT 1 FROM listing_events public_submission WHERE public_submission.listing_id=$alias.id AND public_submission.event IN ('customer_submitted','customer_edit_submitted','customer_resubmitted','customer_changes_resubmitted')) OR EXISTS (SELECT 1 FROM listing_events public_approval WHERE public_approval.listing_id=$alias.id AND public_approval.event='admin_approved_published' AND ".implode(' AND ',$matches).'))';
-        return "BINARY $alias.review_state=BINARY 'approved' AND $alias.listing_purpose IN ('sale','rent') AND BINARY $alias.status IN ('live','approved','active') AND BINARY $alias.deal IN ('available','active') AND $approval";
+        $approval="(NOT EXISTS (SELECT 1 FROM listing_events public_submission WHERE public_submission.listing_id=$alias.id AND public_submission.event IN ('customer_submitted','customer_edit_submitted','customer_resubmitted','customer_changes_resubmitted')) OR EXISTS (SELECT 1 FROM listing_events public_approval WHERE public_approval.listing_id=$alias.id AND public_approval.event IN ('admin_approved_published','admin_property_type_refreshed','admin_media_updated') AND ".implode(' AND ',$matches).'))';
+        return "BINARY $alias.review_state=BINARY 'approved' AND $alias.listing_purpose IN ('sale','rent') AND BINARY $alias.status IN ('live','approved','active') AND BINARY $alias.deal IN ('available','active') AND $approval AND ".AdminListingDeletion::retainedSql($alias);
     }
     public static function active(array $row):bool
     {
-        return ($row['review_state']??null)==='approved'&&in_array($row['listing_purpose']??null,['sale','rent'],true)
+        return !AdminListingDeletion::marked($row)&&($row['review_state']??null)==='approved'&&in_array($row['listing_purpose']??null,['sale','rent'],true)
             &&in_array($row['status']??null,['live','approved','active'],true)&&in_array($row['deal']??null,['available','active'],true);
     }
 }

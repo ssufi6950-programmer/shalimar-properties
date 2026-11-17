@@ -1,0 +1,65 @@
+.smp-project-page {
+    box-sizing: border-box;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 24px;
+    color: #203b31;
+    font: 14px/1.65 Inter, system-ui, sans-serif;
+}
+.smp-project-page *, .smp-project-page *::before, .smp-project-page *::after { box-sizing: border-box; }
+.smp-project-page .ppe-preview { display: grid; grid-template-columns: minmax(240px, .85fr) minmax(0, 1.35fr); overflow: hidden; background: #fff; border: 1px solid #e3e6dd; border-radius: 20px; }
+.smp-project-page .ppe-media { position: relative; min-height: 440px; background: #e8eee5; }
+.smp-project-page .ppe-media > .ppe-image { height: 100%; min-height: 440px; }
+.smp-project-page .ppe-image { position: relative; display: flex; align-items: center; justify-content: center; background: #eef2eb; overflow: hidden; }
+.smp-project-page .ppe-image img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.smp-project-page .ppe-media > .ppe-image img { position: absolute; inset: 0; }
+.smp-project-page .ppe-image-empty { display: grid; place-items: center; min-height: 80px; color: #758a79; }
+.smp-project-page .ppe-logo { position: absolute; left: 22px; top: 22px; width: 130px; background: #fff; border-radius: 14px; padding: 8px; box-shadow: 0 8px 22px #173c291f; }
+.smp-project-page .ppe-logo .ppe-image { height: 100px; background: #fff; }
+.smp-project-page .ppe-logo img { object-fit: contain; }
+.smp-project-page .ppe-info { padding: 28px; min-width: 0; }
+.smp-project-page h2 { font-size: clamp(24px, 2.4vw, 34px); line-height: 1.2; font-weight: 750; margin: 12px 0 8px; }
+.smp-project-page .ppe-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+.smp-project-page .ppe-pill { background: #e8f2e9; border-radius: 30px; padding: 5px 10px; color: #23613d; font-size: 11px; }
+.smp-project-page .ppe-gold { color: #96723b; background: #f5eedf; }
+.smp-project-page .ppe-tagline { font-size: 17px; font-weight: 600; margin: 0 0 10px; }
+.smp-project-page .ppe-location { color: #748075; font-size: 13px; }
+.smp-project-page .ppe-summary { white-space: pre-line; overflow-wrap: anywhere; margin: 12px 0; }
+.smp-project-page .ppe-section-heading { margin-top: 18px; }
+.smp-project-page .ppe-section-heading small { color: #778578; font-size: 12px; }
+.smp-project-page .ppe-features, .smp-project-page .ppe-blocks, .smp-project-page .ppe-actions { display: flex; flex-wrap: wrap; gap: 8px 12px; }
+.smp-project-page .ppe-features { margin: 8px 0; font-size: 12px; color: #56785b; }
+.smp-project-page .ppe-item { display: inline-flex; align-items: center; max-width: 100%; }
+.smp-project-page .ppe-facts { display: flex; flex-wrap: wrap; gap: 15px; margin: 20px 0; padding: 16px 0; border-block: 1px solid #e9ece5; }
+.smp-project-page .ppe-facts > div { min-width: 100px; flex: 1; }
+.smp-project-page .ppe-facts small, .smp-project-page .ppe-facts strong { display: block; font-size: 12px; }
+.smp-project-page .ppe-facts small { color: #829080; margin-bottom: 4px; }
+.smp-project-page .ppe-progress-label { display: flex; justify-content: space-between; font-size: 12px; gap: 10px; }
+.smp-project-page .ppe-progress { background: #e8eee4; height: 6px; border-radius: 8px; overflow: hidden; margin: 8px 0 16px; }
+.smp-project-page .ppe-progress i { display: block; height: 100%; background: #268456; }
+.smp-project-page .ppe-gallery { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 8px 0; }
+.smp-project-page .ppe-gallery .ppe-image { height: 92px; border-radius: 8px; }
+.smp-project-page .ppe-gallery a { display: block; cursor: zoom-in; }
+.smp-project-page .ppe-category { padding: 12px 0; border-bottom: 1px solid #e6ebe1; }
+.smp-project-page .ppe-category-title { font-size: 13px; }
+.smp-project-page .ppe-blocks { margin-top: 8px; }
+.smp-project-page .ppe-blocks .ppe-item { color: #63735f; font-size: 12px; padding: 3px 5px; background: #f4f6f0; border-radius: 6px; }
+.smp-project-page a { color: inherit; }
+.smp-project-page .ppe-price-actions { display: flex; flex-wrap: wrap; gap: 16px; justify-content: space-between; align-items: center; margin-top: 20px; }
+.smp-project-page .ppe-price { font-size: 17px; color: #85622e; }
+.smp-project-page .ppe-action { font-size: 12px; border: 1px solid #d7e2d1; border-radius: 25px; padding: 8px 14px; color: #1a6c42; text-decoration: none; }
+.smp-project-page .ppe-action:hover { background: #e8f2e9; }
+.smp-project-page .ppe-lightbox { padding: 16px; border: 1px solid #d7e2d7; border-radius: 16px; max-width: 94vw; max-height: 94vh; }
+.smp-project-page .ppe-lightbox::backdrop { background: #163e2b99; }
+.smp-project-page .ppe-lightbox img { display: block; max-width: 85vw; max-height: 80vh; object-fit: contain; }
+.smp-project-page .ppe-lightbox button { display: block; margin-left: auto; padding: 8px 14px; cursor: pointer; }
+@media (max-width: 767px) {
+    .smp-project-page { padding: 12px; }
+    .smp-project-page .ppe-preview { display: block; }
+    .smp-project-page .ppe-media, .smp-project-page .ppe-media > .ppe-image { height: 230px; min-height: 230px; }
+    .smp-project-page .ppe-logo { width: 100px; left: 16px; top: 16px; }
+    .smp-project-page .ppe-logo .ppe-image { height: 75px; }
+    .smp-project-page .ppe-info { padding: 20px 16px; }
+    .smp-project-page .ppe-gallery { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .smp-project-page .ppe-gallery .ppe-image { height: 105px; }
+}

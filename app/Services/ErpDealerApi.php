@@ -5,8 +5,10 @@ class ErpDealerApi extends ErpAgencyApi
 {
     public function dealers(array $source,string $agency,string $after='0',?string $maximum=null,int $limit=100):array
     {
-        if(($source['code']??null)!=='SGC')throw new \RuntimeException('Shalimar agents must come from the configured SGC source.');
+        if(!in_array($source['code']??null,['SGC','ZALMI'],true))throw new \RuntimeException('Shalimar agents require an enabled SGC or Zalmi source.');
+        ShalimarAgents::identifier($agency);
         $query=['agency_id'=>$agency,'after_id'=>$after,'limit'=>$limit];if($maximum!==null)$query['snapshot_max_id']=$maximum;
-        return $this->directoryPage($source,$this->settings->dealerPaths[$source['code']]??null,$query);
+        // API fails closed if ledger.sp_Agent is missing; never fall back to dealer=yes.
+        return $this->directoryPage($source,$this->settings->dealerPaths[$source['code']]??'/dealers.php',$query);
     }
 }

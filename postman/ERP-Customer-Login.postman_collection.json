@@ -1,0 +1,60 @@
+{
+  "info": {
+    "name": "Shalimar Customer Login - ERP APIs (SGC + Zalmi)",
+    "description": "Read-only customer identity and ownership endpoints. Set ERP bearer tokens in a private Postman environment; do not export or share secrets.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "SGC",
+      "item": [
+        {
+          "name": "Customer identity match",
+          "request": {
+            "method": "POST",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{sgc_bearer_token}}", "type": "string" }] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"cnic\": \"{{cnic}}\",\n  \"mobile\": \"{{mobile}}\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{sgc_api_base}}/customer-identity.php"
+          }
+        },
+        {
+          "name": "Current owned properties (use customer_id from identity response)",
+          "request": {
+            "method": "POST",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{sgc_bearer_token}}", "type": "string" }] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"customer_id\": \"{{sgc_customer_id}}\",\n  \"verified_mobile\": \"{{mobile}}\",\n  \"page\": {{page}},\n  \"page_size\": 50\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{sgc_api_base}}/customer-owned-properties.php"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Zalmi",
+      "item": [
+        {
+          "name": "Customer identity match",
+          "request": {
+            "method": "POST",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{zalmi_bearer_token}}", "type": "string" }] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"cnic\": \"{{cnic}}\",\n  \"mobile\": \"{{mobile}}\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{zalmi_api_base}}/customer-identity.php"
+          }
+        },
+        {
+          "name": "Current owned properties (use customer_id from identity response)",
+          "request": {
+            "method": "POST",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{zalmi_bearer_token}}", "type": "string" }] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"customer_id\": \"{{zalmi_customer_id}}\",\n  \"verified_mobile\": \"{{mobile}}\",\n  \"page\": {{page}},\n  \"page_size\": 50\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{zalmi_api_base}}/customer-owned-properties.php"
+          }
+        }
+      ]
+    }
+  ],
+  "variable": []
+}

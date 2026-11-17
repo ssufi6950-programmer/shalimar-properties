@@ -19,49 +19,15 @@ foreach (live_listings() as $l) if ($l['project']) $liveCount[$l['project']] = (
     <div class="crumbs"><a href="index.php">Home</a><span>/</span><span>Projects</span></div>
     <h1>Shalimar Group projects</h1>
     <p class="lede">From master-planned communities in Sargodha to a premium commercial tower in Lahore — explore each project, its sectors and blocks, approved properties and official ERP market reporting.</p>
-    <div class="proj-tabs chips-scroll" style="margin-top:14px">
-      <?php foreach ($projects as $p): ?>
-        <a class="proj-tab" href="#<?= e($p['slug']) ?>"><?php if (!empty($p['logo'])): ?><img src="<?= e(img_url($p['logo'])) ?>" alt=""><?php else: ?><span class="plogo-mono"><?= e(project_initials($p['name'])) ?></span><?php endif; ?><?= e($p['name']) ?></a>
-      <?php endforeach; ?>
-    </div>
+    <div class="proj-tabs chips-scroll" id="jsonProjectTabs" style="margin-top:14px"></div>
   </div>
 </section>
 
 <section class="sec-tight" style="padding-top:35px">
   <div class="wrap">
-    <div class="project-list">
-      <?php $i = 0; foreach ($projects as $p): $m = project_media($p); ?>
-      <article class="project rv" id="<?= e($p['slug']) ?>" style="--d:<?= ($i++ % 2) * 80 ?>ms">
-        <div class="media">
-          <img src="<?= e($m['cover_lg']) ?>" alt="<?= e($p['name']) ?>" loading="lazy">
-          <span class="plogo-wrap"><?= project_logo_html($p) ?></span>
-        </div>
-        <div class="info">
-          <div class="tag-row"><span class="pill"><?= e($p['status']) ?></span><span class="pill gold"><?= e($p['kind']) ?></span></div>
-          <h3><?= e($p['name']) ?></h3>
-          <?php if ($m['tagline']): ?><p class="p-tag"><?= e($m['tagline']) ?></p><?php endif; ?>
-          <p class="addr" style="margin:4px 0 8px"><i class="fa-solid fa-location-dot"></i> <?= e($p['location']) ?></p>
-          <p><?= e($p['summary']) ?></p>
-          <?php if ($m['features']): ?><div class="p-feats"><?php foreach ($m['features'] as $ft): ?><span><i class="fa-solid fa-diamond"></i><?= e($ft) ?></span><?php endforeach; ?></div><?php endif; ?>
-          <div class="proj-facts">
-            <div><small>Developer</small><b><?= e($p['developer']) ?></b></div>
-            <div><small>Completed ERP resales this month</small><b><?= market_count($officialMarket['available']?(int)($monthTx[$p['slug']] ?? 0):null) ?></b></div>
-            <div><small>Live listings</small><b><?= (int)($liveCount[$p['slug']] ?? 0) ?></b></div>
-          </div>
-          <div style="display:flex;justify-content:space-between;font-size:12.5px;color:var(--muted)"><span>Development progress</span><strong style="color:var(--ink)"><?= (int)$p['progress'] ?>%</strong></div>
-          <div class="progress"><i style="--w:<?= (int)$p['progress'] ?>%"></i></div>
-          <?php if ($m['gallery']): ?><div class="p-gallery"><?php foreach (array_slice($m['gallery'], 1, 4) as $g): ?><a href="<?= e(photo($g, true)) ?>" data-lightbox="<?= e($p['slug']) ?>" aria-label="Open photo"><img src="<?= e(photo($g)) ?>" alt="<?= e($p['name']) ?>" loading="lazy"></a><?php endforeach; ?></div><?php endif; ?>
-          <?= subprojects_html($p) ?>
-          <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:14px">
-            <span class="price" style="font-size:17px;margin-right:auto"><?= e($p['price_from']) ?></span>
-            <a href="projects.php?project=<?= e($p['slug']) ?>#units" class="btn btn-solid btn-sm">Available units</a>
-            <a href="buy.php?project=<?= e($p['slug']) ?>" class="btn btn-ghost btn-sm">Resale</a>
-            <a href="insights.php?project=<?= e($p['slug']) ?>" class="btn btn-ghost btn-sm"><i class="fa-solid fa-chart-line"></i> Prices</a>
-          </div>
-        </div>
-      </article>
-      <?php endforeach; ?>
-    </div>
+    <p id="jsonProjectsStatus" class="muted" role="status">Loading projects...</p>
+    <div class="project-list" id="jsonProjects"></div>
+    <div class="empty-note" id="jsonProjectsEmpty" hidden>No saved project content is currently available.</div>
   </div>
 </section>
 
@@ -93,5 +59,17 @@ foreach (live_listings() as $l) if ($l['project']) $liveCount[$l['project']] = (
 </main>
 
 <?php require __DIR__ . '/includes/footer.php'; ?>
+
+<script>
+window.JsonProjectPreview = <?= json_encode([
+    'api' => \App\Libraries\PortalLinks::portal('api/projects'),
+    'livePage' => true,
+    'metrics' => array_map(static fn ($slug) => [
+        'monthly' => market_count($officialMarket['available'] ? (int) ($monthTx[$slug] ?? 0) : null),
+        'listings' => (int) ($liveCount[$slug] ?? 0),
+    ], array_combine(array_keys($projects), array_keys($projects))),
+], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_THROW_ON_ERROR) ?>;
+</script>
+<script src="<?= e(\App\Libraries\PortalLinks::portal('assets/projects/projects-json-preview.js')) ?>?v=2"></script>
 </body>
 </html>

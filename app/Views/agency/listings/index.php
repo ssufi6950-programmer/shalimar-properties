@@ -19,9 +19,17 @@
 <td class="agency-record-negotiable" role="cell" data-label="Negotiable"><?= $row['public']['negotiable']?'Yes':'No' ?></td>
 <td class="agency-record-published" role="cell" data-label="Published"><?= $row['public']['published_at']!==''?esc($row['public']['published_at']):'Not recorded' ?></td>
 <td class="agency-record-status" role="cell" data-label="Status"><span class="agency-status">Active</span></td>
-<td class="agency-record-actions" role="cell" data-label="Details"><a class="btn btn-sm btn-outline-primary" href="<?= site_url('agency/listings/'.$row['id']) ?>">View Details</a></td>
+<td class="agency-record-actions" role="cell" data-label="Details"><a class="btn btn-sm btn-outline-primary" href="<?= site_url('agency/listings/'.$row['id']) ?>">View Details</a>
+<?php if($row['selling_method']==='authorized_agency'): $assigned=$dealerAssignments[(int)$row['id']]??null; ?>
+<div class="small my-2" data-dealer-summary><?= $assigned?esc($assigned['name'].' · '.$assigned['source']):'No dealer assigned' ?></div>
+<button type="button" class="btn btn-sm btn-outline-primary" data-dealer-open="<?= (int)$row['id'] ?>"><?= $assigned?'Change Dealer':'Assign Dealer' ?></button>
+<button type="button" class="btn btn-sm btn-outline-secondary mt-1" data-dealer-remove="<?= (int)$row['id'] ?>" <?= !$assigned?'hidden':'' ?>>Unassign Dealer</button>
+<?php endif ?></td>
 </tr><?php endforeach ?>
 <?php if(!$rows): ?><tr class="agency-record-empty" role="row"><td role="cell" colspan="10"><div class="agency-table-empty"><i class="bi bi-inbox"></i><strong>No active listings found</strong><span><?php if($filters['q']!==''||$filters['source']!==''): ?>Try a different search or source filter.<?php else: ?>Active listings assigned to your agency will appear here.<?php endif ?></span></div></td></tr><?php endif ?>
 </tbody></table></div>
 <nav class="agency-pagination" aria-label="Listing pages"><span><?= $total?number_format(($page-1)*$per_page+1):0 ?>â€“<?= number_format(min($page*$per_page,$total)) ?> of <?= number_format($total) ?> listings</span><div><?php if($page>1): ?><a class="btn btn-sm btn-outline-secondary" href="<?= current_url().'?'.http_build_query(array_replace($filters,['page'=>$page-1])) ?>">Previous</a><?php endif ?><span>Page <?= $page ?> / <?= $pages ?></span><?php if($page<$pages): ?><a class="btn btn-sm btn-outline-secondary" href="<?= current_url().'?'.http_build_query(array_replace($filters,['page'=>$page+1])) ?>">Next</a><?php endif ?></div></nav>
-</section></main><?= $this->endSection() ?>
+</section></main>
+<?= $this->include('agency/listings/dealer_modal') ?>
+<?= $this->endSection() ?>
+<?= $this->section('scripts') ?><script src="<?= base_url('assets/agency/js/dealer-assignments.js') ?>?v=<?= filemtime(FCPATH.'assets/agency/js/dealer-assignments.js') ?>"></script><?= $this->endSection() ?>

@@ -9,11 +9,11 @@ final class CustomerOtpService
  private CustomerSecrets $secrets;private CustomerRateLimiter $rate;
  public function __construct(private BaseConnection $db,private CustomerIdentityProvider $provider,private CustomerSmsGateway $sms,private \Config\CustomerPortal $settings,private $clock=null){$this->secrets=new CustomerSecrets($settings->identityKey);$this->rate=new CustomerRateLimiter($db,$this->secrets);}
  private function now():int{return $this->clock?($this->clock)():time();}
- private function unavailable():CustomerFlowException{return new CustomerFlowException(503,'Verification is temporarily unavailable. Please try again later.','service_unavailable');}
+ private function unavailable(string $reasonCode='unspecified'):CustomerFlowException{log_message('error','Customer OTP request returned service_unavailable: reason_code={reason_code}.',['reason_code'=>$reasonCode]);return new CustomerFlowException(503,'Verification is temporarily unavailable. Please try again later.','service_unavailable');}
  private function previewOnly():bool
  {
   if(!$this->settings->loginOtpPreviewOnly)return false;
-  if(!$this->settings->showOtpPreview||!config('Sms')->testMode){log_message('error','Login preview-only mode requires showOtpPreview=true and sms.testMode=true.');throw $this->unavailable();}
+  if(!$this->settings->showOtpPreview||!config('Sms')->testMode){log_message('error','Login preview-only mode requires showOtpPreview=true and sms.testMode=true.');throw $this->unavailable('preview_mode_configuration');}
   return true;
  }
  private function previewNote(bool $matched):string
@@ -27,7 +27,7 @@ final class CustomerOtpService
  {
   $ownership=(new CustomerPortfolio($this->db,$this->provider))->hasCurrent($matches,$unavailable);
   if($ownership['has_properties'])return;
-  if($ownership['unavailable'])throw $this->unavailable();
+  if($ownership['unavailable'])throw $this->unavailable('current_ownership_source_unavailable');
   throw new CustomerFlowException(422,'No current property was found for this CNIC and mobile number. Please check your details or contact your ERP office.','no_properties');
  }
  public function request(string $cnicInput,string $mobileInput,string $binding,string $ip,?int $targetCustomer=null):array
@@ -36,11 +36,11 @@ final class CustomerOtpService
   return $this->lock('issue:'.$cnicHash.':'.$mobileHash,function()use($cnic,$mobile,$cnicHash,$mobileHash,$binding,$ip,$targetCustomer){
    $this->limits($cnicHash,$mobileHash,$ip);
    if($targetCustomer!==null){$target=$this->db->table('portal_customers')->where('id',$targetCustomer)->where('status','active')->get()->getRowArray();if(!$target||!hash_equals($target['cnic_hash'],$cnicHash))throw new CustomerFlowException(422,'Use the CNIC associated with your account to verify another ERP identity.');}
-   try{$lookup=$this->provider->identities($cnic,$mobile);}catch(\Throwable $e){log_message('error','Customer OTP ERP provider threw: type={exception_type}.',['exception_type'=>get_class($e)]);throw $this->unavailable();}
+   try{$lookup=$this->provider->identities($cnic,$mobile);}catch(\Throwable $e){log_message('error','Customer OTP identity provider threw: reason_code=provider_exception exception_type={exception_type}.',['exception_type'=>get_class($e)]);throw $this->unavailable('identity_provider_exception');}
    $matches=$lookup['matches']??[];$unavailable=$lookup['unavailable']??[];
-   if(!$matches&&$unavailable){$codes=array_values(array_unique(array_filter(array_map(static fn($source)=>is_array($source)?($source['source_code']??null):null,$unavailable),'is_string')));log_message('error','Customer OTP has no identity match and ERP source(s) unavailable: sources={source_codes}.',['source_codes'=>$codes?implode(',',$codes):'unknown']);throw $this->unavailable();}
+   if(!$matches&&$unavailable){$codes=array_values(array_unique(array_filter(array_map(static fn($source)=>is_array($source)?($source['source_code']??null):null,$unavailable),'is_string')));log_message('error','Customer OTP has no identity match and ERP source(s) unavailable: sources={source_codes}.',['source_codes'=>$codes?implode(',',$codes):'unknown']);throw $this->unavailable('identity_sources_unavailable_without_match');}
    // The trusted provider returns only identities whose registered mobile matched the submitted mobile.
-   $unique=[];foreach($matches as$match){if(CustomerIdentity::mobile($match['mobile'])!==$mobile){log_message('error','Customer OTP provider returned a mobile validation mismatch.');throw $this->unavailable();}$unique[$match['erp_source_id'].':'.$match['erp_customer_id']]=$match;}$matches=array_values($unique);
+   $unique=[];foreach($matches as$match){if(CustomerIdentity::mobile($match['mobile'])!==$mobile){log_message('error','Customer OTP provider returned a mobile validation mismatch.');throw $this->unavailable('identity_mobile_contract_mismatch');}$unique[$match['erp_source_id'].':'.$match['erp_customer_id']]=$match;}$matches=array_values($unique);
    $this->requireCurrentOwnership($matches,$unavailable);
    $now=$this->now();$previous=$this->db->table('customer_otp_challenges')->where('cnic_hash',$cnicHash)->where('mobile_hash',$mobileHash)->where('resend_after >',$now)->where('delivery_state !=','failed')->where('consumed_at',null)->countAllResults();if($previous)throw new CustomerFlowException(429,'Please wait at least 60 seconds before requesting another code.','cooldown');
    $otp=(string)random_int(100000,999999);$id=bin2hex(random_bytes(32));$payload=['mobile'=>$mobile,'matches'=>$matches,'unavailable'=>$unavailable,'target_customer_id'=>$targetCustomer];
@@ -48,7 +48,7 @@ final class CustomerOtpService
     $this->db->table('customer_otp_challenges')->where('cnic_hash',$cnicHash)->where('mobile_hash',$mobileHash)->where('consumed_at',null)->update(['consumed_at'=>$now,'otp_hash'=>'','payload'=>'']);
     $this->db->table('customer_otp_challenges')->insert(['id'=>$id,'session_hash'=>$this->secrets->digest('session',$binding),'cnic_hash'=>$cnicHash,'mobile_hash'=>$mobileHash,'otp_hash'=>$this->secrets->otpHash($otp),'payload'=>$this->secrets->encrypt($payload),'expires_at'=>$now+max(1,min(300,$this->settings->otpLifetime)),'resend_after'=>$now+max(60,$this->settings->resendCooldown),'delivery_state'=>'pending','created_at'=>$now]);
     if(!$this->db->transStatus())throw new \RuntimeException('Challenge storage failed.');$this->db->transCommit();
-   }catch(\Throwable $e){log_message('error','Customer OTP challenge database write failed: type={exception_type}.',['exception_type'=>get_class($e)]);$this->db->transRollback();$this->db->resetTransStatus();throw $this->unavailable();}
+   }catch(\Throwable $e){log_message('error','Customer OTP challenge database write failed: type={exception_type}.',['exception_type'=>get_class($e)]);$this->db->transRollback();$this->db->resetTransStatus();throw $this->unavailable('otp_challenge_database_write');}
    $this->deliver($id,$mobile,$otp,(bool)$matches);
    if($matches||$this->settings->showOtpPreview)LocalOtpPreview::remember('login',$id,$otp,$now+max(1,min(300,$this->settings->otpLifetime)),$this->previewNote((bool)$matches));
    return ['id'=>$id,'masked_mobile'=>CustomerIdentity::mask($mobile),'resend_after'=>$now+max(60,$this->settings->resendCooldown),'expires_at'=>$now+max(1,min(300,$this->settings->otpLifetime))];
@@ -56,8 +56,8 @@ final class CustomerOtpService
  }
  private function deliver(string $id,string $mobile,string $otp,bool $real):void
  {
-  try{$preview=$real&&$this->previewOnly();if($real&&!$preview)$this->sms->sendCode($mobile,$otp);$stored=$this->db->table('customer_otp_challenges')->where('id',$id)->where('consumed_at',null)->update(['delivery_state'=>$real?($preview?'preview':'sent'):'decoy']);if(!$stored)throw new \RuntimeException('OTP delivery state could not be saved.');}
-  catch(\Throwable $e){$reason=substr(preg_replace('/[^A-Za-z0-9 _.-]/','',$e->getMessage())??'unknown',0,120);log_message('error','Customer OTP delivery failed: type={exception_type} reason={reason}.',['exception_type'=>get_class($e),'reason'=>$reason]);$this->db->table('customer_otp_challenges')->where('id',$id)->update(['delivery_state'=>'failed','consumed_at'=>$this->now(),'otp_hash'=>'','payload'=>'']);throw $this->unavailable();}
+  try{$preview=$real&&$this->previewOnly();if($real&&!$preview){$this->rate->consumeOtpDelivery($mobile,$this->now());$this->sms->sendCode($mobile,$otp);}$stored=$this->db->table('customer_otp_challenges')->where('id',$id)->where('consumed_at',null)->update(['delivery_state'=>$real?($preview?'preview':'sent'):'decoy']);if(!$stored)throw new \RuntimeException('OTP delivery state could not be saved.');}
+  catch(\Throwable $e){$reason=substr(preg_replace('/[^A-Za-z0-9 _.-]/','',$e->getMessage())??'unknown',0,120);log_message('error','Customer OTP delivery failed: type={exception_type} reason={reason}.',['exception_type'=>get_class($e),'reason'=>$reason]);$this->db->table('customer_otp_challenges')->where('id',$id)->update(['delivery_state'=>'failed','consumed_at'=>$this->now(),'otp_hash'=>'','payload'=>'']);if($e instanceof CustomerFlowException)throw $e;throw $this->unavailable('otp_delivery_or_delivery_state_failure');}
  }
  private function row(string $id,string $binding,bool $forUpdate=false):array
  {
@@ -96,7 +96,7 @@ final class CustomerOtpService
   $identities=$candidate?$this->links((int)$candidate['id']):[];
   $byKey=[];foreach(array_merge($identities,$payload['matches'])as$identity)$byKey[$identity['erp_source_id'].':'.$identity['erp_customer_id']]=$identity;
   $portfolio=(new CustomerPortfolio($this->db,$this->provider))->all(array_values($byKey),$payload['unavailable']);
-  if(!$portfolio['properties']){if($portfolio['unavailable'])throw $this->unavailable();throw new CustomerFlowException(403,'No currently owned properties found. Please contact your ERP office if your ownership has changed.','no_properties');}
+  if(!$portfolio['properties']){if($portfolio['unavailable'])throw $this->unavailable('verification_ownership_source_unavailable');throw new CustomerFlowException(403,'No currently owned properties found. Please contact your ERP office if your ownership has changed.','no_properties');}
   return $this->lock('account:'.$row['cnic_hash'],function()use($row,$payload,$portfolio){
    $this->db->transBegin();try{
     $customer=$this->candidate($row['cnic_hash'],$row['mobile_hash'],$payload['matches'],$payload['target_customer_id']);$date=date('Y-m-d H:i:s',$this->now());
@@ -111,7 +111,7 @@ final class CustomerOtpService
   $owners=[];foreach($matches as$match){$row=$this->db->table('customer_erp_links')->where('erp_source_id',$match['erp_source_id'])->where('erp_customer_id',$match['erp_customer_id'])->get()->getRowArray();if($row)$owners[(int)$row['portal_customer_id']]=true;}
   if(count($owners)>1||($target!==null&&$owners&&!isset($owners[$target])))throw new CustomerFlowException(409,'The verified ERP identities need support assistance before they can be linked.','identity_conflict');
   $id=$target??($owners?(int)array_key_first($owners):null);$query=$this->db->table('portal_customers');$row=$id!==null?$query->where('id',$id)->get()->getRowArray():$query->where('cnic_hash',$cnicHash)->where('mobile_hash',$mobileHash)->get()->getRowArray();
-  if($id!==null&&!$row)throw $this->unavailable();if($row&&($row['status']!=='active'||!hash_equals($row['cnic_hash'],$cnicHash)))throw new CustomerFlowException(403,'This account cannot be accessed. Please contact support.');return $row;
+  if($id!==null&&!$row)throw $this->unavailable('linked_customer_record_missing');if($row&&($row['status']!=='active'||!hash_equals($row['cnic_hash'],$cnicHash)))throw new CustomerFlowException(403,'This account cannot be accessed. Please contact support.');return $row;
  }
  public function links(int $customer):array
  {

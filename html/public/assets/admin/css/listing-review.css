@@ -22,10 +22,11 @@
 .review-decision-form{border-top:1px solid var(--border-color,#e6eaf0);padding-top:12px}
 .review-confirm-check{display:flex;gap:9px;align-items:flex-start;font-size:13px;line-height:1.6;margin:14px 0}
 .review-confirm-check input{margin-top:5px;flex-shrink:0}
-.review-photo-grid{list-style:none;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.review-photo-grid{list-style:none;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
 .review-photo-grid li{min-width:0;border:1px solid var(--border-color,#e6eaf0);padding:10px;border-radius:10px}
 .review-photo-grid img{width:100%;height:165px;object-fit:cover;border-radius:6px}.review-photo-grid li>span{display:block;margin:8px 0}
 .review-description{white-space:normal}
 [data-theme=dark] .review-panel{background:var(--card-bg,#172438);color:var(--text-primary,#edf1f7)}
 @media(max-width:900px){.review-detail-grid{grid-template-columns:minmax(0,1fr)}.review-actions{position:static}}
 @media(max-width:575px){.review-panel{padding:16px}.review-facts,.review-photo-grid{grid-template-columns:minmax(0,1fr)}.listing-review-shell .collection-toolbar>*{width:100%;max-width:100%}.listing-review-shell .review-tabs .btn{min-height:44px}.review-photo-grid img{height:190px}}
+@media(min-width:576px) and (max-width:991px){.review-photo-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}

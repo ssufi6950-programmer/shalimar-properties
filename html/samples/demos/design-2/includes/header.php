@@ -16,7 +16,6 @@ $more = [
   'blog'     => ['Blog', 'blog.php', 'fa-newspaper'],
   'events'   => ['Events', 'events.php', 'fa-calendar-days'],
   'wanted'   => ['Wanted', 'wanted.php', 'fa-bullhorn'],
-  'registry' => ['Registry Calculator', 'registry-calculator.php', 'fa-calculator'],
   'admin'    => ['Admin Panel', 'admin.php', 'fa-user-shield'],
 ];
 $moreActive = isset($more[$active]);
@@ -25,7 +24,7 @@ if (!isset($heroPhoto)) {
   $heroPhoto = [
     'buy' => 'gc-aerial', 'rent' => 'gc-homes', 'projects' => 'ssc-aerial', 'insights' => 'ssc-interchange',
     'agencies' => 'ssc-business-bay', 'blog' => 'ssc-boulevard', 'events' => 'ssc-gate-render', 'wanted' => 'gc-boulevard',
-    'registry' => 'ssc-gate-aerial', 'post' => 'ssc-entrance',
+    'post' => 'ssc-entrance',
   ][$active] ?? '';
 }
 if (!DESIGN_BANNER) $heroPhoto = '';

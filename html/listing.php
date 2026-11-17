@@ -5,20 +5,21 @@ require_once __DIR__ . '/includes/market.php';
 $rawId = get_str('id',20);
 $id = preg_match('/\A[1-9][0-9]{0,17}\z/D',$rawId) ? (int)$rawId : 0;
 $l = $id ? find_listing($id) : null;
+$displayTitle = $l ? listing_display_title($l) : '';
 if ($l && !in_array($l['status'], ['live','approved','active'], true) && !is_admin()) $l = null;
 if (!$l) {http_response_code(404);header('X-Robots-Tag: noindex, nofollow');}
 $robots=(!$l||is_admin())?'noindex,nofollow':'index,follow';
 if($l&&!is_admin()){
  $canonical=\App\Libraries\PublicWebsiteUrl::make('listing.php',['id'=>$id]);
- $metaDesc=mb_substr(trim(preg_replace('/\s+/u',' ',strip_tags($l['description']??$l['title']))),0,160);
- $social=['title'=>$l['title'].' ? '.($l['purpose']==='rent'?'For Rent':'For Sale'),'description'=>$metaDesc,'url'=>$canonical,'image'=>listing_image($l)];
+ $metaDesc=mb_substr(trim(preg_replace('/\s+/u',' ',strip_tags($l['description']??$displayTitle))),0,160);
+ $social=['title'=>$displayTitle.' ? '.($l['purpose']==='rent'?'For Rent':'For Sale'),'description'=>$metaDesc,'url'=>$canonical,'image'=>listing_image($l)];
  $seo=['@context'=>'https://schema.org','@type'=>'RealEstateListing','name'=>$social['title'],'url'=>$canonical,'description'=>$metaDesc,'offers'=>['@type'=>'Offer','price'=>(string)$l['price'],'priceCurrency'=>'PKR','url'=>$canonical]];
  if($l['purpose']==='rent')$seo['offers']['priceSpecification']=['@type'=>'UnitPriceSpecification','price'=>(string)$l['price'],'priceCurrency'=>'PKR','unitText'=>'month'];
 }
 
 
 $active = $l ? ($l['purpose'] === 'rent' ? 'rent' : ($l['purpose'] === 'project' ? 'projects' : 'buy')) : '';
-$pageTitle = $l ? $l['title'] . ' — Shalimar Properties' : 'Listing not found — Shalimar Properties';
+$pageTitle = $l ? $displayTitle . ' — Shalimar Properties' : 'Listing not found — Shalimar Properties';
 require __DIR__ . '/includes/header.php';
 
 if (!$l): ?>
@@ -29,15 +30,34 @@ if (!$l): ?>
 <?php exit; endif;
 
 $proj = project($l['project'] ?? null);
+$listingType = strtolower(trim((string)($l['category'] ?? '')));
+$sectorTypes = subproject_types((string)($l['project'] ?? ''), (string)($l['sector'] ?? ''));
+$commercialTypes = ['commercial', 'office', 'shop', 'plaza', 'tower'];
+$residentialTypes = ['house', 'apartment', 'plot', 'farmhouse'];
+$sectorCommercial = (bool)array_intersect($sectorTypes, $commercialTypes);
+$sectorResidential = (bool)array_intersect($sectorTypes, $residentialTypes);
+if ($sectorCommercial && !$sectorResidential) {
+    $propertyCategory = 'Commercial';
+} elseif ($sectorResidential && !$sectorCommercial) {
+    $propertyCategory = 'Residential';
+} elseif (in_array($listingType, $commercialTypes, true) || (($l['project'] ?? '') === 'zalmi-x' && $listingType === 'apartment')) {
+    $propertyCategory = 'Commercial';
+} elseif (in_array($listingType, $residentialTypes, true)) {
+    $propertyCategory = 'Residential';
+} else {
+    $propertyCategory = '—';
+}
 $deal = $l['deal'] ?? 'available';
 $images = listing_gallery($l);
 $back = ['rent' => 'rent.php', 'project' => 'projects.php'][$l['purpose']] ?? 'buy.php';
-$waText = 'Assalam o Alaikum, I am interested in ' . $l['title'] . ' (Ref ' . $l['ref'] . ') listed on Shalimar Properties.';
+$waText = 'Assalam o Alaikum, I am interested in ' . $displayTitle . ' (Ref ' . $l['ref'] . ') listed on Shalimar Properties.';
 $publicContact = \App\Libraries\PortalCatalogStore::connect()->publicContact((int)$l['id']);
+$showRoomFacts = $propertyCategory !== 'Commercial'
+  && \App\Libraries\PortalCatalogStore::connect()->publicListingConstructed((int)$l['id']);
 $isAvailable = in_array($deal,['available','active'],true) && in_array($l['status'],['live','approved','active'],true);
 $displayDeal = $l['status']==='sold'||$deal==='sold'?'sold':($isAvailable?'available':($deal==='available'?'unavailable':$deal));
 $sellerSubtitle = $publicContact['subtitle'];
-$sellerName = $publicContact['method']==='self_sell' ? ($publicContact['owner_name'] ?: $publicContact['name']) : $publicContact['name'];
+$sellerName = $publicContact['method']==='self_sell' ? 'Owner' : $publicContact['name'];
 $sellerRepresentative = '';
 
 // Official reporting is separate from asking prices and monthly rents.
@@ -54,7 +74,7 @@ $similar = array_slice(array_filter(filter_listings([$l['purpose']], ['project' 
 <section class="sec-tight" style="padding-top:6px">
   <div class="wrap ld-grid">
     <div class="rv">
-      <div class="gallery"><img width="900" height="600" decoding="async" id="gMain" src="<?= e(img_url($images[0])) ?>" alt="<?= e($l['title']) ?>">
+      <div class="gallery"><img width="900" height="600" decoding="async" id="gMain" src="<?= e(img_url($images[0])) ?>" alt="<?= e($displayTitle) ?>">
         <span class="chip<?= $l['purpose'] === 'rent' ? ' rent' : ($l['purpose'] === 'project' ? ' proj' : '') ?>"><?= e(purpose_label($l['purpose'])) ?></span>
         <?php if ($deal !== 'available'): ?><span class="ribbon ribbon-<?= e($deal) ?>"><?= e(deal_label($deal)) ?></span><?php endif; ?>
       </div>
@@ -65,17 +85,23 @@ $similar = array_slice(array_filter(filter_listings([$l['purpose']], ['project' 
       </div>
       <?php endif; ?>
 
-      <h1 style="font-size:clamp(22px,2.8vw,32px);margin:16px 0 4px"><?= e($l['title']) ?></h1>
-      <p class="addr" style="font-size:14px"><i class="fa-solid fa-location-dot"></i> <?= e(listing_location($l)) ?><?= $l['sector'] ? ' · ' . e($l['sector']) : '' ?></p>
+      <?php $videoEmbed=\App\Services\ListingVideo::embed($l['youtube_video_id']??'');if($videoEmbed!==''): ?>
+      <section style="margin-top:16px"><h2 style="font-size:20px">Property video</h2><iframe src="<?= e($videoEmbed) ?>" title="Property video" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen style="display:block;width:100%;aspect-ratio:16/9;border:0;border-radius:12px"></iframe></section>
+      <?php endif ?>
+
+      <h1 style="font-size:clamp(22px,2.8vw,32px);margin:16px 0 4px"><?= e($displayTitle) ?></h1>
+      <p class="addr" style="font-size:14px"><i class="fa-solid fa-location-dot"></i> <?= e(listing_location($l)) ?><?= $l['sector'] ? ' · ' . e(cat_label($l['project'] ?? null, $l['sector'])) : '' ?></p>
 
       <div class="spec-grid">
         <div class="spec"><small>Size</small><b><?= e(size_text($l['size'], $l['unit'])) ?></b></div>
-        <div class="spec"><small>Type</small><b><?= e(category_label($l['category'])) ?></b></div>
+        <div class="spec"><small>Type</small><b><?= e(category_label($l['category'], $l['_erp_source_code']??'')) ?></b></div>
+        <?php if($showRoomFacts): ?>
         <div class="spec"><small>Bedrooms</small><b><?= $l['beds'] ? (int)$l['beds'] : '—' ?></b></div>
         <div class="spec"><small>Bathrooms</small><b><?= $l['baths'] ? (int)$l['baths'] : '—' ?></b></div>
+        <?php endif ?>
         <?php if ($proj): ?>
         <div class="spec"><small>Project</small><b><?= e($proj['name']) ?></b></div>
-        <div class="spec"><small>Category</small><b><?= e($l['sector'] ? cat_label($l['project'] ?? null, $l['sector']) : '—') ?></b></div>
+        <div class="spec"><small>Category</small><b><?= e($propertyCategory) ?></b></div>
         <div class="spec"><small>Sub-category</small><b><?= e($l['block'] ? sub_label($l['project'] ?? null, $l['sector'] ?? '', $l['block']) : '—') ?></b></div>
         <?php endif; ?>
         <div class="spec"><small>Reference</small><b><?= e($l['ref']) ?></b></div>
@@ -100,8 +126,8 @@ $similar = array_slice(array_filter(filter_listings([$l['purpose']], ['project' 
       <?php if (!empty($l['charges'])): $ch = $l['charges']; ?><div class="lp-charges" style="display:grid;gap:4px;margin:8px 0 4px;padding:10px 12px;border-radius:12px;background:var(--paper);border:1px solid var(--line);font-size:13px"><div style="display:flex;justify-content:space-between;gap:10px"><span class="muted">Service charges<?= ($ch['service_basis'] ?? '') === 'one_percent' ? ' (1%)' : ((($ch['service_basis'] ?? '') === 'half_rent') ? ' (half month rent)' : '') ?></span><b><?= e(fmt_pkr((int)($ch['service'] ?? 0))) ?></b></div><?php if (!empty($ch['docs'])): ?><div style="display:flex;justify-content:space-between;gap:10px"><span class="muted">Documentation</span><b><?= e(fmt_pkr((int)$ch['docs'])) ?></b></div><?php endif; ?><?php $gt = (int)$l['price'] + (int)($ch['service'] ?? 0) + (int)($ch['docs'] ?? 0); ?><div class="lp-total" style="display:flex;justify-content:space-between;gap:10px;margin-top:4px;padding-top:6px;border-top:1px dashed var(--line);font-size:14px"><b><?= ($l['purpose'] ?? '') === 'rent' ? 'Total (first month)' : 'Grand total' ?></b><b style="color:var(--green-deep)"><?= e(fmt_pkr($gt)) ?></b></div></div><?php endif; ?>
       <hr style="border:0;border-top:1px solid var(--line);margin:14px 0">
       <div class="who" style="margin:0">
-        <span class="av" aria-hidden="true"><?= e(project_initials($sellerName)) ?></span>
-        <div style="min-width:0;overflow-wrap:anywhere"><strong data-seller-name><?= e($sellerName) ?></strong><span data-seller-description><?= e($sellerSubtitle) ?></span><?php if($sellerRepresentative!==''): ?><span style="display:block" data-seller-representative><?= e($sellerRepresentative) ?></span><?php endif; ?></div>
+        <span class="av" aria-hidden="true"><?php if(!empty($publicContact['image_url'])): ?><img src="<?= e($publicContact['image_url']) ?>" alt="" loading="lazy" referrerpolicy="no-referrer" style="width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><span hidden><?= e(project_initials($sellerName)) ?></span><?php else: ?><?= e(project_initials($sellerName)) ?><?php endif ?></span>
+        <div style="min-width:0;overflow-wrap:anywhere"><strong data-seller-name><?= e($sellerName) ?></strong><?php if($sellerSubtitle!==''): ?><span data-seller-description><?= e($sellerSubtitle) ?></span><?php endif ?><?php if($sellerRepresentative!==''): ?><span style="display:block" data-seller-representative><?= e($sellerRepresentative) ?></span><?php endif; ?></div>
       </div>
       <div style="display:grid;gap:8px;margin-top:14px">
         <?php if ($isAvailable && $publicContact['available']): ?>

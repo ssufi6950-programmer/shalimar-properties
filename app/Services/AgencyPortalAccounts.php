@@ -15,11 +15,28 @@ final class AgencyPortalAccounts
 
     public function agencyEligible(int $agencyId): bool
     {
-        return (bool)$this->db->query("SELECT a.id FROM authorized_agencies a WHERE a.id=? AND a.portal_active=1 AND a.agency_type='external' AND a.is_shalimar_agency=0 AND EXISTS (
+        return (bool)$this->db->query("SELECT a.id FROM authorized_agencies a WHERE a.id=? AND a.portal_active=1 AND ((a.agency_type='external' AND a.is_shalimar_agency=0 AND EXISTS (
             SELECT 1 FROM agency_erp_links l JOIN erp_sources s ON s.id=l.erp_source_id
             WHERE l.portal_agency_id=a.id AND l.mapping_status='mapped' AND l.present=1 AND s.is_active=1 AND s.code IN ('SGC','ZALMI')
             AND ".AgencyDirectory::resaleAuthorizationSql('l')."
-        )", [$agencyId])->getRowArray();
+        )) OR (".self::internalAgencySql()."))", [$agencyId])->getRowArray();
+    }
+
+    /** Only the verified configured internal agency can use the Shalimar portfolio. */
+    public static function internalAgencySql(): string
+    {
+        return "a.agency_type='internal' AND a.is_shalimar_agency=1 AND EXISTS (
+            SELECT 1 FROM shalimar_agent_settings cfg
+            JOIN shalimar_agent_source_settings source_cfg ON source_cfg.settings_id=cfg.id
+            JOIN erp_sources internal_source ON internal_source.id=source_cfg.erp_source_id
+            JOIN agency_erp_links internal_link ON internal_link.portal_agency_id=cfg.portal_agency_id
+                AND internal_link.erp_source_id=source_cfg.erp_source_id AND internal_link.erp_agency_id=source_cfg.erp_agency_id
+            WHERE cfg.id=1 AND cfg.portal_agency_id=a.id AND source_cfg.is_active=1 AND source_cfg.verified_version=source_cfg.version AND source_cfg.last_synced_at IS NOT NULL
+                AND internal_source.code IN ('SGC','ZALMI') AND internal_source.is_active=1
+                AND internal_link.mapping_status='mapped' AND internal_link.present=1
+                AND BINARY internal_link.erp_authorize=BINARY 'yes'
+                AND BINARY internal_link.erp_locked=BINARY 'no' AND BINARY internal_link.erp_restricted=BINARY 'no'
+        )";
     }
 
     public function eligibleAgency(int $agencyId): ?array

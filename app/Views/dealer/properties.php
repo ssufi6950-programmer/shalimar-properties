@@ -1,0 +1,7 @@
+<?= $this->extend('dealer/layout') ?><?= $this->section('content') ?>
+<h1 class="h3"><?= esc($pageTitle) ?></h1><p><?= esc($dealer['dealer_name']) ?> · <?= esc($dealer['agency_name']) ?> · <?= esc($dealer['source_code']) ?></p>
+<section class="card p-3"><p><strong><?= $total ?></strong> currently accessible assigned properties</p>
+<?php if($dashboard): ?><a class="btn btn-primary align-self-start" href="<?= site_url('dealer/my-properties') ?>">View My Assigned Properties</a>
+<?php else: foreach($rows as $row): ?><article class="dealer-record"><h2 class="h6"><a href="<?= site_url('dealer/my-properties/'.$row['id']) ?>"><?= esc($row['public']['reference'].' · '.$row['public']['plot']) ?></a></h2><p class="mb-1"><?= esc($row['project']) ?> · <?= $row['purpose']==='rent'?'For Rent':'For Sale' ?> · <?= esc($row['public']['type']) ?></p><p class="mb-1"><?= $row['price']!==null?'PKR '.number_format((float)$row['price']):'Price not recorded' ?></p><small>Assigned <?= esc($row['assigned_at']) ?></small></article><?php endforeach ?>
+<?php if(!$rows): ?><p>No assigned properties are currently available.</p><?php endif ?>
+<nav class="d-flex gap-3 mt-3" aria-label="Property pages"><?php if($page>1): ?><a href="<?= site_url('dealer/my-properties').'?page='.($page-1) ?>">Previous</a><?php endif ?><span><?= $page ?> / <?= $pages ?></span><?php if($page<$pages): ?><a href="<?= site_url('dealer/my-properties').'?page='.($page+1) ?>">Next</a><?php endif ?></nav><?php endif ?></section><?= $this->endSection() ?>

@@ -10,7 +10,6 @@ $nav = [
   'blog' => ['Blog', 'blog.php', 'fa-newspaper'],
   'events' => ['Events', 'events.php', 'fa-calendar-days'],
   'wanted' => ['Wanted', 'wanted.php', 'fa-bullhorn'],
-  'registry' => ['Registry', 'registry-calculator.php', 'fa-calculator'],
 ];
 ?>
 <!DOCTYPE html>
@@ -63,7 +62,7 @@ $nav = [
     <?php foreach ($nav as $key => $item): ?>
       <a href="<?= $item[1] ?>" class="<?= $active === $key ? 'active' : '' ?>">
         <span class="d-ico"><i class="fa-solid <?= $item[2] ?>"></i></span>
-        <span class="d-txt"><?= $item[0] === 'Registry' ? 'Registry Calculator' : $item[0] ?></span>
+        <span class="d-txt"><?= $item[0] ?></span>
         <?php if ($active === $key): ?><span class="d-now">Now</span><?php endif; ?>
       </a>
     <?php endforeach; ?>

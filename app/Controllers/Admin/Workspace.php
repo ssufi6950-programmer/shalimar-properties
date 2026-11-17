@@ -6,6 +6,11 @@ class Workspace extends \App\Controllers\BaseController
     public function index(){return $this->show('dashboard');}
     public function show(string $tab)
     {
+        if (in_array($tab, ['projects', 'project-form'], true)) {
+            $editor = new ProjectEditor();
+            $editor->initController($this->request, $this->response, service('logger'));
+            return $tab === 'projects' ? $editor->index() : $editor->edit();
+        }
         $permission=\Config\AdminSecurity::TABS[$tab]??null;if(!$permission||!can($permission))return admin_denied();
         if(in_array($tab,['dashboard','analytics'],true)){$records=new PortalRecords();$records->initController($this->request,$this->response,service('logger'));return $records->dashboard($tab==='analytics');}
         if(in_array($tab,['customers','properties','resale'],true)){$query=$this->request->getGet();$suffix=is_array($query)&&$query?'?'.http_build_query($query):'';return redirect()->to(site_url('admin/'.$tab).$suffix);}

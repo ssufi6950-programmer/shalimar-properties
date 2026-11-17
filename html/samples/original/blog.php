@@ -9,7 +9,7 @@ $posts = [
   ['Market','Lahore DHA: what 10 marla actually costs now','Median asking vs closing prices from the last quarter, phase by phase.','8 min read · Sep 2026','photo-1560518883-ce09059eeffa'],
   ['Rentals','Deposit myths landlords still push','What verified rental ads on our platform can and cannot ask for.','6 min read · Aug 2026','photo-1502672260266-1c1ef2d93688'],
   ['Projects','Payment plans that won’t trap you','Red flags in instalment schedules before you book a new project.','10 min read · Aug 2026','photo-1486406146926-c627a92ad1ab'],
-  ['Legal','Stamp duty basics for first-time buyers','Province-wise ranges and when registry calculator numbers diverge from the counter.','9 min read · Jul 2026','photo-1589829545856-d10d557cf95f'],
+  ['Legal','Stamp duty basics for first-time buyers','An introduction to stamp duty and property registration paperwork.','9 min read · Jul 2026','photo-1589829545856-d10d557cf95f'],
   ['Lifestyle','Staging that photographs well','Simple prep that helps our shoot team and your listing views.','5 min read · Jul 2026','photo-1600210492486-724fe5c67fb0'],
 ];
 ?>

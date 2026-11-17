@@ -29,7 +29,7 @@ final class PortalCatalogStore
         $table=match($name){'projects'=>'portal_projects','listings'=>'portal_listings',default=>throw new \InvalidArgumentException('Unsupported catalog')};
         $out=[];
         $sql=$name==='listings'
-            ? 'SELECT l.*,c.portal_customer_id AS otp_customer_id,c.submission_key AS otp_submission_key,c.delivery_state AS otp_delivery_state,c.verified_at AS otp_verified_at,c.consumed_at AS otp_consumed_at FROM portal_listings l LEFT JOIN resale_otp_challenges c ON c.id=l.resale_verification_id'
+            ? 'SELECT l.*,s.code AS erp_source_code,c.portal_customer_id AS otp_customer_id,c.submission_key AS otp_submission_key,c.delivery_state AS otp_delivery_state,c.verified_at AS otp_verified_at,c.consumed_at AS otp_consumed_at FROM portal_listings l LEFT JOIN erp_sources s ON s.id=l.erp_source_id LEFT JOIN resale_otp_challenges c ON c.id=l.resale_verification_id'
             : 'SELECT * FROM '.$table;
         foreach ($this->pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC) as $row) {
             $payload=json_decode($row['payload'],true,128,JSON_THROW_ON_ERROR);
@@ -37,6 +37,7 @@ final class PortalCatalogStore
                 $payload['active']=(bool)$row['published'];$out[$row['slug']]=$payload;
             } else {
                 $payload['status']=$row['status'];$payload['deal']=$row['deal'];$payload['mapping_id']=$row['mapping_id'];$payload['project']=$row['project_slug'];$payload['_record_version']=(int)$row['record_version'];
+                $payload['_erp_source_code']=$row['erp_source_code']??'';
                 $payload['_publication_verification']=\App\Services\PublicationVerification::summary($row);
                 $payload['_selling_method']=$row['selling_method'];$payload['_listing_purpose']=$row['listing_purpose'];$payload['_review_state']=$row['review_state'];$payload['purpose']=self::payloadPurpose($row['listing_purpose'],$payload['purpose']??'');$out[]=$payload;
             }
@@ -64,6 +65,7 @@ final class PortalCatalogStore
                             $current['purpose']=self::payloadPurpose($before['listing_purpose'],$current['purpose']??'');
                             $requested=$row;unset($requested['_record_version'],$requested['_publication_verification'],$requested['_selling_method'],$requested['_listing_purpose'],$requested['_review_state']);
                             if($current===$requested)continue; // A legacy full-catalog save must not touch unrelated rows.
+                            if(\App\Services\AdminListingDeletion::marked($before))throw new \InvalidArgumentException('Deleted listings are read-only. Their ownership and history are retained.');
                         }
                         if($before&&($row['_record_version']??null)!==(int)$before['record_version'])throw new \InvalidArgumentException('The listing changed during this legacy action. Reload and review the current record.');
                     }
@@ -98,16 +100,32 @@ final class PortalCatalogStore
         $sql='SELECT l.id'.\App\Services\PublicListingSearch::fromSql();
         return array_map('intval',$this->pdo->query($sql)->fetchAll(PDO::FETCH_COLUMN));
     }
-    public function publicSearch(array $filters,array $purposes=[],bool $paginate=true):array
+    public function publicSearch(array $filters,array $purposes=[],bool $paginate=true,?array $explorer=null):array
     {
-        $result=(new \App\Services\PublicListingSearch($this->pdo))->search($filters,$purposes,$paginate);
+        $result=(new \App\Services\PublicListingSearch($this->pdo))->search($filters,$purposes,$paginate,$explorer);
         $this->contacts()->prime(array_column($result['rows'],'id'));
         foreach($result['rows']as&$row)$row['_public_contact']=$this->contacts()->resolve((int)$row['id']);
         return $result;
     }
+    public function explorerOptions(string $slug,array $payload,string $purpose):array
+    {
+        return (new \App\Services\PublicExplorerFilters($this->pdo))->options($slug);
+    }
+    public function publicExplorerState(string $slug,string $rootKey,string $tree):array
+    {
+        return (new \App\Services\PublicExplorerFilters($this->pdo))->state($slug,$rootKey,$tree);
+    }
     public function publicListing(int $id):?array
     {
         return (new \App\Services\PublicListingSearch($this->pdo))->find($id);
+    }
+    /** Display room facts only for the exact locally saved, verified construction record. */
+    public function publicListingConstructed(int $id):bool
+    {
+        $sql=preg_replace('/ WHERE /',' JOIN portal_owned_properties room_property ON room_property.erp_source_id=l.erp_source_id AND room_property.erp_property_id=l.erp_property_id AND room_property.portal_customer_id=l.portal_customer_id WHERE ',\App\Services\PublicListingSearch::fromSql(),1);
+        $query=$this->pdo->prepare('SELECT room_property.payload'.$sql.' AND l.id=?');$query->execute([$id]);
+        $saved=$query->fetchColumn();$property=is_string($saved)?json_decode($saved,true):null;
+        return is_array($property)&&\App\Services\ErpPropertyClassification::verifiedConstructed($property);
     }
     private function contacts():\App\Services\PublicListingContact
     {
@@ -116,6 +134,15 @@ final class PortalCatalogStore
     public function publicContact(int $listingId): array
     {
         return $this->contacts()->resolve($listingId);
+    }
+    /** Synced ERP authorization count, independent of resale assignment eligibility. */
+    public function authorizedAgencyCount(): int
+    {
+        return count($this->publicAgencyDirectory());
+    }
+    public function publicAgencyDirectory():array
+    {
+        return (new \App\Services\PublicAgencyDirectory($this->pdo))->agencies();
     }
     /** Local PDO supplies ERP connection/mapping metadata only; metrics come from authenticated ERP APIs. */
     public function marketSnapshot(array $filters=[]): array

@@ -15,7 +15,6 @@ $more = [
   'blog'     => ['Blog', 'blog.php', 'fa-newspaper'],
   'events'   => ['Events', 'events.php', 'fa-calendar-days'],
   'wanted'   => ['Wanted', 'wanted.php', 'fa-bullhorn'],
-  'registry' => ['Registry Calculator', 'registry-calculator.php', 'fa-calculator'],
   'admin'    => ['Admin Panel', 'admin.php', 'fa-user-shield'],
 ];
 $moreActive = isset($more[$active]);

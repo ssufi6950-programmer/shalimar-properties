@@ -13,9 +13,10 @@ final class ResalePhotos
   if(!preg_match('/\A[a-f0-9]{64}\z/D',$row['id'])||!in_array($row['extension'],['jpg','png','webp'],true))throw new \RuntimeException('Invalid image storage reference.');
   return $this->root().DIRECTORY_SEPARATOR.$row['id'].'.'.$row['extension'];
  }
- public static function ids($value):array
+ public static function ids($value,?int $maximum=null):array
  {
-  if(!is_array($value)||!array_is_list($value)||count($value)>config('CustomerPortal')->photoMaximumCount)throw new \InvalidArgumentException('Choose a valid number of property photos.');
+  $maximum??=config('CustomerPortal')->photoMaximumCount;
+  if(!is_array($value)||!array_is_list($value)||count($value)>$maximum)throw new \InvalidArgumentException('Choose a valid number of property photos.');
   $seen=[];foreach($value as$id){if(!is_string($id)||!preg_match('/\A(?:[a-f0-9]{64}|legacy-[a-f0-9]{64})\z/D',$id)||isset($seen[$id]))throw new \InvalidArgumentException('Choose valid unique photos.');$seen[$id]=true;}return $value;
  }
  public static function marker(string $id):string{return 'resale-photo:'.$id;}
@@ -45,7 +46,7 @@ final class ResalePhotos
   if(!in_array(strtolower($file->getClientExtension()),['jpg','jpeg','png','webp'],true))throw new \InvalidArgumentException('Use a JPEG, PNG or WebP file extension.');
   if(!$file->isValid()||$file->getSize()>$cfg->photoMaximumBytes||$file->getSize()<1)throw new \InvalidArgumentException('Upload a valid image within the configured size limit.');
   $raw=file_get_contents($file->getTempName());$info=@getimagesizefromstring($raw);$mime=(new \finfo(FILEINFO_MIME_TYPE))->buffer($raw);$types=['image/jpeg'=>'jpg','image/png'=>'png','image/webp'=>'webp'];
-  if(!$info||!isset($types[$mime])||$info['mime']!==$mime||$info[0]<50||$info[1]<50||$info[0]*$info[1]>$cfg->photoMaximumPixels)throw new \InvalidArgumentException('Use a valid JPEG, PNG or WebP image with safe dimensions.');
+  if(!$info||!isset($types[$mime])||$info['mime']!==$mime||$info[0]<50||$info[1]<50)throw new \InvalidArgumentException('Use a valid JPEG, PNG or WebP image at least 50 × 50 pixels.');
   $image=@imagecreatefromstring($raw);if(!$image)throw new \InvalidArgumentException('The uploaded image cannot be decoded.');
   $id=bin2hex(random_bytes(32));$row=['id'=>$id,'extension'=>$types[$mime]];$path=$this->path($row);
   try{

@@ -20,6 +20,21 @@ function market_count(?int $value): string { return $value === null ? 'N/A' : nu
 function market_change(?float $value): string { return \App\Services\ErpMarketPeriods::change($value); }
 function market_json($value): string { return json_encode($value,JSON_HEX_TAG|JSON_HEX_AMP|JSON_HEX_APOS|JSON_HEX_QUOT|JSON_THROW_ON_ERROR); }
 
+/** Public table projection: combine sources and kinds under the same displayed segment. */
+function market_sale_rent_rows(array $rows): array
+{
+    $groups=[];
+    foreach($rows as$row){
+        $key=json_encode([$row['project_name'],$row['subhead_name'],$row['category']],JSON_THROW_ON_ERROR);
+        if(!isset($groups[$key]))$groups[$key]=['project_name'=>$row['project_name'],'subhead_name'=>$row['subhead_name'],'category'=>$row['category'],'sale_deals'=>0,'rent_deals'=>0,'count'=>0];
+        $column=match($row['deal_kind']){'sale','resale'=>'sale_deals','check_in'=>'rent_deals',default=>throw new \UnexpectedValueException('Unsupported market deal kind.')};
+        $groups[$key][$column]+=$row['count'];$groups[$key]['count']+=$row['count'];
+    }
+    $groups=array_values($groups);
+    usort($groups,static fn($a,$b)=>[$a['project_name'],$a['subhead_name'],$a['category']]<=>[$b['project_name'],$b['subhead_name'],$b['category']]);
+    return $groups;
+}
+
 function market_tx(array $f = []): array
 {
     return array_values(array_filter(store_read('transactions'), function ($t) use ($f) {

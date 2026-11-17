@@ -10,32 +10,11 @@
       </h1>
       <p class="h3-lede"><?= e($H['lede']) ?></p>
 
-      <form class="h3-search" id="heroSearch" action="buy.php" method="get">
-        <div class="tabs" id="tabs">
-          <span class="tab-pill" id="pill"></span>
-          <button type="button" class="tab on" data-action="buy.php">Buy</button>
-          <button type="button" class="tab" data-action="rent.php">Rent</button>
-          <button type="button" class="tab" data-action="projects.php">Projects</button>
-        </div>
-        <div class="fields">
-          <div class="field f-loc"><label for="loc"><i class="fa-solid fa-location-dot"></i> Location</label><input id="loc" name="q" placeholder="Sector or block"></div>
-          <div class="field"><label for="hproj"><i class="fa-solid fa-city"></i> Project</label>
-            <select id="hproj" name="project"><option value="">All projects</option>
-              <?php foreach ($projects as $p): ?><option value="<?= e($p['slug']) ?>"><?= e($p['name']) ?></option><?php endforeach; ?>
-            </select></div>
-          <div class="field"><label for="typ"><i class="fa-solid fa-shapes"></i> Type</label>
-            <select id="typ" name="type"><option value="">Any type</option>
-              <?php foreach (CATEGORIES as $c): ?><option value="<?= $c ?>"><?= e(category_label($c)) ?></option><?php endforeach; ?>
-            </select></div>
-          <button class="btn btn-solid h3-go" type="submit" aria-label="Search"><i class="fa-solid fa-magnifying-glass"></i><span>Search</span></button>
-        </div>
-      </form>
-
       <div class="h3-stats">
         <div><b data-to="<?= count($projects) ?>">0</b><span>Communities</span></div>
         <div><b data-to="<?= count($live) ?>">0</b><span>Verified listings</span></div>
         <div><b data-to="<?= $agencyCount ?>">0</b><span>Authorized agencies</span></div>
-          <div><b><?= market_count($kpi['month']) ?></b><span>Completed resales this month</span></div>
+          <div><b><?= market_count($kpi['month']) ?></b><span>Deals this month</span></div>
       </div>
     </div>
 
@@ -67,15 +46,16 @@
       </div>
 
       <?php foreach (array_slice($projects, 0, 3) as $i => $p): ?>
-      <a class="h3-pcard <?= $cardPos[$i] ?>" href="projects.php#<?= e($p['slug']) ?>" aria-label="<?= e($p['name']) ?>" style="--d:<?= 500 + $i * 160 ?>ms;--f:<?= $i * 1.3 ?>s">
+      <a class="h3-pcard <?= $cardPos[$i] ?><?= $p['slug']==='shalimar-smart-city'?' h3-pcard--smart-city':'' ?>" href="project.php?project=<?= e(rawurlencode($p['slug'])) ?>" aria-label="<?= e($p['name']) ?>" style="--d:<?= 500 + $i * 160 ?>ms;--f:<?= $i * 1.3 ?>s">
         <span class="pc-logo"><?= project_logo_html($p, 'plogo') ?></span>
+        <span class="pc-action">Explore project <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></span>
         <span class="pc-txt"><small><i class="fa-solid fa-location-dot"></i> <?= e($p['city']) ?> · <?= (int)($liveByProject[$p['slug']] ?? 0) ?> live</small></span>
       </a>
       <?php endforeach; ?>
 
       <div class="h3-chip c4" style="--d:1100ms;--f:2.2s">
         <span class="mini-bars" aria-hidden="true"><i style="--h:40%"></i><i style="--h:65%"></i><i style="--h:50%"></i><i style="--h:85%"></i><i style="--h:70%"></i><i style="--h:100%"></i></span>
-          <span><b><?= market_count($kpi['last_month']) ?></b><small>completed resales last month</small></span>
+          <span><b><?= market_count($kpi['last_month']) ?></b><small>deals last month</small></span>
       </div>
       <div class="h3-chip c5" style="--d:1250ms;--f:.6s"><i class="fa-solid fa-circle-check"></i><span><b><?= count($cities) ?> cities</b><small><?= e(implode(' · ', $cities)) ?></small></span></div>
 

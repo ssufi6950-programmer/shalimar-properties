@@ -1,0 +1,107 @@
+.ppe-editor { color: #203b31; }
+.ppe-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-bottom: 20px; }
+.ppe-toolbar h1 { font-size: 26px; margin: 8px 0; }
+.ppe-toolbar p { margin: 0; color: #6d7b75; }
+.ppe-toolbar-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+#projectSaveState { color: #68766e; font-size: 12px; }
+.ppe-template-picker { padding: 24px; background: #fff; border: 1px solid #dde5df; border-radius: 16px; margin-bottom: 20px; }
+.ppe-template-picker[hidden] { display: none; }
+.ppe-template-picker h2 { font-size: 20px; margin-bottom: 18px; }
+.ppe-template-options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+.ppe-template-option { display: grid; text-align: left; background: #f8faf7; border: 1px solid #dce6de; border-radius: 12px; padding: 10px; gap: 10px; color: #254e3c; }
+.ppe-template-option img { width: 100%; height: 130px; object-fit: cover; border-radius: 8px; }
+.ppe-template-option span { font-size: 12px; color: #69756f; }
+.ppe-template-option:hover, .ppe-template-option:focus-visible { border-color: #17885b; outline: 2px solid #17885b; }
+.ppe-document-details { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 12px 0 20px; }
+.ppe-document-details .form-control { width: min(100%, 300px); }
+.ppe-document-details > span { color: #728078; font-size: 12px; }
+.ppe-canvas { background: #f8f7f2; padding: 26px; border: 1px solid #e3e7df; border-radius: 20px; }
+.ppe-preview { display: grid; grid-template-columns: minmax(240px, .85fr) minmax(0, 1.35fr); border: 1px solid #e3e6dd; border-radius: 20px; overflow: hidden; background: #fff; font-family: Inter, system-ui, sans-serif; }
+.ppe-media { position: relative; min-height: 440px; background: #e8eee5; }
+.ppe-media > .ppe-image { height: 100%; min-height: 440px; }
+.ppe-image { position: relative; display: flex; align-items: center; justify-content: center; background: #eef2eb; overflow: hidden; }
+.ppe-image img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.ppe-media > .ppe-image img { position: absolute; inset: 0; }
+.ppe-image-empty { display: grid; place-items: center; min-height: 80px; color: #758a79; }
+.ppe-image-tools { position: absolute; left: 8px; right: 8px; bottom: 8px; display: flex; justify-content: space-between; gap: 4px; z-index: 1; }
+.ppe-image-tools button { background: rgba(255,255,255,.95); border: 1px solid #d5e2d7; border-radius: 6px; color: #145f40; font-size: 11px; padding: 5px 8px; min-height: 30px; }
+.ppe-logo { position: absolute; left: 22px; top: 22px; width: 130px; background: #fff; border-radius: 14px; padding: 8px; box-shadow: 0 8px 22px #173c291f; }
+.ppe-logo .ppe-image { height: 100px; background: #fff; }
+.ppe-logo img { object-fit: contain; }
+.ppe-info { padding: 28px; min-width: 0; }
+.ppe-info h2 { font-size: clamp(24px, 2.4vw, 34px); line-height: 1.2; font-weight: 750; margin: 12px 0 8px; }
+.ppe-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+.ppe-pill { background: #e8f2e9; border-radius: 30px; padding: 5px 10px; color: #23613d; font-size: 11px; }
+.ppe-gold { color: #96723b; background: #f5eedf; }
+.ppe-tagline { font-size: 17px; font-weight: 600; margin: 0 0 10px; }
+.ppe-location { color: #748075; font-size: 13px; }
+.ppe-summary { font-size: 14px; line-height: 1.8; white-space: pre-line; margin: 12px 0; }
+.ppe-section-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 18px; }
+.ppe-section-heading small { color: #778578; font-size: 12px; }
+.ppe-features { display: flex; flex-wrap: wrap; gap: 7px 12px; margin: 8px 0; }
+.ppe-item { display: inline-flex; align-items: center; gap: 3px; max-width: 100%; }
+.ppe-features .ppe-item { font-size: 12px; color: #56785b; }
+.ppe-add { border: 1px dashed #67a185; background: #eff7ef; color: #17774e; border-radius: 50%; min-width: 30px; height: 30px; font-size: 22px; line-height: 1; flex-shrink: 0; }
+.ppe-remove, .ppe-setting { border: 0; background: transparent; color: #849187; padding: 3px; min-width: 24px; min-height: 28px; line-height: 1; }
+.ppe-remove:hover { color: #b74040; background: #fff0ed; }
+.ppe-facts { display: flex; flex-wrap: wrap; gap: 15px; margin: 20px 0; padding: 16px 0; border-top: 1px solid #e9ece5; border-bottom: 1px solid #e9ece5; align-items: center; }
+.ppe-facts > div { min-width: 100px; flex: 1; }
+.ppe-facts small, .ppe-facts strong { display: block; font-size: 12px; }
+.ppe-facts small { color: #829080; margin-bottom: 4px; }
+.ppe-progress-label { display: flex; justify-content: space-between; font-size: 12px; gap: 10px; }
+.ppe-progress { background: #e8eee4; height: 6px; border-radius: 8px; overflow: hidden; margin: 8px 0 16px; }
+.ppe-progress i { display: block; height: 100%; background: #268456; }
+.ppe-gallery { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 8px 0; }
+.ppe-gallery-item { position: relative; min-width: 0; }
+.ppe-gallery .ppe-image { height: 92px; border-radius: 8px; }
+.ppe-gallery .ppe-image-tools { left: 2px; right: 2px; bottom: 2px; }
+.ppe-gallery .ppe-image-tools button { font-size: 9px; padding: 3px; }
+.ppe-gallery-item > .ppe-remove { position: absolute; top: 2px; right: 2px; background: #fff; border-radius: 20px; }
+.ppe-alt { display: block; font-size: 10px; color: #809080; margin-top: 4px; overflow-wrap: anywhere; }
+.ppe-category { padding: 12px 0; border-bottom: 1px solid #e6ebe1; }
+.ppe-category-title { display: flex; align-items: center; gap: 4px; font-size: 13px; }
+.ppe-category-title > .ppe-add { margin-left: auto; }
+.ppe-blocks { display: flex; flex-wrap: wrap; gap: 4px 8px; margin-top: 8px; }
+.ppe-blocks .ppe-item { color: #63735f; font-size: 12px; padding: 3px 5px; background: #f4f6f0; border-radius: 6px; }
+.ppe-price-actions { display: flex; flex-wrap: wrap; gap: 16px; justify-content: space-between; align-items: center; margin-top: 20px; }
+.ppe-price { font-size: 17px; color: #85622e; }
+.ppe-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.ppe-action { font-size: 12px; border: 1px solid #d7e2d1; border-radius: 25px; padding: 6px 10px; color: #1a6c42; }
+.ppe-preview [data-field] { cursor: text; border-radius: 3px; min-width: 12px; min-height: 1em; overflow-wrap: anywhere; }
+.ppe-preview [data-field]:empty::before { content: 'Double-click to edit'; color: #91a290; font-size: 11px; font-style: italic; }
+.ppe-preview [data-field]:hover, .ppe-preview [data-field]:focus-visible { outline: 1px dashed #6ba17f; outline-offset: 3px; }
+.ppe-preview [contenteditable="true"] { outline: 2px solid #3e9368; outline-offset: 4px; background: #f1fbf0; }
+.ppe-dialog { width: min(92vw, 520px); max-height: 85vh; overflow: auto; padding: 24px; border: 1px solid #d7e2d7; border-radius: 16px; color: #234531; }
+.ppe-dialog::backdrop { background: #163e2b66; }
+.ppe-dialog-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 18px; }
+.ppe-dialog-heading h2 { margin: 0; font-size: 22px; }
+.ppe-dialog-heading > button { border: 0; background: none; font-size: 24px; }
+.ppe-dialog-field { display: block; font-size: 13px; margin: 14px 0; }
+.ppe-dialog-field input { margin: 6px 0; }
+.ppe-dialog-field small { color: #7a8779; }
+.ppe-dialog-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 22px; }
+#projectDialogError { color: #a54331; font-size: 13px; margin-top: 12px; }
+@media (max-width: 1050px) {
+    .ppe-canvas { padding: 12px; }
+    .ppe-preview { grid-template-columns: minmax(180px, .75fr) minmax(0, 1.4fr); }
+    .ppe-info { padding: 20px; }
+}
+@media (max-width: 767px) {
+    .ppe-toolbar { align-items: flex-start; flex-direction: column; gap: 12px; }
+    .ppe-toolbar-actions { width: 100%; }
+    .ppe-template-options { grid-template-columns: 1fr; }
+    .ppe-template-option { grid-template-columns: 100px minmax(0, 1fr); align-items: center; }
+    .ppe-template-option img { grid-row: span 2; height: 80px; }
+    .ppe-template-picker { padding: 16px; }
+    .ppe-document-details { align-items: flex-start; flex-direction: column; }
+    .ppe-preview { display: block; }
+    .ppe-media, .ppe-media > .ppe-image { min-height: 230px; height: 230px; }
+    .ppe-logo { width: 100px; left: 16px; top: 16px; }
+    .ppe-logo .ppe-image { height: 75px; }
+    .ppe-info { padding: 20px 16px; }
+    .ppe-gallery { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .ppe-gallery .ppe-image { height: 105px; }
+    .ppe-add { min-width: 36px; height: 36px; }
+    .ppe-remove, .ppe-setting { min-width: 32px; min-height: 36px; }
+    .ppe-canvas { padding: 0; border: 0; background: transparent; }
+}

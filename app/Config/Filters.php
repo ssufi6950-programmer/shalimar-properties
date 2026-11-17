@@ -109,6 +109,6 @@ class Filters extends BaseFilters
      */
     public array $filters = [
         'adminGuard'=>['before'=>['admin','admin/*'],'after'=>['admin','admin/*']],
-        'csrf'=>['before'=>['admin/*','customer/*','agency/*']],
+        'csrf'=>['before'=>['admin/*','customer/*','agency/*','dealer/*']],
     ];
 }

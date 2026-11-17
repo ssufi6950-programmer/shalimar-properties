@@ -2,7 +2,7 @@
 <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap"><div><h2 class="h5 mb-1">Agency Portal Access</h2><p class="text-muted mb-0">Access is tied to this central agency record and its SGC/Zalmi listings.</p></div>
 <?php if($portalAccount): ?><span class="badge <?= (int)$portalAccount['enabled']?'text-bg-success':'text-bg-secondary' ?>"><?= (int)$portalAccount['enabled']?'Enabled':'Disabled' ?></span><?php endif ?>
 </div>
-<?php if(!$portalEligible): ?><div class="alert alert-warning mt-3 mb-0">Usable access requires an active external agency with a current authorized SGC or Zalmi ERP mapping.</div><?php endif ?>
+<?php if(!$portalEligible): ?><div class="alert alert-warning mt-3 mb-0">Portal access requires an active authorized external agency, or the verified configured Shalimar internal agency.</div><?php endif ?>
 <?php if(!$portalAccount && $portalEligible): ?>
 <form class="mt-3" method="post" action="<?= site_url('admin/agencies/'.$agency['id'].'/portal-access') ?>"><?= csrf_field() ?><fieldset <?= !can('agencies.edit')?'disabled':'' ?>>
 <legend class="h6">Generate Portal Credentials</legend>

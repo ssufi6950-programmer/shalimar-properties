@@ -2,11 +2,6 @@
 (() => {
   'use strict';
   addEventListener('pageshow', event => { if (event.persisted) location.reload(); });
-  const budget = document.querySelector('#browse-budget');
-  budget?.addEventListener('change', () => {
-    ['browse-min', 'browse-max'].forEach(id => { document.getElementById(id).value = ''; });
-  });
-  ['browse-min', 'browse-max'].forEach(id => document.getElementById(id)?.addEventListener('input', () => { budget.value = ''; }));
   const block = document.getElementById('browse-block'), project = document.getElementById('browse-project');
   const sync = () => {
     if (!block || !project) return;

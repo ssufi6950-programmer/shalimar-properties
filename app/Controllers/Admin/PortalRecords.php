@@ -38,7 +38,7 @@ final class PortalRecords extends \App\Controllers\BaseController
  public function listing(int $id)
  {
   if(!can('resale_listings.view'))return admin_denied();$data=$this->data();$row=$data->listing($id);if(!$row)throw PageNotFoundException::forPageNotFound();
-  return view('admin/records/details',['pageTitle'=>$row['reference'],'tab'=>'resale','kind'=>'resale','record'=>$row,'related'=>null,'options'=>$data->options()]);
+  return view('admin/records/details',['pageTitle'=>$row['reference'],'tab'=>'resale','kind'=>'resale','record'=>$row,'related'=>null,'options'=>$data->options(),'dealerAssignment'=>(new \App\Services\AdminListingDealerAssignment(db_connect()))->detail($id)]);
  }
  public function dashboard(bool $analytics=false)
  {

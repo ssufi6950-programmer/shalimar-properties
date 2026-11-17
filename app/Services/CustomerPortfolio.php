@@ -4,6 +4,11 @@ use CodeIgniter\Database\BaseConnection;
 final class CustomerPortfolio
 {
  public function __construct(private BaseConnection $db,private CustomerIdentityProvider $provider){}
+ private function logOwnershipFailure(array $identity,\Throwable $error,int $page,string $operation):void
+ {
+  $message=$error->getMessage();$reason=preg_match('/\bHTTP status (\d{3})\b/i',$message,$match)?'http_'.$match[1]:match($message){'ERP source unavailable.'=>'source_unavailable','Current ownership endpoint is not configured.'=>'endpoint_missing','ERP URL is missing.'=>'base_url_missing','ERP host not approved.'=>'host_not_approved','ERP DNS unavailable.'=>'dns_unavailable','ERP transport failed.'=>'transport_failed','Invalid ownership API response.'=>'ownership_contract_invalid',default=>str_contains(strtolower($message),'timeout')?'timeout':(str_contains($message,'Invalid')?'invalid_response':'ownership_check_failed')};
+  log_message('error','Customer ERP ownership check failed: operation={operation} source={source_code} page={page} reason_code={reason_code} exception_type={exception_type}.',['operation'=>$operation,'source_code'=>(string)($identity['source_code']??'unknown'),'page'=>(string)$page,'reason_code'=>$reason,'exception_type'=>get_class($error)]);
+ }
  /** Read-only login precheck; stop as soon as any verified identity owns a current property. */
  public function hasCurrent(array $identities,array $unavailable=[]):array
  {
@@ -13,13 +18,13 @@ final class CustomerPortfolio
    if($result['properties'])return ['has_properties'=>true,'unavailable'=>$errors];
    if(!$result['has_more'])break;
    if($page===100)throw new \RuntimeException('Ownership pagination limit reached.');
-  }}catch(\Throwable $e){$errors[]=['erp_source_id'=>(int)$identity['erp_source_id'],'source_name'=>$identity['source_name']??'ERP','source_code'=>$identity['source_code']??'','message'=>'Current properties from this source could not be fully loaded.'];}}
+  }}catch(\Throwable $e){$this->logOwnershipFailure($identity,$e,$page,'login_precheck');$errors[]=['erp_source_id'=>(int)$identity['erp_source_id'],'source_name'=>$identity['source_name']??'ERP','source_code'=>$identity['source_code']??'','message'=>'Current properties from this source could not be fully loaded.'];}}
   return ['has_properties'=>false,'unavailable'=>$errors];
  }
  public function all(array $identities,array $unavailable=[]):array
  {
   $properties=[];$errors=$unavailable;$seen=[];
-  foreach($identities as$identity){try{for($page=1;$page<=100;$page++){$result=$this->page($identity,$page);foreach($result['properties']as$property){$key=$property['erp_source_id'].':'.$property['erp_property_id'];if(!isset($seen[$key])){$properties[]=$property;$seen[$key]=true;}}if(!$result['has_more'])break;if($page===100)throw new \RuntimeException('Ownership pagination limit reached.');}}catch(\Throwable $e){$errors[]=['erp_source_id'=>(int)$identity['erp_source_id'],'source_name'=>$identity['source_name']??'ERP','source_code'=>$identity['source_code']??'','message'=>'Current properties from this source could not be fully loaded.'];}}
+  foreach($identities as$identity){$page=1;try{for(;$page<=100;$page++){$result=$this->page($identity,$page);foreach($result['properties']as$property){$key=$property['erp_source_id'].':'.$property['erp_property_id'];if(!isset($seen[$key])){$properties[]=$property;$seen[$key]=true;}}if(!$result['has_more'])break;if($page===100)throw new \RuntimeException('Ownership pagination limit reached.');}}catch(\Throwable $e){$this->logOwnershipFailure($identity,$e,$page,'portfolio_load');$errors[]=['erp_source_id'=>(int)$identity['erp_source_id'],'source_name'=>$identity['source_name']??'ERP','source_code'=>$identity['source_code']??'','message'=>'Current properties from this source could not be fully loaded.'];}}
   return ['properties'=>$properties,'unavailable'=>$errors];
  }
  public function page(array $identity,int $page,?int $ignoreListing=null,string $purpose='sale'):array
@@ -35,8 +40,9 @@ final class CustomerPortfolio
  }
  private function normalize(array $row,array $identity,?int $ignoreListing=null,string $purpose='sale'):?array
  {
-  $purpose=ListingPolicy::purpose($purpose);$classification=ErpPropertyClassification::fromApi($row);$id=self::id($row['property_id']??null);$head=self::id($row['head_id']??null,true);$sub=self::id($row['subhead_id']??null,true);
+  $purpose=ListingPolicy::purpose($purpose);$classification=ErpPropertyClassification::fromApi($row, (string) ($identity['source_code'] ?? ''));$id=self::id($row['property_id']??null);$head=self::id($row['head_id']??null,true);$sub=self::id($row['subhead_id']??null,true);
   $owners=$row['current_owner_customer_ids']??[$row['current_owner_customer_id']??null];if(!is_array($owners)||!array_is_list($owners))throw new \RuntimeException('Invalid current ownership proof.');$owners=array_map(static fn($id)=>self::id($id),$owners);
+  $explorerSnapshot=ExplorerListingSnapshot::capture($row['explorer_snapshot']??null,(int)$identity['erp_source_id'],$id,$head,$sub);
   if(!in_array((string)$identity['erp_customer_id'],$owners,true)||($row['ownership_status']??null)!=='current'||($row['booking_status']??null)!=='active')return null;
   foreach(['head_smp_active','subhead_smp_active']as$key)if(!array_key_exists($key,$row)||($row[$key]!==null&&!is_string($row[$key])))throw new \RuntimeException('Invalid ERP visibility values.');
   $text=static function($value):string{if($value===null)return '';if(!is_string($value)&&!is_int($value)&&!is_float($value))throw new \RuntimeException('Invalid property description.');return mb_substr((string)$value,0,255);};
@@ -53,6 +59,8 @@ final class CustomerPortfolio
   elseif(!(int)$mapping['head_present']||!(int)$mapping['sub_present']||!ErpVisibility::eligible($mapping['head_flag'],$mapping['sub_flag']))$reason='The synchronized ERP catalog does not currently permit public resale.';
   $baseReason=$reason;$actions=[];$records=$this->db->table('portal_listings')->select('id,portal_customer_id,status,review_state,listing_purpose,active_erp_property')->where('erp_source_id',$identity['erp_source_id'])->where('erp_property_id',$id)->get()->getResultArray();
   foreach(['sale','rent']as$actionPurpose){$actionReason=$baseReason;$existing=null;
+   $rentClassification=array_merge($classification,['project_slug'=>$mapping['project_slug']??null,'erp_code'=>(string)($identity['source_code']??''),'explorer_snapshot'=>$explorerSnapshot]);
+   if($actionPurpose==='rent'&&!ErpPropertyClassification::rentEligible($rentClassification))$actionReason=ErpPropertyClassification::RENT_HOUSE_ONLY;
    foreach($records as$record){if($record['listing_purpose']!==$actionPurpose)continue;
     if($record['status']==='unlisted'&&$record['portal_customer_id']!==null)$actionReason='This purpose has an admin-unpublished listing. Contact support before relisting.';
     if($record['active_erp_property']===ListingPolicy::key((int)$identity['erp_source_id'],$id,$actionPurpose)&&(int)$record['id']!==$ignoreListing){$existing=$record;$actionReason='This property already has a current '.($actionPurpose==='rent'?'Rent':'Sale').' listing.';}
@@ -61,7 +69,7 @@ final class CustomerPortfolio
    $actions[$actionPurpose]=['eligible'=>$actionReason==='','reason'=>$actionReason,'listing_id'=>$own?(int)$existing['id']:null,'status'=>$existing['status']??null,'review_state'=>$existing['review_state']??null];
   }
   $reason=$actions[$purpose]['reason'];$existing=$actions[$purpose];
-  return ['erp_source_id'=>(int)$identity['erp_source_id'],'erp_customer_id'=>(string)$identity['erp_customer_id'],'erp_property_id'=>$id,'erp_head_id'=>$head,'erp_subhead_id'=>$sub,'mapping_id'=>$mapping?(int)$mapping['id']:null,'project_slug'=>$mapping['project_slug']??null,'project'=>$mapping['name']??$text($row['head_name']??'ERP property'),'erp'=>$identity['source_name']??'ERP','erp_code'=>$identity['source_code']??'','head'=>$text($row['head_name']??''),'subhead'=>$text($row['subhead_name']??''),'plot'=>$text($row['unit_number']??$id),'floor'=>$text($row['floor']??''),'floor_title'=>$text($row['floor_title']??''),'floor_category'=>$text($row['floor_category']??''),'booking'=>$text($row['booking_id']??''),'block'=>$text($row['block']??''),'sector'=>$text($row['sector']??''),'type'=>$classification['type'],'inventory_property_type'=>$classification['inventory_property_type'],'maintenance_status'=>$classification['maintenance_status'],'classification_status'=>$classification['classification_status'],'construction_status'=>$classification['construction_status'],'listing_purpose'=>$purpose,'size'=>$text($row['size']??''),'location'=>$text($row['location']??''),'ownership'=>$processing==='no'?'Verified':'Current booking','booking_status'=>'active','booking_in_process'=>$processing,'booking_processing_status'=>$processingLabel,'sale_type'=>$text($row['sale_type']??''),'erp_booking_status'=>$text($row['erp_booking_status']??'active'),'last_updated'=>$text($row['updated_at']??''),'original_agency'=>$text($row['original_agent_agency']??''),'eligible'=>$reason==='','reason'=>$reason,'listing_actions'=>$actions,'listing_status'=>$existing['status']??null,'image'=>'gc-villas.webp'];
+  return ['explorer_snapshot'=>$explorerSnapshot,'erp_source_id'=>(int)$identity['erp_source_id'],'erp_customer_id'=>(string)$identity['erp_customer_id'],'erp_property_id'=>$id,'erp_head_id'=>$head,'erp_subhead_id'=>$sub,'mapping_id'=>$mapping?(int)$mapping['id']:null,'project_slug'=>$mapping['project_slug']??null,'project'=>$mapping['name']??$text($row['head_name']??'ERP property'),'erp'=>$identity['source_name']??'ERP','erp_code'=>$identity['source_code']??'','head'=>$text($row['head_name']??''),'subhead'=>$text($row['subhead_name']??''),'plot'=>$text($row['unit_number']??$id),'floor'=>$text($row['floor']??''),'floor_title'=>$text($row['floor_title']??''),'floor_category'=>$text($row['floor_category']??''),'booking'=>$text($row['booking_id']??''),'block'=>$text($row['block']??''),'sector'=>$text($row['sector']??''),'type'=>$classification['type'],'inventory_property_type'=>$classification['inventory_property_type'],'maintenance_status'=>$classification['maintenance_status'],'classification_status'=>$classification['classification_status'],'construction_status'=>$classification['construction_status'],'listing_purpose'=>$purpose,'size'=>$text($row['size']??''),'location'=>$text($row['location']??''),'ownership'=>$processing==='no'?'Verified':'Current booking','booking_status'=>'active','booking_in_process'=>$processing,'booking_processing_status'=>$processingLabel,'sale_type'=>$text($row['sale_type']??''),'erp_booking_status'=>$text($row['erp_booking_status']??'active'),'last_updated'=>$text($row['updated_at']??''),'original_agency'=>$text($row['original_agent_agency']??''),'eligible'=>$reason==='','reason'=>$reason,'listing_actions'=>$actions,'listing_status'=>$existing['status']??null,'image'=>'gc-villas.webp'];
  }
  public function find(array $identities,int $source,string $customer,string $property,?int $ignoreListing=null,string $purpose='sale'):?array
  {

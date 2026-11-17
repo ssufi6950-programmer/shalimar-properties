@@ -23,7 +23,7 @@ final class CustomerListingReadModel
         $perPage=in_array((int)($input['per_page']??10),[10,20,50],true)?(int)($input['per_page']??10):10;
         $builder=$this->db->table('portal_listings l')->join('erp_sources s','s.id=l.erp_source_id','left')->join('portal_projects p','p.slug=l.project_slug','left')->where('l.portal_customer_id',$customer);
         if($history)$builder->where('NOT ('.ListingPolicy::publicSql().')',null,false);
-        else $builder->where('l.status !=','sold')->where('l.deal !=','sold');
+        else $builder->where('l.status !=','sold')->where('l.deal !=','sold')->where(AdminListingDeletion::retainedSql(),null,false);
         if($q!=='')$builder->groupStart()->like('l.payload',$q)->orLike('p.name',$q)->orLike('s.name',$q)->orLike('l.id',$q)->groupEnd();
         if($status==='active')$builder->where(ListingPolicy::publicSql(),null,false);
         elseif($status==='sold')$builder->groupStart()->where('l.status','sold')->orWhere('l.deal','sold')->groupEnd();

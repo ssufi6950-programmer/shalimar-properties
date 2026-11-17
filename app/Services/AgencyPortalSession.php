@@ -89,7 +89,7 @@ final class AgencyPortalSession
         $row = $this->db->table('agency_portal_accounts a')->select('a.*,g.agency_name,g.portal_active,g.agency_type,g.is_shalimar_agency')
             ->join('authorized_agencies g', 'g.id=a.portal_agency_id')->where('a.id', $id)->get()->getRowArray();
         $now = $this->now();
-        if (!$row || (int)$row['enabled'] !== 1 || (int)$row['portal_active'] !== 1 || $row['agency_type'] !== 'external' || (int)$row['is_shalimar_agency'] !== 0
+        if (!$row || (int)$row['enabled'] !== 1 || (int)$row['portal_active'] !== 1
             || (int)$row['auth_version'] !== (int)$session->get('agency_portal_auth_version')
             || (int)$session->get('agency_portal_authenticated_at') <= time() - self::MAXIMUM_LIFETIME
             || (int)$session->get('agency_portal_last_activity') <= time() - self::IDLE_TIMEOUT

@@ -10,10 +10,21 @@ class AdminPermission implements FilterInterface
     public static function permissionFor(string $path,string $method): ?string
     {
         $path=trim($path,'/');
+        if($path==='admin/dealer-credential-activity'&&$method==='GET')return 'audit_logs.view';
+        if($method==='GET'&&preg_match('~^admin/dealer-logins/\d+(?:/login)?$~D',$path))return 'agencies.edit';
+        if($method==='POST'&&preg_match('~^admin/dealer-logins/\d+/login/(create|username|reset|enable|disable|revoke)$~D',$path,$credential))return $credential[1]==='revoke'?'agencies.deactivate':'agencies.edit';
         if(in_array($path,['admin/logout','admin/profile','admin/change-password'],true))return '';
         if(in_array($path,['admin','admin/dashboard'],true))return 'dashboard.view';
+        if ($path === 'admin/property-explorer') return match ($method) { 'GET' => 'projects.view', 'POST' => 'projects.edit', default => null };
+        if ($path === 'admin/property-explorer/fetch' && $method === 'POST') return 'projects.edit';
+        if ($method === 'GET' && in_array($path, ['admin/workspace/projects', 'admin/workspace/project-form'], true)) return 'projects.view';
+        if ($method === 'POST' && in_array($path, ['admin/project-editor/save', 'admin/project-editor/images'], true)) return 'projects.view';
+        if ($method === 'GET' && preg_match('~^admin/project-editor/images/[a-f0-9]{64}$~D', $path)) return 'projects.view';
         if($method==='GET'&&preg_match('~^admin/listings(?:/\d+/(?:review|photos/(?:legacy-)?[a-f0-9]{64}))?$~',$path))return 'resale_listings.view';
+        if($method==='POST'&&preg_match('~^admin/listings/\d+/property-type/(?:preview|refresh)$~D',$path))return 'resale_listings.edit';
         if($method==='POST'&&preg_match('~^admin/listings/\d+/(approve|reject|changes|verify|photos|photo-set)$~',$path,$review))return in_array($review[1],['approve','verify'],true)?'resale_listings.approve':(in_array($review[1],['reject','changes'],true)?'resale_listings.reject':'resale_listings.edit');
+        if($method==='POST'&&preg_match('~^admin/listings/\d+/assignment-sms/retry$~',$path))return 'resale_listings.approve';
+        if(in_array($method,['GET','POST'],true)&&preg_match('~^admin/listings/\d+/delete$~',$path))return 'resale_listings.deactivate';
         if($method==='GET'&&preg_match('~^admin/(customers|properties|resale)(?:/\d+)?$~',$path,$records))return ['customers'=>'customers.view','properties'=>'properties.view','resale'=>'resale_listings.view'][$records[1]];
         if($method==='POST'&&preg_match('~^admin/resale/\d+/unpublish$~',$path))return 'resale_listings.deactivate';
         if(preg_match('~^admin/workspace/([a-z-]+)$~',$path,$m))return \Config\AdminSecurity::TABS[$m[1]]??null;
@@ -28,6 +39,8 @@ class AdminPermission implements FilterInterface
         }
         if($method==='GET'&&preg_match('~^admin/(?:agencies(?:/\d+)?|agency-links/\d+)$~',$path))return 'agencies.view';
         if($method==='GET'&&preg_match('~^admin/agents(?:/\d+)?$~',$path))return 'agents.view';
+        if(in_array($method,['GET','POST'],true)&&preg_match('~^admin/(?:agents/\d+/links|agent-links/\d+/map)$~',$path))return 'agents.edit';
+        if(in_array($method,['GET','POST'],true)&&preg_match('~^admin/agents/\d+/delete$~',$path))return 'agents.deactivate';
         if($method==='POST'){
             if($path==='admin/agents/sync')return 'erp_sync.run';
             if($path==='admin/agents/configuration')return 'erp_sync.manage_settings';
@@ -36,7 +49,10 @@ class AdminPermission implements FilterInterface
             if(preg_match('~^admin/agents/listings/\d+/review$~',$path))return 'resale_listings.edit';
         }
         if($method==='POST') {
+            if(preg_match('~^admin/agencies/dealer-batches/(start|step|status|retry)$~D',$path))return 'agencies.edit';
+            if($path==='admin/agencies/sync-images')return 'erp_sync.run';
             if(in_array($path,['admin/agency-links/bulk-review','admin/agency-links/bulk-map'],true))return 'agencies.edit';
+            if(preg_match('~^admin/agencies/\d+/dealers/sync$~D',$path))return 'agencies.edit';
             if(preg_match('~^admin/agencies/sync(?:/\d+)?$~',$path))return 'erp_sync.run';
             if(preg_match('~^admin/agencies/\d+/status$~',$path))return 'agencies.deactivate';
             if(preg_match('~^admin/agencies/\d+/portal-access(?:/(?:reset|status))?$~',$path))return 'agencies.edit';
@@ -59,6 +75,7 @@ class AdminPermission implements FilterInterface
             if($module==='users'&&preg_match('~^\d+/status$~',$tail))return 'users.deactivate';
             if($module==='roles'&&preg_match('~^\d+/delete$~',$tail))return 'roles.delete';
         }
+        if($path==='admin/customer-identity-check'&&in_array($method,['GET','POST'],true))return 'customers.edit';
         if($path==='admin/audit-logs')return 'audit_logs.view';
         if($path==='admin/audit-logs/export')return 'audit_logs.export';
         if($path==='admin/classic')return ''; // Controller checks every legacy tab and action.

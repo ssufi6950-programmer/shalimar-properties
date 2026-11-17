@@ -1,0 +1,9 @@
+<?= $this->extend('dealer/layout') ?><?= $this->section('content') ?>
+<section class="dealer-auth card p-4"><h1 class="h3"><?= esc($pageTitle) ?></h1>
+<?php if($error): ?><div class="alert alert-danger" role="alert"><?= esc($error) ?></div><?php endif ?>
+<?php if($mode==='password'): ?><p>Use a new password with uppercase, lowercase, a number and a symbol. Temporary passwords must be changed before viewing properties.</p><?php endif ?>
+<form method="post" action="<?= site_url($mode==='login'?'dealer/login':'dealer/change-password') ?>"><?= csrf_field() ?>
+<?php if($mode==='login'): ?><label class="form-label" for="dealerUser">Username</label><input class="form-control mb-3" id="dealerUser" name="username" autocomplete="username" maxlength="100" required><?php endif ?>
+<label class="form-label" for="dealerPass"><?= $mode==='login'?'Password':'Current password' ?></label><input type="password" class="form-control mb-3" id="dealerPass" name="<?= $mode==='login'?'password':'current_password' ?>" autocomplete="current-password" required maxlength="4096">
+<?php if($mode==='password'): ?><label class="form-label" for="newDealerPass">New password</label><input type="password" class="form-control mb-3" id="newDealerPass" name="password" autocomplete="new-password" minlength="12" maxlength="72" required><label class="form-label" for="confirmDealerPass">Confirm password</label><input type="password" class="form-control mb-3" id="confirmDealerPass" name="confirmation" autocomplete="new-password" minlength="12" maxlength="72" required><?php endif ?>
+<button class="btn btn-primary w-100"><?= $mode==='login'?'Sign in':'Change password' ?></button></form><p class="small text-muted mt-3 mb-0">For login creation or an expired password, contact your agency.</p></section><?= $this->endSection() ?>

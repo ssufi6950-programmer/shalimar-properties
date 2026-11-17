@@ -20,7 +20,6 @@
         <a href="rent.php">Apartments for rent</a>
         <a href="projects.php">New projects</a>
         <a href="wanted.php">Wanted ads</a>
-        <a href="registry-calculator.php">Registry calculator</a>
       </div>
       <div class="f-col">
         <h5>For owners</h5>

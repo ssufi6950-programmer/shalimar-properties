@@ -81,23 +81,35 @@ if(portfolio){
   return '<details class="app-action-reasons"><summary>Listing information</summary>'+items.map(reason=>'<p>'+escape(reason)+'</p>').join('')+'</details>';
  }
  function canList(p){return p.listing_actions?Object.values(p.listing_actions).some(a=>a.eligible):p.eligible;}
+ function propertyTitle(property) {
+  const number = String(property.plot ?? '').trim();
+  let floor = String(property.floor ?? '').trim();
+
+  if (!floor) {
+   const title = String(property.floor_title ?? '').trim();
+   const category = String(property.floor_category ?? '').trim();
+   floor = title + (title && category ? ' (' + category.charAt(0).toUpperCase() + category.slice(1) + ')' : '');
+  }
+
+  return [number, floor].filter(Boolean).join(' · ');
+ }
  function selectionRow(p){
   const action=p.listing_actions?.[listingPurpose]||{eligible:listingPurpose==='sale'&&p.eligible,reason:p.reason},type=typeof p.type==='string'&&p.type.trim()?p.type:'Property';
   const button=action.listing_id?'<a class="btn btn-outline btn-sm" data-picker-existing href="'+escape(config.routes.resaleBase+'/'+action.listing_id)+'">View Listing</a>':action.eligible?'<button type="button" class="btn btn-primary btn-sm" data-picker-select data-listing-purpose="'+listingPurpose+'" data-resale-ref="'+escape(p.id)+'">Select</button>':'<button type="button" class="btn btn-outline btn-sm" disabled>Select</button>';
-  return '<li class="app-property-choice" data-property-choice><div><h3>'+escape(friendly(p.plot))+'</h3><p><span data-property-type>'+escape(friendly(type))+'</span>'+(p.size?' &middot; <span data-property-size>'+escape(p.size)+'</span>':'')+'</p><p class="app-choice-project">'+escape(friendly(p.project))+'</p></div><div class="app-choice-action">'+button+'</div>'+(!action.eligible&&!action.listing_id?'<p class="app-choice-reason">'+escape(friendly(action.reason||'Listing is not available for this property.'))+'</p>':'')+'<p class="form-error" data-resale-error hidden role="alert"></p></li>';
+  return '<li class="app-property-choice" data-property-choice><div><h3>'+escape(friendly(propertyTitle(p)))+'</h3><p><span data-property-type>'+escape(friendly(type))+'</span>'+(p.size?' &middot; <span data-property-size>'+escape(p.size)+'</span>':'')+'</p><p class="app-choice-project">'+escape(friendly(p.project))+'</p></div><div class="app-choice-action">'+button+'</div>'+(!action.eligible&&!action.listing_id?'<p class="app-choice-reason">'+escape(friendly(action.reason||'Listing is not available for this property.'))+'</p>':'')+'<p class="form-error" data-resale-error hidden role="alert"></p></li>';
  }
  function row(p,index){
   const details=escape(config.routes.property+'/'+p.id);
   const state=p.booking_processing_status||'Current booking',type=typeof p.type==='string'&&p.type.trim()&&!['not provided','not recorded','unavailable','unknown'].includes(p.type.trim().toLowerCase())?p.type:'Property';
   return `<tr role="row" data-property-row ${listingPurpose?'data-property-picker-row':''}>
    <td role="cell" data-label="#" class="app-record-index">${index}</td>
-   <th role="rowheader" scope="row" data-label="Property / Plot" class="app-record-title"><a class="app-table-title" href="${details}">${escape(friendly(p.plot))}</a><small>${escape([p.floor,p.booking?'Booking '+p.booking:''].filter(Boolean).join(' / '))}</small></th>
+   <th role="rowheader" scope="row" data-label="Property / Plot" class="app-record-title"><a class="app-table-title" href="${details}">${escape(friendly(propertyTitle(p)))}</a><small>${escape(p.booking?'Booking '+p.booking:'')}</small></th>
    <td role="cell" data-label="Project">${escape(friendly(p.project))}<small class="d-block text-muted">${escape(friendly(p.subhead))}</small></td>
    <td role="cell" data-label="Type / Size"><span data-property-type>${escape(friendly(type))}</span><small class="d-block text-muted ${p.size?'':'app-property-size-missing'}" data-property-size>${escape(p.size||'Not provided')}</small></td>
    <td role="cell" data-label="Construction Status"><span class="app-status ${p.construction_status==='Constructed'?'app-status-green':p.construction_status==='Under Construction'?'app-status-amber':'app-status-neutral'}">${escape(p.construction_status||'Not recorded')}</span></td>
    <td role="cell" data-label="Portfolio"><span class="app-source-tag">${escape(friendly(p.erp))}</span></td>
    <td role="cell" data-label="Current Status" class="app-record-status"><span class="app-status ${canList(p)?'app-status-green':'app-status-neutral'}">${escape(state)}</span><small class="d-block text-muted mt-2">${escape(canList(p)?'Listing options available':friendly(p.reason))}</small></td>
-   <td role="cell" data-label="Actions" class="app-record-actions"><div class="app-record-action-content"><div class="app-row-actions"><a class="btn btn-outline btn-sm app-property-detail-action" href="${details}" aria-label="View details for ${escape(friendly(p.plot))}">View Details <i class="bi bi-arrow-up-right"></i></a>${purposeAction(p,'sale')}${purposeAction(p,'rent')}</div>${actionReasons(p)}</div><p class="form-error mt-2" data-resale-error hidden role="alert"></p></td>
+   <td role="cell" data-label="Actions" class="app-record-actions"><div class="app-record-action-content"><div class="app-row-actions"><a class="btn btn-outline btn-sm app-property-detail-action" href="${details}" aria-label="View details for ${escape(friendly(propertyTitle(p)))}">View Details <i class="bi bi-arrow-up-right"></i></a>${purposeAction(p,'sale')}${purposeAction(p,'rent')}</div>${actionReasons(p)}</div><p class="form-error mt-2" data-resale-error hidden role="alert"></p></td>
   </tr>`;
  }
  function options(selector,values){const select=$(selector);if(!select)return;const current=select.value;while(select.options.length>1)select.remove(1);[...new Set(values)].filter(Boolean).sort().forEach(value=>{const option=document.createElement('option');option.value=value;option.textContent=friendly(value);select.append(option);});select.value=current;}
@@ -112,7 +124,7 @@ if(portfolio){
  compactViewport?.addEventListener?.('change',()=>{if(body)render();});
  function render(){
   const q=($('#propertySearch')?.value||'').toLowerCase(),project=$('#projectFilter')?.value||'',eligibility=$('#eligibilityFilter')?.value||'';
-  const rows=properties.filter(p=>(!q||[p.project,p.head,p.subhead,p.plot,p.floor,p.booking].join(' ').toLowerCase().includes(q))&&(!project||p.project===project)&&(!eligibility||(eligibility==='eligible'?canList(p):!canList(p))));
+  const rows=properties.filter(p=>(!q||[p.project,p.head,p.subhead,propertyTitle(p),p.booking].join(' ').toLowerCase().includes(q))&&(!project||p.project===project)&&(!eligibility||(eligibility==='eligible'?canList(p):!canList(p))));
   const size=pageSize(),pages=Math.max(1,Math.ceil(rows.length/size));currentPage=Math.max(1,Math.min(currentPage,pages));const offset=(currentPage-1)*size;
   const loading=sourceStates.some(s=>s.state==='loading'),incomplete=sourceStates.some(s=>s.state!=='done');
   if(body){

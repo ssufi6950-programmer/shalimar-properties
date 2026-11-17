@@ -12,6 +12,7 @@ final class Listings extends BaseController
         $agency = service('agencyPortalSession')->user();
         if (!$agency) return redirect()->to(url_to('agency.login'));
         $data = service('agencyPortalListings')->search((int)$agency['portal_agency_id'], $this->request->getGet());
+        $data['dealerAssignments']=(new \App\Services\AgencyDealerAssignments(db_connect()))->effective((int)$agency['portal_agency_id'],array_column($data['rows'],'id'));
         return view('agency/listings/index', [
             'pageTitle' => 'My Active Listings', 'agency' => $agency, 'activeNav' => 'listings',
         ] + $data);

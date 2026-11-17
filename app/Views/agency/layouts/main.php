@@ -11,6 +11,7 @@
 <link rel="stylesheet" href="<?= base_url('assets/customer/css/customer.css') ?>">
 <link rel="stylesheet" href="<?= base_url('assets/customer/css/customer-app.css') ?>?v=<?= filemtime(FCPATH.'assets/customer/css/customer-app.css') ?>">
 <link rel="stylesheet" href="<?= base_url('assets/agency/css/agency-portal.css') ?>?v=<?= filemtime(FCPATH.'assets/agency/css/agency-portal.css') ?>">
+<style>@media(max-width:767px){.agency-app .agency-bottom-nav{grid-template-columns:repeat(4,minmax(0,1fr))}}</style>
 <?= $this->renderSection('head') ?>
 </head>
 <?php $activeNav=$activeNav??''; ?>
@@ -18,13 +19,13 @@
 <a class="skip-link" href="#agency-main">Skip to content</a>
 <?php if(empty($authPage)): ?>
 <header class="agency-header"><div class="agency-header-inner">
-<a class="agency-brand" href="<?= site_url('agency/dashboard') ?>"><img src="<?= base_url('assets/customer/images/sp-logo.svg') ?>" alt="Shalimar Properties"><span>AUTHORIZED AGENCY PORTAL</span></a>
-<nav class="agency-desktop-nav" aria-label="Agency navigation"><a href="<?= site_url('agency/dashboard') ?>" class="<?= $activeNav==='dashboard'?'active':'' ?>">Dashboard</a><a href="<?= site_url('agency/listings') ?>" class="<?= $activeNav==='listings'?'active':'' ?>">My Active Listings</a></nav>
+<a class="agency-brand" href="<?= site_url('agency/dashboard') ?>"><img src="<?= base_url('assets/customer/images/sp-logo.svg') ?>" alt="Shalimar Properties"><span><?= ($agency['agency_type']??'external')==='internal'?'SHALIMAR AGENCY PORTAL':'AUTHORIZED AGENCY PORTAL' ?></span></a>
+<nav class="agency-desktop-nav" aria-label="Agency navigation"><a href="<?= site_url('agency/dashboard') ?>" class="<?= $activeNav==='dashboard'?'active':'' ?>">Dashboard</a><a href="<?= site_url('agency/listings') ?>" class="<?= $activeNav==='listings'?'active':'' ?>">My Active Listings</a><a href="<?= site_url('agency/dealers') ?>" class="<?= $activeNav==='dealers'?'active':'' ?>">My Dealers</a></nav>
 <div class="agency-account"><span class="agency-name"><?= esc($agency['agency_name']) ?></span><a href="<?= site_url('agency/change-password') ?>">Change Password</a><form method="post" action="<?= site_url('agency/logout') ?>"><?= csrf_field() ?><button type="submit">Log out</button></form></div>
 </div></header>
 <?php endif ?>
 <?= $this->renderSection('content') ?>
-<?php if(empty($authPage)): ?><nav class="agency-bottom-nav" aria-label="Mobile agency navigation"><a class="<?= $activeNav==='dashboard'?'active':'' ?>" href="<?= site_url('agency/dashboard') ?>"><i class="bi bi-grid-1x2"></i><span>Home</span></a><a class="<?= $activeNav==='listings'?'active':'' ?>" href="<?= site_url('agency/listings') ?>"><i class="bi bi-list-ul"></i><span>Listings</span></a><a href="<?= site_url('agency/change-password') ?>"><i class="bi bi-person-gear"></i><span>Account</span></a></nav><footer class="agency-footer">© <?= date('Y') ?> Shalimar Properties · Agency Portal</footer><?php endif ?>
+<?php if(empty($authPage)): ?><nav class="agency-bottom-nav" aria-label="Mobile agency navigation"><a class="<?= $activeNav==='dashboard'?'active':'' ?>" href="<?= site_url('agency/dashboard') ?>"><i class="bi bi-grid-1x2"></i><span>Home</span></a><a class="<?= $activeNav==='listings'?'active':'' ?>" href="<?= site_url('agency/listings') ?>"><i class="bi bi-list-ul"></i><span>Listings</span></a><a class="<?= $activeNav==='dealers'?'active':'' ?>" href="<?= site_url('agency/dealers') ?>"><i class="bi bi-people"></i><span>My Dealers</span></a><a href="<?= site_url('agency/change-password') ?>"><i class="bi bi-person-gear"></i><span>Account</span></a></nav><footer class="agency-footer">© <?= date('Y') ?> Shalimar Properties · Agency Portal</footer><?php endif ?>
 <script src="<?= base_url('assets/customer/vendor/bootstrap.bundle.min.js') ?>"></script>
 <?= $this->renderSection('scripts') ?>
 </body></html>

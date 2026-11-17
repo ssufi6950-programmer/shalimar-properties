@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Property Explorer - Static Demo | Shalimar Properties</title>
+<meta name="description" content="A static sample property explorer. Not real property inventory.">
+<meta name="theme-color" content="#0E4B31">
+<meta name="robots" content="noindex,nofollow"><link rel="icon" href="assets/images/logos/favicon.ico?v=8" sizes="any">
+<link rel="icon" href="assets/images/logos/favicon.svg?v=8" type="image/svg+xml">
+<link rel="icon" href="assets/images/logos/favicon-32.png?v=8" sizes="32x32" type="image/png">
+<link rel="icon" href="assets/images/logos/favicon-16.png?v=8" sizes="16x16" type="image/png">
+<link rel="apple-touch-icon" href="assets/images/logos/apple-touch-icon.png?v=8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="assets/css/site.css?v=1794413133">
+<link rel="stylesheet" href="assets/css/design.css?v=9">
+<link rel="stylesheet" href="assets/css/subprojects.css?v=4">
+<link rel="stylesheet" href="assets/css/public-listings.css?v=1794411257">
+</head>
+<body class="dz dz-5 ">
+<a href="#main" class="sr-only">Skip to content</a>
+
+<header class="hdr" id="hdr">
+  <div class="wrap hdr-in">
+    <a href="index.php" class="brand" aria-label="Shalimar Properties — home">
+      <img class="logo logo-c" src="assets/images/logos/sp-logo.svg?v=7" alt="Shalimar Properties" width="189" height="46">
+      <img class="logo logo-w" src="assets/images/logos/sp-logo-white.svg?v=7" alt="" width="189" height="46">
+    </a>
+
+    <nav class="nav" aria-label="Main">
+              <a href="index.php" class="">Home</a>
+              <a href="buy.php" class="">Buy</a>
+              <a href="rent.php" class="">Rent</a>
+              <a href="projects.php" class="">Projects</a>
+              <a href="insights.php" class="">Market Insights <span class="new">NEW</span></a>
+              <a href="agencies.php" class="">Agencies</a>
+            <div class="nav-more">
+        <button type="button" aria-haspopup="true">More <i class="fa-solid fa-chevron-down"></i></button>
+        <div class="nav-drop">
+                      <a href="blog.php" class=""><i class="fa-solid fa-newspaper"></i>Blog</a>
+                      <a href="events.php" class=""><i class="fa-solid fa-calendar-days"></i>Events</a>
+                      <a href="wanted.php" class=""><i class="fa-solid fa-bullhorn"></i>Wanted</a>
+                  </div>
+      </div>
+    </nav>
+
+    <div class="hdr-act">
+              <a href="../public/customer/login" class="btn btn-ghost btn-sm"><i class="fa-solid fa-user" aria-hidden="true"></i> Customer Portal</a>
+              <a href="../public/agency/login" class="btn btn-ghost btn-sm"><i class="fa-solid fa-briefcase" aria-hidden="true"></i> Agency Portal</a>
+            <a href="post-property.php" class="btn btn-solid btn-sm"><i class="fa-solid fa-plus"></i> Post property</a>
+      <button class="burger" id="burger" aria-label="Open menu" aria-expanded="false" aria-controls="drawer"><span></span><span></span><span></span></button>
+    </div>
+  </div>
+</header>
+
+<div class="drawer" id="drawer" role="dialog" aria-modal="true" aria-label="Menu">
+  <div class="drawer-top">
+    <a href="index.php" class="brand" aria-label="Shalimar Properties — home"><img class="logo" src="assets/images/logos/sp-logo.svg?v=7" alt="Shalimar Properties" width="165" height="40"></a>
+    <button class="drawer-close" id="drawerClose" aria-label="Close menu"><i class="fa-solid fa-xmark"></i></button>
+  </div>
+  <a href="post-property.php" class="btn btn-solid btn-block"><i class="fa-solid fa-plus"></i> Post a property</a>
+  <p class="drawer-label">Portals</p>
+  <nav class="drawer-nav" aria-label="Portals">
+          <a href="../public/customer/login"><span class="d-ico"><i class="fa-solid fa-user" aria-hidden="true"></i></span><span>Customer Portal</span></a>
+          <a href="../public/agency/login"><span class="d-ico"><i class="fa-solid fa-briefcase" aria-hidden="true"></i></span><span>Agency Portal</span></a>
+      </nav>
+  <p class="drawer-label">Explore</p>
+  <nav class="drawer-nav">
+          <a href="index.php" class="">
+        <span class="d-ico"><i class="fa-solid fa-house"></i></span><span>Home</span>
+      </a>
+          <a href="buy.php" class="">
+        <span class="d-ico"><i class="fa-solid fa-key"></i></span><span>Buy</span>
+      </a>
+          <a href="rent.php" class="">
+        <span class="d-ico"><i class="fa-solid fa-building"></i></span><span>Rent</span>
+      </a>
+          <a href="projects.php" class="">
+        <span class="d-ico"><i class="fa-solid fa-city"></i></span><span>Projects</span>
+      </a>
+          <a href="insights.php" class="">
+        <span class="d-ico"><i class="fa-solid fa-chart-line"></i></span><span>Market Insights</span>
+      </a>
+          <a href="agencies.php" class="">
+        <span class="d-ico"><i class="fa-solid fa-briefcase"></i></span><span>Agencies</span>
+      </a>
+          <a href="blog.php" class="">
+        <span class="d-ico"><i class="fa-solid fa-newspaper"></i></span><span>Blog</span>
+      </a>
+          <a href="events.php" class="">
+        <span class="d-ico"><i class="fa-solid fa-calendar-days"></i></span><span>Events</span>
+      </a>
+          <a href="wanted.php" class="">
+        <span class="d-ico"><i class="fa-solid fa-bullhorn"></i></span><span>Wanted</span>
+      </a>
+      </nav>
+  <div class="drawer-contact"><i class="fa-solid fa-headset"></i> Help line: <a href="tel:+9248111222084">UAN +92-48-111-222-084</a></div>
+</div>
+<div class="mobile-menu-overlay" id="drawerOverlay"></div>
+
+<nav class="tabbar" aria-label="App navigation">
+  <a href="index.php" class=""><i class="fa-solid fa-house"></i>Home</a>
+  <a href="buy.php" class=""><i class="fa-solid fa-key"></i>Buy</a>
+  <a href="rent.php" class=""><i class="fa-solid fa-building"></i>Rent</a>
+  <a href="projects.php" class=""><i class="fa-solid fa-city"></i>Projects</a>
+  <button type="button" id="tabMore" class="on" aria-controls="drawer"><i class="fa-solid fa-grip"></i>More</button>
+</nav>
+
+<style>
+    .explorer-demo { max-width: 980px; margin: 0 auto; padding: 22px 16px 38px; }
+    .explorer-demo * { min-width: 0; }
+    .explorer-demo [hidden] { display: none !important; }
+    .explorer-demo h1 { font-size: clamp(23px, 4vw, 32px); margin: 4px 0; }
+    .explorer-demo .intro { font-size: 12px; color: var(--muted); margin-bottom: 14px; }
+    .explorer-demo .demo-label { color: var(--gold); font-size: 10px; font-weight: 700; letter-spacing: .12em; }
+    .explorer-demo .explorer-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+    .explorer-demo .purpose { display: flex; padding: 3px; background: var(--paper-3); border-radius: 24px; }
+    .explorer-demo .purpose button { border: 0; background: transparent; color: var(--ink-soft); border-radius: 20px; padding: 6px 18px; font: inherit; font-size: 12px; cursor: pointer; }
+    .explorer-demo .purpose button[aria-pressed="true"] { background: var(--green); color: white; }
+    .explorer-demo .reset { border: 0; background: none; color: var(--green); font: inherit; font-size: 12px; cursor: pointer; text-decoration: underline; }
+    .explorer-demo .explorer-panel { background: white; border: 1px solid var(--line); border-radius: 14px; padding: 0 12px; }
+    .explorer-demo .step { position: relative; padding: 11px 0; }
+    .explorer-demo .step-toolbar { display: flex; align-items: center; justify-content: space-between; min-height: 25px; margin-bottom: 9px; }
+    .explorer-demo .step-toolbar h2 { margin: 0; }
+    .explorer-demo .breadcrumb { display: flex; flex-wrap: wrap; gap: 3px 6px; margin: 0 0 10px; padding: 0; list-style: none; color: var(--muted); font-size: 10px; line-height: 1.5; }
+    .explorer-demo .breadcrumb li { display: inline; overflow-wrap: anywhere; }
+    .explorer-demo .breadcrumb li + li::before { content: '\203A'; margin-right: 6px; color: var(--gold); }
+    .explorer-demo .breadcrumb [aria-current="step"] { color: var(--green-deep); font-weight: 700; }
+    .explorer-demo h2 { display: flex; align-items: center; gap: 7px; margin: 0 0 9px; font-size: 12px; }
+    .explorer-demo .step-number { color: var(--gold); font-size: 10px; }
+    .explorer-demo .choices { display: grid; grid-template-columns: repeat(var(--choice-count, 5), minmax(0, 1fr)); gap: 4px; max-width: 450px; min-height: 66px; align-content: start; transition: opacity 110ms ease, transform 110ms ease; }
+    .explorer-demo .choice { display: flex; flex-direction: column; align-items: center; gap: 4px; border: 0; padding: 0; background: none; color: var(--ink-soft); font: inherit; cursor: pointer; }
+    .explorer-demo .choice-symbol { width: 36px; height: 36px; display: grid; place-items: center; border: 1px solid #d8e4db; border-radius: 11px; background: var(--green-tint); color: var(--green); font-size: 14px; font-weight: 700; transition: background-color 180ms ease, transform 180ms ease; }
+    .explorer-demo .choice-back .choice-symbol { background: transparent; border-color: var(--green); }
+    .explorer-demo .choice:hover .choice-symbol { transform: translateY(-2px); }
+    .explorer-demo .choice-back:hover .choice-symbol { background: var(--green-tint); }
+    .explorer-demo .choice:active .choice-symbol { transform: scale(.95); }
+    .explorer-demo .choice-name { width: 100%; font-size: 9px; line-height: 1.25; text-align: center; overflow-wrap: anywhere; }
+    .explorer-demo .choice-symbol { font-size: 12px; }
+    .explorer-demo .choice[aria-pressed="true"] .choice-symbol { background: var(--green); color: white; border-color: var(--gold); box-shadow: 0 0 0 2px var(--gold-tint); }
+    .explorer-demo .choice[aria-pressed="true"] .choice-name { color: var(--green-deep); font-weight: 700; }
+    .explorer-demo button:focus-visible { outline: 2px solid var(--gold); outline-offset: 4px; }
+    .explorer-demo .results-heading { margin: 18px 0 10px; font-size: 16px; }
+    .explorer-demo .sample-grid { position: relative; display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; align-content: start; overflow: hidden; transition: height 220ms ease; overflow-anchor: none; }
+    .explorer-demo .sample-property { display: grid; grid-template-columns: 88px minmax(0, 1fr); background: white; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; transition: opacity 220ms ease, transform 220ms cubic-bezier(.2,.7,.2,1); }
+    .explorer-demo .sample-property[data-exiting] { pointer-events: none; }
+    .explorer-demo .sample-grid.is-updating, .explorer-demo .sample-grid.is-updating .sample-property { transition: none; }
+    .explorer-demo .sample-art { min-height: 90px; background: var(--green-tint); display: grid; place-items: center; position: relative; color: var(--green); }
+    .explorer-demo .sample-art > i { font-size: 29px; }
+    .explorer-demo .sample-tag { position: absolute; top: 6px; left: 5px; right: 5px; text-align: center; background: var(--green-deep); color: white; border-radius: 12px; padding: 2px 3px; font-size: 8px; }
+    .explorer-demo .sample-body { padding: 10px; transition: opacity 110ms ease, transform 110ms ease; }
+    .explorer-demo .sample-body h3 { font-size: 12px; margin: 4px 0; }
+    .explorer-demo .sample-body p { font-size: 10px; color: var(--muted); margin: 3px 0; overflow-wrap: anywhere; }
+    .explorer-demo .sample-price { font-size: 14px; color: var(--green-deep); font-weight: 700; }
+    .explorer-demo .empty { font-size: 12px; color: var(--muted); padding: 12px 0; }
+    @media (min-width: 768px) {
+        .explorer-demo { padding-top: 30px; }
+        .explorer-demo .explorer-panel { padding: 0 18px; }
+        .explorer-demo .sample-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        .explorer-demo .sample-property { display: block; }
+        .explorer-demo .sample-tag { right: auto; padding: 2px 7px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+        .explorer-demo .choices, .explorer-demo .sample-grid,
+        .explorer-demo .sample-property, .explorer-demo .sample-body,
+        .explorer-demo .choice-symbol { transition: none !important; }
+        .explorer-demo .choice:hover .choice-symbol, .explorer-demo .choice:active .choice-symbol { transform: none; }
+    }
+</style>
+<main id="main" class="explorer-demo">
+    <span class="demo-label">STATIC DESIGN DEMO</span>
+    <h1>Find your next space.</h1>
+    <p class="intro">Pick a project, sector, property type and size. All properties and prices below are samples.</p>
+    <div class="explorer-bar">
+        <div class="purpose" role="group" aria-label="Buy or rent">
+            <button type="button" data-purpose="buy" aria-pressed="true">Buy</button>
+            <button type="button" data-purpose="rent" aria-pressed="false">Rent</button>
+        </div>
+        <button class="reset" type="button" id="explorerReset">Start over</button>
+    </div>
+    <div class="explorer-panel">
+        <section class="step" aria-labelledby="stepHeading">
+            <nav aria-label="Your property selections"><ol class="breadcrumb" id="explorerBreadcrumb"></ol></nav>
+            <div class="step-toolbar">
+                <h2 id="stepHeading"><span class="step-number">01</span> Projects</h2>
+            </div>
+            <div class="choices" id="explorerChoices" role="group" aria-labelledby="stepHeading"></div>
+        </section>
+    </div>
+    <section id="explorerResults" aria-live="polite" aria-atomic="true" hidden>
+        <h2 class="results-heading" id="resultsHeading">Sample properties</h2>
+        <div class="sample-grid" id="sampleProperties"></div>
+        <p class="empty" id="sampleEmpty" hidden>No sample properties match. Try another selection.</p>
+    </section>
+    <noscript><p class="empty">Enable JavaScript to try the sample selections.</p></noscript>
+</main>
+<script>
+(() => {
+    'use strict';
+    const projects = [
+        { id: 'smart-city', name: 'Smart City', full: 'Shalimar Smart City', icon: 'fa-city', sectors: ['Sector I', 'Sector II', 'Business', 'Golf Avenue', 'Central'] },
+        { id: 'gulberg', name: 'Gulberg City', full: 'Gulberg City', icon: 'fa-tree-city', sectors: ['Residential', 'Villas', 'Liberty', 'Mini Market', 'Apartments'] },
+        { id: 'zalmi', name: 'Zalmi X', full: 'Zalmi X', icon: 'fa-building', sectors: ['Ground', 'First Floor', 'Offices', 'Outlets', 'Executive'] }
+    ];
+    const types = [
+        { id: 'plots', name: 'Plots', icon: 'fa-vector-square' },
+        { id: 'towers', name: 'Towers', icon: 'fa-building' },
+        { id: 'shops', name: 'Shops', icon: 'fa-store' }
+    ];
+    const sizes = ['5M', '7M', '10M', '20M'];
+    const order = ['project', 'sector', 'type', 'size'];
+    const headings = ['Projects', 'Sectors', 'Property type', 'Size'];
+    const state = { step: 0, purpose: 'buy', project: '', sector: '', type: '', size: '' };
+    // Deliberately fictional, in-memory sample inventory. No external data requests.
+    const samples = projects.flatMap((project, projectIndex) => project.sectors.flatMap((sector, sectorIndex) =>
+        types.flatMap((type, typeIndex) => sizes.map((size, sizeIndex) => ({
+            project: project.id, projectName: project.full, sector, type: type.id, typeName: type.name,
+            size, icon: type.icon, reference: 'DEMO-' + (projectIndex + 1) + (sectorIndex + 1) + (typeIndex + 1) + (sizeIndex + 1),
+            sale: [4500000, 6200000, 8500000, 16000000][sizeIndex] + typeIndex * 1200000,
+            rent: [25000, 35000, 50000, 85000][sizeIndex] + typeIndex * 10000
+        }))))
+    );
+    const byId = id => document.getElementById(id);
+    const project = () => projects.find(item => item.id === state.project);
+    const money = amount => 'PKR ' + amount.toLocaleString('en-PK');
+    const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+    const cards = new Map();
+    let rowKey = '', rowTimer, resultTimer, contentTimer, resultFrame, lastPurpose = state.purpose;
+
+    function choices(containerId, options, key) {
+        const row = byId(containerId);
+        const badges = [{ id: 'all', name: 'All', icon: 'fa-border-all' }, ...options];
+        if (state.step > 0) badges.push({ id: 'back', name: 'Back', icon: 'fa-arrow-left', back: true });
+        row.style.setProperty('--choice-count', badges.length);
+        row.replaceChildren(...badges.map(option => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = option.back ? 'choice choice-back' : 'choice';
+            if (option.back) {
+                button.dataset.action = 'back';
+                button.setAttribute('aria-label', 'Back to ' + headings[state.step - 1]);
+            } else {
+                button.dataset.key = key;
+                button.dataset.value = option.id;
+                button.setAttribute('aria-pressed', String(state[key] === option.id));
+            }
+            const symbol = document.createElement('span');
+            symbol.className = 'choice-symbol';
+            if (option.icon) {
+                const icon = document.createElement('i');
+                icon.className = 'fa-solid ' + option.icon;
+                icon.setAttribute('aria-hidden', 'true');
+                symbol.append(icon);
+            } else {
+                symbol.textContent = option.name;
+                symbol.setAttribute('aria-hidden', 'true');
+            }
+            const label = document.createElement('span');
+            label.className = 'choice-name';
+            label.textContent = option.name;
+            button.append(symbol, label);
+            return button;
+        }));
+    }
+
+    function updateChoices(options, key, focus) {
+        clearTimeout(rowTimer);
+        const row = byId('explorerChoices');
+        const replace = () => {
+            choices('explorerChoices', options, key);
+            rowKey = key;
+            row.style.transform = 'translateY(4px)';
+            void row.offsetWidth;
+            row.style.opacity = '1';
+            row.style.transform = 'none';
+            if (focus) (row.querySelector('[aria-pressed="true"]') || row.querySelector('button'))?.focus({ preventScroll: true });
+        };
+        if (!rowKey || rowKey === key || reducedMotion.matches) {
+            replace();
+        } else {
+            row.style.opacity = '0';
+            row.style.transform = 'translateY(-4px)';
+            rowTimer = setTimeout(replace, 110);
+        }
+    }
+
+    function cardFor(item) {
+        if (!cards.has(item.reference)) {
+            const card = document.createElement('article');
+            card.className = 'sample-property';
+            card.dataset.reference = item.reference;
+            // Values are exclusively from the hardcoded sample constants above.
+            card.innerHTML = `<div class="sample-art"><span class="sample-tag"></span><i class="fa-solid ${item.icon}" aria-hidden="true"></i></div><div class="sample-body"><strong class="sample-price"></strong><h3>${item.size} ${item.typeName} · ${item.projectName}</h3><p>${item.sector} · ${item.reference}</p><p>Fictional property · Demo only</p></div>`;
+            cards.set(item.reference, card);
+        }
+        return cards.get(item.reference);
+    }
+
+    function updatePrice(card, item) {
+        card.querySelector('.sample-tag').textContent = 'SAMPLE · ' + (state.purpose === 'buy' ? 'FOR SALE' : 'FOR RENT');
+        card.querySelector('.sample-price').textContent = money(state.purpose === 'buy' ? item.sale : item.rent) + (state.purpose === 'rent' ? ' / mo' : '');
+    }
+
+    function updateResults(matches, ready, before) {
+        clearTimeout(resultTimer);
+        clearTimeout(contentTimer);
+        cancelAnimationFrame(resultFrame);
+        const grid = byId('sampleProperties');
+        const results = byId('explorerResults');
+        const existing = [...grid.children];
+        const wanted = new Set(matches.map(item => item.reference));
+        const purposeChanged = state.purpose !== lastPurpose;
+        lastPurpose = state.purpose;
+        if (ready) results.hidden = false;
+        const origin = grid.getBoundingClientRect();
+        const startHeight = origin.height;
+        grid.classList.add('is-updating');
+
+        existing.forEach(card => {
+            const body = card.querySelector('.sample-body');
+            body.style.opacity = '';
+            body.style.transform = '';
+            card.removeAttribute('style');
+            if (wanted.has(card.dataset.reference)) {
+                delete card.dataset.exiting;
+                card.removeAttribute('aria-hidden');
+            } else {
+                const old = before.get(card);
+                card.dataset.exiting = 'true';
+                card.setAttribute('aria-hidden', 'true');
+                Object.assign(card.style, {
+                    position: 'absolute', left: (old.left - origin.left) + 'px', top: (old.top - origin.top) + 'px',
+                    width: old.width + 'px', height: old.height + 'px', opacity: old.opacity
+                });
+            }
+        });
+
+        grid.style.height = 'auto';
+        matches.forEach(item => {
+            const card = cardFor(item);
+            const old = before.get(card);
+            grid.append(card);
+            delete card.dataset.exiting;
+            card.removeAttribute('aria-hidden');
+            card.removeAttribute('style');
+            if (!purposeChanged || !old || reducedMotion.matches) updatePrice(card, item);
+        });
+        // Measure the final grid first, then animate from its current height/positions.
+        const targetHeight = grid.getBoundingClientRect().height;
+        const destinations = new Map(matches.map(item => {
+            const card = cardFor(item);
+            return [card, card.getBoundingClientRect()];
+        }));
+        matches.forEach(item => {
+            const card = cardFor(item);
+            const old = before.get(card);
+            const next = destinations.get(card);
+            card.style.transform = old ? `translate(${old.left - next.left}px, ${old.top - next.top}px)` : 'translateY(7px)';
+            card.style.opacity = old ? old.opacity : '0';
+        });
+        grid.style.height = startHeight + 'px';
+        const finish = () => {
+            [...grid.children].forEach(card => {
+                if (!wanted.has(card.dataset.reference)) card.remove();
+                else card.removeAttribute('style');
+            });
+            grid.style.height = '';
+            grid.classList.remove('is-updating');
+            results.hidden = !ready;
+        };
+        if (reducedMotion.matches) {
+            matches.forEach(item => updatePrice(cardFor(item), item));
+            finish();
+            return;
+        }
+        void grid.offsetWidth;
+        grid.classList.remove('is-updating');
+        resultFrame = requestAnimationFrame(() => {
+            grid.style.height = targetHeight + 'px';
+            [...grid.children].forEach(card => {
+                card.style.opacity = card.dataset.exiting ? '0' : '1';
+                card.style.transform = card.dataset.exiting ? 'translateY(-6px)' : 'none';
+            });
+            if (purposeChanged) {
+                matches.forEach(item => {
+                    const body = cardFor(item).querySelector('.sample-body');
+                    body.style.opacity = '0';
+                    body.style.transform = 'translateY(3px)';
+                });
+                contentTimer = setTimeout(() => matches.forEach(item => {
+                    const card = cardFor(item);
+                    updatePrice(card, item);
+                    card.querySelector('.sample-body').style.opacity = '';
+                    card.querySelector('.sample-body').style.transform = '';
+                }), 110);
+            }
+            resultTimer = setTimeout(finish, 230);
+        });
+    }
+
+    function render(focus = false) {
+        const before = new Map([...byId('sampleProperties').children].map(card => [card, {
+            ...card.getBoundingClientRect().toJSON(), opacity: getComputedStyle(card).opacity
+        }]));
+        const options = [
+            projects,
+            (project()?.sectors || []).map((name, index) => ({ id: name, name, icon: ['fa-location-dot', 'fa-road', 'fa-briefcase', 'fa-leaf', 'fa-map-pin'][index] })),
+            types,
+            sizes.map(name => ({ id: name, name }))
+        ];
+        updateChoices(options[state.step], order[state.step], focus);
+        byId('stepHeading').innerHTML = `<span class="step-number">0${state.step + 1}</span> ${headings[state.step]}`;
+        const selected = [project()?.name, state.sector, types.find(item => item.id === state.type)?.name, state.size];
+        byId('explorerBreadcrumb').replaceChildren(...['Project', 'Sector', 'Type', 'Size'].map((label, index) => {
+            const item = document.createElement('li');
+            const value = state[order[index]] === 'all' ? 'All' : selected[index];
+            item.textContent = value ? `${label}: ${value}` : label;
+            if (index === state.step) item.setAttribute('aria-current', 'step');
+            return item;
+        }));
+        document.querySelectorAll('[data-purpose]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.purpose === state.purpose)));
+        const ready = Boolean(state.project);
+        const matches = ready ? samples.filter(item => order.every(key =>
+            !state[key] || state[key] === 'all' || item[key] === state[key])) : [];
+        byId('resultsHeading').textContent = matches.length + ' sample ' + (state.purpose === 'buy' ? 'properties for sale' : 'rentals');
+        byId('sampleEmpty').hidden = matches.length > 0;
+        updateResults(matches, ready, before);
+    }
+
+    document.querySelector('.explorer-demo').addEventListener('click', event => {
+        const button = event.target.closest('button');
+        if (!button) return;
+        if (button.id === 'explorerReset') {
+            Object.assign(state, { step: 0, project: '', sector: '', type: '', size: '' });
+        } else if (button.dataset.action === 'back') {
+            state.step = Math.max(0, state.step - 1);
+            order.slice(state.step + 1).forEach(key => state[key] = '');
+        } else if (button.dataset.purpose) {
+            state.purpose = button.dataset.purpose;
+        } else if (button.dataset.key) {
+            const key = button.dataset.key;
+            if (state[key] !== button.dataset.value) {
+                state[key] = button.dataset.value;
+                order.slice(order.indexOf(key) + 1).forEach(next => state[next] = '');
+            }
+            state.step = Math.min(3, order.indexOf(key) + 1);
+        } else {
+            return;
+        }
+        render(!button.dataset.purpose);
+    });
+    reducedMotion.addEventListener('change', () => render());
+    render();
+})();
+</script>
+<footer>
+  <div class="wrap">
+    <div class="f-grid">
+      <div>
+        <a href="index.php" class="f-logo" aria-label="Shalimar Properties — home"><img src="assets/images/logos/sp-logo-white.svg?v=7" alt="Shalimar Properties" width="222" height="54"></a>
+        <p>The official property portal of Shalimar Group — verified plots, homes, rentals and project units, posted only by owners and authorized realtors.</p>
+        <div class="f-proj">
+                      <a href="projects.php#shalimar-smart-city" title="Shalimar Smart City"><span class="plogo-mono" style="width:26px;height:26px;font-size:11px">SSC</span></a>
+                      <a href="projects.php#gulberg-city" title="Gulberg City"><span class="plogo-mono" style="width:26px;height:26px;font-size:11px">GC</span></a>
+                      <a href="projects.php#zalmi-x" title="Zalmi X"><span class="plogo-mono" style="width:26px;height:26px;font-size:11px">ZX</span></a>
+                  </div>
+        <div class="f-subp"></div>
+        <div class="socials">
+          <a href="tel:+9248111222084" aria-label="Call us"><i class="fa-solid fa-phone"></i></a>
+          <a href="mailto:info@shalimarco.com" aria-label="Email us"><i class="fa-solid fa-envelope"></i></a>
+        </div>
+      </div>
+      <div class="f-col">
+        <h5>Browse</h5>
+        <a href="buy.php">Plots &amp; homes for sale</a>
+        <a href="rent.php">Homes for rent</a>
+        <a href="projects.php">Shalimar projects</a>
+        <a href="insights.php">Market insights</a>
+        <a href="wanted.php">Wanted ads</a>
+      </div>
+      <div class="f-col">
+        <h5>Owners &amp; realtors</h5>
+        <a href="post-property.php">Post a property</a>
+        <a href="agencies.php">Authorized agencies</a>
+        <a href="events.php">Events</a>
+        <a href="../public/customer/login">Customer Portal</a>
+        <a href="../public/agency/login">Agency Portal</a>
+      </div>
+      <div class="f-col">
+        <h5>Contact</h5>
+        <a href="tel:+9248111222084"><i class="fa-solid fa-phone"></i> UAN +92-48-111-222-084</a><a href="tel:+92483722644"><i class="fa-solid fa-phone"></i> 048-3722644</a><a href="tel:+92483723326"><i class="fa-solid fa-phone"></i> 048-3723326</a>        <a href="mailto:info@shalimarco.com"><i class="fa-solid fa-envelope"></i> info@shalimarco.com</a>
+        <span style="display:block;font-size:12.5px;color:rgba(221,226,222,.6);margin-top:6px"><i class="fa-solid fa-location-dot"></i> Head Office: 2km Mall Road, Sargodha</span>
+      </div>
+    </div>
+    <div class="f-bot">
+      <span>© 2026 Shalimar Properties · All rights reserved. </span>
+      <span><a href="insights.php">Market report</a> · <a href="post-property.php">List with us</a></span>
+    </div>
+  </div>
+</footer>
+
+<button class="up" id="up" aria-label="Back to top"><i class="fa-solid fa-arrow-up"></i></button>
+<script src="assets/js/site.js?v=4"></script>
+
+</body>
+</html>

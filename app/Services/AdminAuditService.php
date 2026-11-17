@@ -10,6 +10,8 @@ class AdminAuditService
         if ($values===null) return null;
         $allowed=['name','username','email','status','is_active','role_ids','permission_keys','slug','description','must_change_password','code','base_url','auth_type','credential_ref','connection_status','last_checked_at','permission','reason','portal_agency_id','erp_source_id','erp_agency_id','mapping_status','agency_name','portal_active','normalized_name','record_count','portal_agent_id','agent_erp_link_id','agent_source_id','erp_ledger_id','erp_dealer_id','sgc_source_id','version','verified_version','contact_approved','review_count','selling_method','portal_customer_id'];
         $allowed=array_merge($allowed,['enabled','username_type']);
+        $allowed=array_merge($allowed,['explorer_option','label','icon','order','visible']);
+        $allowed=array_merge($allowed,['project_slug','erp_head_id','parent_filter_id','source_field','source_value','display_name','is_visible','display_order','record_version','category','maintenance_status','classification_status']);
         $result=[];
         foreach ($values as $key=>$value) {
             if (!in_array($key,$allowed,true)) continue;

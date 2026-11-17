@@ -29,7 +29,21 @@ final class Agencies extends \App\Controllers\BaseController
     {
         if (!can('agencies.view')) return admin_denied();$db=db_connect();$row=$db->table('authorized_agencies')->where('id',$id)->get()->getRowArray();if (!$row) throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();
         $accounts=service('agencyPortalAccounts');$account=$accounts->find($id);
-        return view('admin/agencies/show',['pageTitle'=>$row['agency_name'],'tab'=>'agencies','agency'=>$row,'links'=>$db->query('SELECT l.*,s.name AS source_name FROM agency_erp_links l JOIN erp_sources s ON s.id=l.erp_source_id WHERE l.portal_agency_id=? ORDER BY s.name,l.id',[$id])->getResultArray(),'portalAccount'=>$account,'portalEligible'=>$accounts->agencyEligible($id),'phoneUsernameValid'=>\App\Libraries\AgencyPortalIdentity::phone((string)$row['phone'])!==null]);
+        return view('admin/agencies/show',['pageTitle'=>$row['agency_name'],'tab'=>'agencies','agency'=>$row,'links'=>$db->query('SELECT l.*,s.name AS source_name,s.code AS source_code FROM agency_erp_links l JOIN erp_sources s ON s.id=l.erp_source_id WHERE l.portal_agency_id=? ORDER BY s.name,l.id',[$id])->getResultArray(),'portalAccount'=>$account,'portalEligible'=>$accounts->agencyEligible($id),'phoneUsernameValid'=>\App\Libraries\AgencyPortalIdentity::phone((string)$row['phone'])!==null,'dealerData'=>service('agencyDealerDirectory')->data($id,$this->request->getGet())]);
+    }
+    public function syncDealers(int $id)
+    {
+        if(!can('agencies.edit')||!can('erp_sync.run'))return admin_denied();
+        $agency=db_connect()->table('authorized_agencies')->where('id',$id)->get()->getRowArray();if(!$agency)throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();
+        $requested=$this->request->getPost('source');if(!in_array($requested,['all','SGC','ZALMI'],true)){session()->setFlashdata('agency_error','Choose a valid ERP source.');return redirect()->to(site_url('admin/agencies/'.$id));}$selected=$requested;$links=service('agencyDealerDirectory')->data($id)['links'];
+        $targets=array_values(array_filter($links,static fn($link)=>$link['sync_eligible']&&($selected==='all'||$link['source_code']===$selected)));$results=[];$failed=false;
+        foreach($targets as$link){
+            try{$result=service('agencyDealerSync')->synchronize($id,(int)$link['agency_erp_link_id'],(int)admin_user()['id']);$results[]=$link['source_code'].': '.$result['count'].' dealers synced ('.$result['added'].' new'.($result['transferred']?', '.$result['transferred'].' transferred':'').').';}
+            catch(\Throwable$e){$failed=true;$reason=$e->getMessage();if(str_contains(strtolower($reason),'credential'))$reason='Source token is not configured in this portal environment.';$results[]=$link['source_code'].' (ERP agency #'.$link['erp_agency_id'].'): '.$reason;}
+        }
+        if(!$targets){session()->setFlashdata('agency_error',$selected==='all'?'No active, authorized SGC/Zalmi ERP mapping is available for dealer sync.':'No active, authorized '.$selected.' mapping is available for dealer sync.');}
+        else session()->setFlashdata($failed?'agency_error':'agency_message',implode(' ',$results));
+        return redirect()->to(site_url('admin/agencies/'.$id));
     }
     private function portalCredentialResponse(int $agencyId,array $credentials)
     {
@@ -125,5 +139,40 @@ final class Agencies extends \App\Controllers\BaseController
             catch (\Throwable $e) {$failed=true;$messages[]=$source['name'].': synchronization failed; previous records retained. Check the agency API upload and source connection.';log_message('error','Agency synchronization failed for source {source} ({type}).',['source'=>$source['id'],'type'=>get_class($e)]);}
         }
         session()->setFlashdata($failed?'agency_error':'agency_message',$sources?implode(' ',$messages):'No enabled ERP sources are available.');return redirect()->to(site_url('admin/agencies?tab=unmapped'));
+    }
+
+    public function syncImages()
+    {
+        if (!can('agencies.edit') || !can('erp_sync.run')) return admin_denied();
+
+        $db = db_connect();
+        $logos = new \App\Services\AgencyLogoCache();
+        $rows = $db->query("SELECT s.code AS source_code, l.contact_json
+            FROM agency_erp_links l
+            JOIN erp_sources s ON s.id=l.erp_source_id
+            WHERE s.code IN ('SGC','ZALMI') AND s.is_active=1 AND l.present=1
+              AND BINARY l.erp_authorize=BINARY 'yes'
+            ORDER BY s.code,l.id")->getResultArray();
+
+        $seen = [];
+        $refreshed = 0;
+        $missing = 0;
+        $failed = 0;
+        foreach ($rows as $row) {
+            $metadata = json_decode((string)($row['contact_json'] ?? ''), true);
+            $filename = \App\Services\AgencyLogo::filename(is_array($metadata) ? ($metadata['logo'] ?? '') : '');
+            if ($filename === '') { $missing++; continue; }
+            $key = \App\Services\AgencyLogoCache::key((string)$row['source_code'], $filename);
+            if ($key === '' || isset($seen[$key])) continue;
+            $seen[$key] = true;
+            if ($logos->store((string)$row['source_code'], $filename, true)) $refreshed++;
+            else $failed++;
+        }
+
+        $message = $refreshed . ' agency logo(s) refreshed.';
+        if ($missing) $message .= ' ' . $missing . ' authorized ERP record(s) have no saved logo.';
+        if ($failed) $message .= ' ' . $failed . ' image(s) could not be fetched; existing cache files were retained where possible.';
+        session()->setFlashdata($failed ? 'agency_error' : 'agency_message', $message);
+        return redirect()->to(site_url('admin/agencies'));
     }
 }

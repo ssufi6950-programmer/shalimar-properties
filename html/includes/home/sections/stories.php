@@ -3,8 +3,8 @@
     <div class="c-sintro rv">
       <span class="c-tag light"><span class="dot"></span> Illustrative stories</span>
       <h2 class="sw-title">Explore example<br>property journeys.</h2>
-      <p>Illustrative examples, not verified customer testimonials or completed ERP transactions. Tap a story to read it.</p>
-      <div class="c-scount"><b><?= count($storyJs) ?></b><span>illustrative examples<br>separate from ERP reporting</span></div>
+      <p>Illustrative examples, not verified customer testimonials or completed transactions. Tap a story to read it.</p>
+      <div class="c-scount"><b><?= count($storyJs) ?></b><span>illustrative examples<br>separate from recorded deals</span></div>
     </div>
     <div class="c-wall" aria-label="Stories">
       <?php for ($col = 0; $col < 3; $col++): $order = array_merge(array_slice(array_keys($storyJs), $col * 2), array_slice(array_keys($storyJs), 0, $col * 2)); ?>

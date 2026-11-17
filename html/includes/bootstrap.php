@@ -288,10 +288,11 @@ function purpose_label(string $p): string
     return ['sale' => 'For sale', 'resale' => 'Resale', 'rent' => 'For rent', 'project' => 'Project unit'][$p] ?? ucfirst($p);
 }
 
-function category_label(string $c): string
+function category_label(string $c, string $sourceCode = ''): string
 {
-    return ['house' => 'House', 'apartment' => 'Apartment', 'plot' => 'Plot', 'commercial' => 'Commercial / Shop',
-            'office' => 'Office', 'farmhouse' => 'Farmhouse'][$c] ?? ucfirst($c);
+    $label = ['house' => 'House', 'apartment' => 'Apartment', 'plot' => 'Plot', 'commercial' => 'Commercial / Shop',
+              'office' => 'Office', 'farmhouse' => 'Farmhouse'][$c] ?? ucwords(str_replace('_', ' ', $c));
+    return \App\Services\ErpPropertyClassification::displayType($label, $sourceCode);
 }
 
 const CATEGORIES = ['house', 'apartment', 'plot', 'commercial', 'office', 'farmhouse'];
@@ -438,6 +439,23 @@ function project_initials(string $name): string
 /** <img> for a project logo, or an elegant monogram when none uploaded. */
 function project_logo_html(array $p, string $cls = 'plogo'): string
 {
+    // The editor saves its document separately; prefer its saved logo without
+    // changing the original project payload or publishing other draft fields.
+    $document = $p['_admin_editor']['document'] ?? null;
+    if (is_array($document) && array_key_exists('logo', $document)) {
+        try {
+            $logo = \App\Services\ProjectPageEditor::url($document['logo'], true);
+            if (preg_match('/\Aproject-image:([a-f0-9]{64})\z/D', $logo, $match)) {
+                $logo = \App\Libraries\PortalLinks::portal('api/projects/images/' . $match[1]);
+            }
+            if ($logo !== '') {
+                return '<img class="' . e($cls) . '" src="' . e($logo) . '" alt="' . e($p['name']) . ' logo">';
+            }
+            return '<span class="' . e($cls) . ' plogo-mono" aria-hidden="true">' . e(project_initials($p['name'])) . '</span>';
+        } catch (\InvalidArgumentException $error) {
+            // Retain the existing logo if a saved reference is malformed.
+        }
+    }
     if (!empty($p['logo'])) {
         return '<img class="' . e($cls) . '" src="' . e(img_url($p['logo'])) . '" alt="' . e($p['name']) . ' logo">';
     }
@@ -519,8 +537,8 @@ function listing_location(array $l): string
     $parts = [];
     if (!empty($l['project'])) {
         $parts[] = project_name($l['project']);
-        if (!empty($l['block'])) $parts[] = $l['block'];
-        elseif (!empty($l['sector'])) $parts[] = $l['sector'];
+        if (!empty($l['block'])) $parts[] = sub_label($l['project'], $l['sector'] ?? '', $l['block']);
+        elseif (!empty($l['sector'])) $parts[] = cat_label($l['project'], $l['sector']);
     } elseif (!empty($l['location'])) {
         $parts[] = $l['location'];
     }
@@ -533,31 +551,59 @@ function deal_label(string $deal): string
     return $deal === 'rented' ? 'Rented' : ($deal === 'sold' ? 'Sold' : 'Available');
 }
 
+/** Presentation only: use the listing's saved floor metadata without changing its identity. */
+function listing_floor_text(array $listing): string
+{
+    $floor = trim((string) ($listing['floor'] ?? ''));
+    if ($floor !== '') return $floor;
+
+    $title = trim((string) ($listing['floor_title'] ?? ''));
+    $category = trim((string) ($listing['floor_category'] ?? ''));
+    return $title . ($title !== '' && $category !== '' ? ' (' . ucfirst($category) . ')' : '');
+}
+
+function listing_with_floor(string $text, array $listing): string
+{
+    $floor = listing_floor_text($listing);
+    if ($floor === '' || mb_stripos($text, $floor) !== false) return $text;
+    return $text . ($text !== '' ? " \u{00B7} " : '') . $floor;
+}
+
+function listing_display_title(array $listing): string
+{
+    $reference = trim((string)($listing['plot_no'] ?? ''));
+    $type = category_label((string)($listing['category'] ?? ''), (string)($listing['_erp_source_code'] ?? ''));
+    $projectName = trim((string)(project((string)($listing['project'] ?? ''))['name'] ?? ''));
+    $titleParts = array_values(array_filter([$projectName, $reference !== '' ? $reference : trim((string)($listing['title'] ?? '')), $type], static fn($part) => $part !== ''));
+    $title = implode(' · ', $titleParts);
+    return listing_with_floor($title, $listing);
+}
+
 function render_card(array $l, int $delay = 0): string
 {
     $badge = listing_badge($l);
     $deal = $l['deal'] ?? 'available';
     $purpose = $l['purpose'] ?? 'sale';
+    $displayTitle = listing_display_title($l);
     ob_start(); ?>
 <article class="card rv<?= $deal !== 'available' ? ' is-closed' : '' ?>" style="--d:<?= (int)$delay ?>ms">
   <div class="card-art">
-    <img src="<?= e(listing_image($l)) ?>" alt="<?= e($l['title']) ?>" loading="lazy" width="600" height="410">
+    <img src="<?= e(listing_image($l)) ?>" alt="<?= e($displayTitle) ?>" loading="lazy" width="600" height="410">
     <span class="chip<?= $purpose === 'rent' ? ' rent' : ($purpose === 'project' ? ' proj' : '') ?>"><?= e(purpose_label($purpose)) ?></span>
     <?php if ($deal !== 'available'): ?><span class="ribbon ribbon-<?= e($deal) ?>"><?= e(deal_label($deal)) ?></span><?php endif; ?>
   </div>
   <div class="card-body">
     <p class="price"><?= listing_price($l) ?></p>
-    <h4><a href="listing.php?id=<?= (int)$l['id'] ?>" class="stretched"><?= e($l['title']) ?></a></h4>
-    <?php if(!empty($l['plot_no'])): ?><p class="muted" style="font-size:12px;margin:0 0 6px">Property <?= e($l['plot_no']) ?></p><?php endif ?>
+    <h4><a href="listing.php?id=<?= (int)$l['id'] ?>" class="stretched"><?= e($displayTitle) ?></a></h4>
     <p class="addr"><i class="fa-solid fa-location-dot"></i> <?= e(listing_location($l)) ?></p>
     <div class="feats">
-      <span><?= e(category_label($l['category']??'')) ?></span>
+      <span><?= e(category_label($l['category']??'', $l['_erp_source_code']??'')) ?></span>
       <?php if (!empty($l['beds'])): ?><span><i class="fa-solid fa-bed"></i> <?= (int)$l['beds'] ?> Bed</span><?php endif; ?>
       <?php if (!empty($l['baths'])): ?><span><i class="fa-solid fa-bath"></i> <?= (int)$l['baths'] ?> Bath</span><?php endif; ?>
       <span><i class="fa-solid fa-ruler-combined"></i> <?= e(size_text($l['size'] ?? 0, $l['unit'] ?? 'marla')) ?></span>
     </div>
     <?php if ($badge): ?><span class="vbadge" title="<?= e($l['_publication_verification']['date']) ?>"><i class="fa-solid fa-circle-check"></i> <?= e($badge) ?></span><?php endif; ?>
-    <?php $seller=$l['_public_contact']??null;if($seller): ?><p class="public-card-seller"><span><?= e($seller['badge']?:'Seller unavailable') ?></span><b><?= e($seller['method']==='self_sell'?($seller['owner_name']?:$seller['name']):$seller['name']) ?></b></p><?php elseif ($method=listing_selling_method($l)): ?><p class="muted" style="font-size:12px;margin:8px 0 0"><?= e($method) ?></p><?php endif; ?>
+    <?php $seller=$l['_public_contact']??null;if($seller): ?><p class="public-card-seller"><?php if($seller['method']==='self_sell'): ?><span>Owner</span><?php elseif(!empty($seller['identity_available'])): ?><span class="public-card-avatar<?= $seller['method']==='authorized_agency'?' is-agency':'' ?>" aria-hidden="true"><span><?= e(project_initials($seller['name'])) ?></span><?php if(!empty($seller['image_url'])): ?><img src="<?= e($seller['image_url']) ?>" alt="" loading="lazy" referrerpolicy="no-referrer" width="34" height="34" onerror="this.hidden=true"><?php endif ?></span><span class="public-card-seller-copy"><b><?= e($seller['name']) ?></b><small><?= $seller['method']==='shalimar_agent'?'Shalimar Agent':'Agency' ?></small></span><?php else: ?><span>Seller unavailable</span><?php endif ?></p><?php elseif ($method=listing_selling_method($l)): ?><p class="muted" style="font-size:12px;margin:8px 0 0"><?= e($method) ?></p><?php endif; ?>
   </div>
 </article>
 <?php

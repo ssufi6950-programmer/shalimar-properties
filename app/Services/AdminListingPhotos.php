@@ -26,7 +26,7 @@ final class AdminListingPhotos
                 $real=realpath($path);$base=realpath($photo?WRITEPATH.'resale-photos':ROOTPATH.'html/uploads/listings');
                 if($real&&$base&&str_starts_with($real,$base.DIRECTORY_SEPARATOR)){
                     $entry['checksum']=hash_file('sha256',$real);$entry['bytes']=filesize($real);$mime=(new \finfo(FILEINFO_MIME_TYPE))->file($real);$size=@getimagesize($real);
-                    $entry['valid']=in_array($mime,['image/jpeg','image/png','image/webp'],true)&&$size&&$size['mime']===$mime&&$size[0]*$size[1]<=config('CustomerPortal')->photoMaximumPixels;
+                    $entry['valid']=in_array($mime,['image/jpeg','image/png','image/webp'],true)&&$size&&$size['mime']===$mime;
                     if($photo){$entry['stored_checksum']=$photo['checksum'];$entry['valid']=$entry['valid']&&hash_equals($photo['checksum'],$entry['checksum'])&&(int)$photo['bytes']===$entry['bytes']&&$photo['mime']===$mime;}
                 }
             }
@@ -37,7 +37,7 @@ final class AdminListingPhotos
     public function fingerprint(array $listing):string{return hash('sha256',ListingLifecycle::fingerprint($listing).json_encode($this->manifest($listing),JSON_THROW_ON_ERROR));}
     public function requirePublishable(array $listing):void
     {
-        $photos=$this->manifest($listing);if(count($photos)>config('CustomerPortal')->photoMaximumCount)throw new \InvalidArgumentException('The final photo set exceeds the photo limit.');
+        $photos=$this->manifest($listing);if(count($photos)>config('CustomerPortal')->adminPhotoMaximumCount)throw new \InvalidArgumentException('The final photo set exceeds the photo limit.');
         foreach($photos as$photo)if(!$photo['valid'])throw new \InvalidArgumentException('A reviewed photo is missing, altered or not linked to this listing. Remove or replace it before approval.');
     }
     public function items(array $listing):array
@@ -54,7 +54,7 @@ final class AdminListingPhotos
     }
     public function references(array $listing,array $ids):array
     {
-        ResalePhotos::ids($ids);$allowed=[];foreach($this->manifest($listing)as$photo)if($photo['id'])$allowed[$photo['id']]=$photo['reference'];$out=[];
+        ResalePhotos::ids($ids,config('CustomerPortal')->adminPhotoMaximumCount);$allowed=[];foreach($this->manifest($listing)as$photo)if($photo['id'])$allowed[$photo['id']]=$photo['reference'];$out=[];
         foreach($ids as$id){if(!isset($allowed[$id]))throw new \InvalidArgumentException('A selected photo does not belong to this reviewed listing.');$out[]=$allowed[$id];}return$out;
     }
     public static function placeholder(array $payload):array

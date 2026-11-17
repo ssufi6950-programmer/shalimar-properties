@@ -27,7 +27,6 @@
         <h5>Owners &amp; realtors</h5>
         <a href="post-property.php">Post a property</a>
         <a href="agencies.php">Authorized agencies</a>
-        <a href="registry-calculator.php">Registry calculator</a>
         <a href="events.php">Events</a>
         <a href="admin.php">Admin sign in</a>
       </div>

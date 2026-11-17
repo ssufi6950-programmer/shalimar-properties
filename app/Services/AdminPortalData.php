@@ -21,10 +21,13 @@ final class AdminPortalData
  }
  /** Legacy imports lacking customer/property provenance are preserved, not counted as customer submissions. */
  private function workflow(BaseBuilder $query,string $alias='l'):BaseBuilder{return $query->where($alias.'.portal_customer_id IS NOT NULL',null,false)->where($alias.'.erp_source_id IS NOT NULL',null,false)->where($alias.'.erp_property_id IS NOT NULL',null,false);}
- private function listingBase():BaseBuilder{return $this->workflow($this->db->table('portal_listings l'));}
+ private function listingBase(bool $includeDeleted=false):BaseBuilder
+ {
+  $query=$this->workflow($this->db->table('portal_listings l'));return $includeDeleted?$query:$query->where(AdminListingDeletion::retainedSql(),null,false);
+ }
  private function latestPropertyListings():string
  {
-  return $this->listingBase()->select('l.erp_source_id,l.erp_property_id,MAX(l.id) AS latest_id,MIN(l.created_at) AS first_resale_at,COUNT(*) AS listing_count',false)->groupBy(['l.erp_source_id','l.erp_property_id'])->getCompiledSelect();
+  return $this->listingBase(true)->select('l.erp_source_id,l.erp_property_id,MAX(l.id) AS latest_id,MIN(l.created_at) AS first_resale_at,COUNT(*) AS listing_count',false)->groupBy(['l.erp_source_id','l.erp_property_id'])->getCompiledSelect();
  }
  private function propertyBase():BaseBuilder
  {
@@ -74,7 +77,7 @@ final class AdminPortalData
  private function propertyRows(array $rows):array
  {
   foreach($rows as&$row){$payload=self::object($row['payload']);$proof=self::object($row['owner_verification']);
-   $row['plot']=self::text($payload['plot']??'');$row['size']=self::text($payload['size']??'');$row['type']=self::text($payload['type']??'');$row['floor']=self::text($payload['floor']??'');$row['booking']=self::text($payload['booking']??'');$row['original_agency']=self::text($payload['original_agency']??'');
+   $row['plot']=self::text($payload['plot']??'');$row['size']=self::text($payload['size']??'');$row['type']=ErpPropertyClassification::displayType(self::text($payload['type']??''), (string) ($row['source_code']??''));$row['floor']=self::text($payload['floor']??'');$row['booking']=self::text($payload['booking']??'');$row['original_agency']=self::text($payload['original_agency']??'');
    $row['project_name']=$row['project_name']?:self::text($payload['project']??'');$row['head_name']=$row['head_name']?:self::text($payload['head']??'');$row['subhead_name']=$row['subhead_name']?:self::text($payload['subhead']??'');
    $row['verified_at']=$row['resale_verification_id']&&($proof['ownership_match']??null)===true?self::text($proof['verified_at']??''):'';$row['verification_status']=$row['verified_at']!==''?'Verified at publication':'Not recorded';unset($row['payload'],$row['owner_verification'],$row['resale_verification_id']);
   }unset($row);return $rows;
@@ -86,9 +89,9 @@ final class AdminPortalData
   $page=$this->page($query,$filters,'o.id');$page['rows']=$this->propertyRows($page['rows']);return $page;
  }
  public function property(int $id):?array{return $this->propertyRows($this->propertySelect()->where('o.id',$id)->get()->getResultArray())[0]??null;}
- private function listingSelect():BaseBuilder
+ private function listingSelect(bool $includeDeleted=false):BaseBuilder
  {
-  return $this->listingBase()->select('l.*,c.display_name AS customer_name,s.name AS source_name,s.code AS source_code,p.name AS project_name,o.id AS local_property_id,a.name AS current_agent_name,ag.agency_name AS current_agency_name')
+  return $this->listingBase($includeDeleted)->select('l.*,c.display_name AS customer_name,s.name AS source_name,s.code AS source_code,p.name AS project_name,o.id AS local_property_id,a.name AS current_agent_name,ag.agency_name AS current_agency_name')
    ->join('portal_customers c','c.id=l.portal_customer_id','left')->join('erp_sources s','s.id=l.erp_source_id','left')->join('portal_projects p','p.slug=l.project_slug','left')
    ->join('portal_owned_properties o','o.erp_source_id=l.erp_source_id AND o.erp_property_id=l.erp_property_id','left')->join('shalimar_agents a','a.id=l.portal_agent_id','left')->join('authorized_agencies ag','ag.id=l.portal_agency_id','left');
  }
@@ -101,7 +104,7 @@ final class AdminPortalData
    $row['project_name']=$row['project_name']?:self::text($payload['project']??'');$row['price']=$row['asking_price']??(is_numeric($payload['price']??null)?$payload['price']:null);
    $row['representative_name']=self::text($snapshot['name']??$poster['name']??$row['current_agent_name']??$row['current_agency_name']??'');$row['public_contact']=self::text($poster['phone']??'');$row['published_at']=self::text($payload['published_at']??'');
    $row['verified_at']=$row['resale_verification_id']&&($proof['ownership_match']??null)===true?self::text($proof['verified_at']??''):'';$row['booking_ref']=self::text($proof['current_booking_ref']??'');$row['verification_status']=$row['verified_at']!==''?'Verified at publication':'Not recorded';
-   $row['public_visible']=in_array($row['id'],$public,true);$row['can_unpublish']=in_array($row['status'],['live','approved','active'],true)&&in_array($row['deal'],['available','active'],true);$row['review_note']=self::text($payload['review_note']??'');
+   $row['public_visible']=in_array($row['id'],$public,true);$row['can_unpublish']=!AdminListingDeletion::marked($row)&&in_array($row['status'],['live','approved','active'],true)&&in_array($row['deal'],['available','active'],true);$row['review_note']=self::text($payload['review_note']??'');
    unset($row['payload'],$row['owner_verification'],$row['agent_snapshot'],$row['submission_key'],$row['resale_verification_id'],$row['current_agent_name'],$row['current_agency_name'],$row['active_erp_property']);
   }unset($row);return $rows;
  }
@@ -111,7 +114,7 @@ final class AdminPortalData
   if($filters['q']!==''){$query->groupStart()->like('l.payload',$filters['q'])->orLike('c.display_name',$filters['q'])->orLike('p.name',$filters['q'])->orLike('a.name',$filters['q'])->orLike('ag.agency_name',$filters['q']);if(ctype_digit($filters['q']))$query->orWhere('l.id',$filters['q'])->orWhere('l.erp_property_id',$filters['q']);$query->groupEnd();}
   $page=$this->page($query,$filters,'l.id');$page['rows']=$this->listingRows($page['rows']);return $page;
  }
- public function listing(int $id):?array{return $this->listingRows($this->listingSelect()->where('l.id',$id)->get()->getResultArray())[0]??null;}
+ public function listing(int $id):?array{return $this->listingRows($this->listingSelect(true)->where('l.id',$id)->get()->getResultArray())[0]??null;}
  public function retainedLegacyCount():int{return $this->db->table('portal_listings')->groupStart()->where('portal_customer_id',null)->orWhere('erp_source_id',null)->orWhere('erp_property_id',null)->groupEnd()->countAllResults();}
  public function dashboard(array $access):array
  {

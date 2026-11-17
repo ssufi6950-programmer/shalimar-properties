@@ -18,8 +18,8 @@ class CustomerPortal extends BaseConfig
  /** Temporary property verification testing without SMS; requires showOtpPreview and sms.testMode. */
  public bool $resaleOtpPreviewOnly=false;
  public int $photoMaximumCount=6;
+ public int $adminPhotoMaximumCount=20;
  public int $photoMaximumBytes=4194304;
- public int $photoMaximumPixels=20000000;
  public int $photoStagingLifetime=86400;
  public array $identityPaths=[];
  public array $propertiesPaths=[];

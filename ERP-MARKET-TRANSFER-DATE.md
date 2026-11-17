@@ -1,3 +1,5 @@
+> Inventory follow-up (11 November 2026): Head/Subhead now come from company-matched `pro_inventory`, with an explicit unassigned bucket for missing inventory. The SQL below describes the earlier booking-dimension implementation; see [MARKET-INVENTORY-DIMENSIONS-FIX.md](MARKET-INVENTORY-DIMENSIONS-FIX.md) for the current change and required uploads.
+
 # ERP Market Intelligence — current transfer-date definition
 
 Updated 11 November 2026. This supersedes the previous approval-history definition in `ERP-MARKET-INTELLIGENCE.md` and older deployment packages.

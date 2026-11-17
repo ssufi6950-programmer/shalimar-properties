@@ -24,11 +24,11 @@ final class ListingLifecycle
  }
  public function canRepublish(array $row):bool
  {
-  if(($row['review_state']??null)!=='approved'||$row['status']!=='cancelled'||!in_array($row['deal'],['available','active'],true))return false;
+  if(AdminListingDeletion::marked($row)||($row['review_state']??null)!=='approved'||$row['status']!=='cancelled'||!in_array($row['deal'],['available','active'],true))return false;
   $last=$this->db->table('listing_events')->select('event,portal_customer_id')->where('listing_id',$row['id'])->orderBy('id','DESC')->get()->getRowArray();
   return $last&&$last['event']==='customer_withdrawn'&&(int)$last['portal_customer_id']===(int)$row['portal_customer_id'];
  }
- public static function canCorrect(array $row):bool{return ($row['review_state']??null)==='needs_changes'&&in_array($row['status']??null,['pending','pending_approval'],true)&&in_array($row['deal']??null,['available','active'],true);}
+ public static function canCorrect(array $row):bool{return !AdminListingDeletion::marked($row)&&($row['review_state']??null)==='needs_changes'&&in_array($row['status']??null,['pending','pending_approval'],true)&&in_array($row['deal']??null,['available','active'],true);}
  public function decorate(array $rows):array
  {
   if(!$rows)return [];$ids=array_column($rows,'id');$latest=$this->db->table('listing_events')->select('MAX(id)',false)->whereIn('listing_id',$ids)->groupBy('listing_id')->getCompiledSelect();$events=[];

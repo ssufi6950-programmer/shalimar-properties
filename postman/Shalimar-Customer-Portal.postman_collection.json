@@ -1,0 +1,70 @@
+{
+  "info": {
+    "name": "Shalimar Properties - Customer Login & Portfolio",
+    "description": "Portal-side sign-in/OTP and authenticated portfolio requests. Postman maintains the session cookie. OTP requests can send a real message depending on server configuration.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "event": [
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "try {",
+          "  const body = pm.response.json();",
+          "  if (body.csrf && body.csrf.name && body.csrf.hash) {",
+          "    pm.environment.set('csrf_name', body.csrf.name);",
+          "    pm.environment.set('csrf_hash', body.csrf.hash);",
+          "  }",
+          "} catch (e) {",
+          "  const html = pm.response.text();",
+          "  const token = html.match(/name=\"([^\"]*csrf[^\"]*)\"\\s+value=\"([^\"]+)\"/i);",
+          "  if (token) { pm.environment.set('csrf_name', token[1]); pm.environment.set('csrf_hash', token[2]); }",
+          "}"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Start session and get CSRF",
+      "request": { "method": "GET", "header": [{ "key": "Accept", "value": "text/html" }], "url": "{{portal_base_url}}/customer/login" }
+    },
+    {
+      "name": "2. Request sign-in OTP (may send real SMS/WhatsApp)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Content-Type", "value": "application/x-www-form-urlencoded" }, { "key": "X-CSRF-TOKEN", "value": "{{csrf_hash}}" }],
+        "body": { "mode": "urlencoded", "urlencoded": [{ "key": "cnic", "value": "{{cnic}}" }, { "key": "mobile", "value": "{{mobile}}" }, { "key": "{{csrf_name}}", "value": "{{csrf_hash}}" }] },
+        "url": "{{portal_base_url}}/customer/otp/request"
+      }
+    },
+    {
+      "name": "3. Verify sign-in OTP",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Content-Type", "value": "application/x-www-form-urlencoded" }, { "key": "X-CSRF-TOKEN", "value": "{{csrf_hash}}" }],
+        "body": { "mode": "urlencoded", "urlencoded": [{ "key": "otp", "value": "{{otp}}" }, { "key": "{{csrf_name}}", "value": "{{csrf_hash}}" }] },
+        "url": "{{portal_base_url}}/customer/otp/verify"
+      }
+    },
+    {
+      "name": "4. Resend sign-in OTP (may send real SMS/WhatsApp)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Content-Type", "value": "application/x-www-form-urlencoded" }, { "key": "X-CSRF-TOKEN", "value": "{{csrf_hash}}" }],
+        "body": { "mode": "urlencoded", "urlencoded": [{ "key": "{{csrf_name}}", "value": "{{csrf_hash}}" }] },
+        "url": "{{portal_base_url}}/customer/otp/resend"
+      }
+    },
+    {
+      "name": "5. Customer dashboard (session required)",
+      "request": { "method": "GET", "header": [{ "key": "Accept", "value": "text/html" }], "url": "{{portal_base_url}}/customer/dashboard" }
+    },
+    {
+      "name": "6. Load one ERP source page through portal (session required)",
+      "request": { "method": "GET", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{portal_base_url}}/customer/api/properties/{{source_link_id}}?page={{page}}" }
+    }
+  ],
+  "variable": []
+}

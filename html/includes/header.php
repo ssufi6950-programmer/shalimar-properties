@@ -15,9 +15,7 @@ $nav = [
 ];
 $more = [
   'blog'     => ['Blog', 'blog.php', 'fa-newspaper'],
-  'events'   => ['Events', 'events.php', 'fa-calendar-days'],
   'wanted'   => ['Wanted', 'wanted.php', 'fa-bullhorn'],
-  'registry' => ['Registry Calculator', 'registry-calculator.php', 'fa-calculator'],
 ];
 $portalLinks = [
   'customer' => ['Customer Portal', \App\Libraries\PortalLinks::portal('customer/login'), 'fa-user'],
@@ -29,7 +27,7 @@ if (!isset($heroPhoto)) {
   $heroPhoto = [
     'buy' => 'gc-aerial', 'rent' => 'gc-homes', 'projects' => 'ssc-aerial', 'insights' => 'ssc-interchange',
     'agencies' => 'ssc-business-bay', 'blog' => 'ssc-boulevard', 'events' => 'ssc-gate-render', 'wanted' => 'gc-boulevard',
-    'registry' => 'ssc-gate-aerial', 'post' => 'ssc-entrance',
+    'post' => 'ssc-entrance',
   ][$active] ?? '';
 }
 if (!DESIGN_BANNER) $heroPhoto = '';
@@ -59,8 +57,8 @@ if(!isset($canonical)&&in_array($active,['home','buy','rent','projects','insight
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-<link rel="stylesheet" href="assets/css/site.css?v=8">
-<?php if ($active === 'home'): ?><link rel="stylesheet" href="assets/css/home-base.css?v=erp-market-20261110"><?php endif; ?>
+<link rel="stylesheet" href="assets/css/site.css?v=<?= filemtime(__DIR__.'/../assets/css/site.css') ?>">
+<?php if ($active === 'home'): ?><link rel="stylesheet" href="assets/css/home-base.css?v=<?= filemtime(__DIR__.'/../assets/css/home-base.css') ?>"><?php endif; ?>
 <link rel="stylesheet" href="assets/css/design.css?v=9">
 <link rel="stylesheet" href="assets/css/subprojects.css?v=4">
 <link rel="stylesheet" href="assets/css/public-listings.css?v=<?= filemtime(__DIR__.'/../assets/css/public-listings.css') ?>">

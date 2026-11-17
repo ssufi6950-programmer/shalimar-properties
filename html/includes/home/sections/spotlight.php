@@ -27,10 +27,13 @@
             <h3><?= e($p['name']) ?></h3>
             <p class="sp-loc"><i class="fa-solid fa-location-dot"></i> <?= e($p['location']) ?></p>
             <?php if ($m['features']): ?><ul class="sp-feats"><?php foreach (array_slice($m['features'], 0, 4) as $f): ?><li><?= e($f) ?></li><?php endforeach; ?></ul><?php endif; ?>
-            <?= subprojects_html($p, 'mini') ?>
+            <?php $explorerFilters = $explorerFiltersByProject[$p['slug']] ?? []; ?>
+            <?php if ($explorerFilters): ?><div class="subp subp-mini spot-explorer-filters" aria-label="<?= e($p['name']) ?> Layer <?= $p['slug'] === 'zalmi-x' ? '3' : '2' ?> property filters">
+              <?php foreach ($explorerFilters as $filter): ?><a class="subp-cat" href="<?= e($filter['url']) ?>"><i class="fa-solid fa-layer-group" aria-hidden="true"></i><?= e($filter['label']) ?><em><?= (int)$filter['count'] ?></em></a><?php endforeach; ?>
+            </div><?php else: ?><?= subprojects_html($p, 'mini') ?><?php endif; ?>
             <div class="sp-facts">
               <div><b><?= (int)($liveByProject[$p['slug']] ?? 0) ?></b><span>Live listings</span></div>
-              <div><b><?= market_count($market['available'] ? (int)($byProject[$p['slug']] ?? 0) : null) ?></b><span>Completed resales this month</span></div>
+              <div><b><?= market_count($market['available'] ? (int)($byProject[$p['slug']] ?? 0) : null) ?></b><span>Deals this month</span></div>
               <div><b><?= e(preg_replace('/\s*\(.*$/', '', (string)$p['price_from'])) ?></b><span>Starting from</span></div>
             </div>
             <a class="btn btn-solid btn-sm" href="projects.php#<?= e($p['slug']) ?>">Explore <?= e($p['name']) ?> <i class="fa-solid fa-arrow-right-long"></i></a>

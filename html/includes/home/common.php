@@ -9,11 +9,58 @@ $kpi = $market;
 $byProject = $market['project_month_counts'] ?? [];
 $liveByProject = [];
 foreach ($live as $l) if (!empty($l['project']) && is_string($l['project'])) $liveByProject[$l['project']] = ($liveByProject[$l['project']] ?? 0) + 1;
-$agencyCount = count(array_filter(store_read('parties'), fn($p) => $p['role'] === 'agency' && !empty($p['active'])));
+$agencyCount = \App\Libraries\PortalCatalogStore::connect()->authorizedAgencyCount();
+$explorerFiltersByProject = [];
+try {
+  $explorerStore = \App\Libraries\PortalCatalogStore::connect();
+  foreach ($projects as $project) {
+    $slug = (string)($project['slug'] ?? '');
+    if ($slug === '') continue;
+    $state = $explorerStore->publicExplorerState($slug, '', '');
+    $items = [];
+    foreach (($state['roots'] ?? []) as $root) {
+      if ($slug === 'zalmi-x') {
+        $childState = $explorerStore->publicExplorerState($slug, (string)$root['key'], '');
+        foreach (($childState['row'] ?? []) as $child) {
+          $filter = [
+            'project' => $slug,
+            'source_id' => (string)$root['source_id'],
+            'head_id' => (string)$root['head_id'],
+            'path' => [
+              ['id' => (string)$root['filter_id'], 'source_field' => (string)$root['source_field'], 'source_value' => (string)$root['value']],
+              ['id' => (string)$child['id'], 'source_field' => (string)$child['source_field'], 'source_value' => (string)$child['value']],
+            ],
+          ];
+          $search = \App\Services\PublicListingSearch::filters(['project' => $slug, 'page' => '1', 'per_page' => '12'], 'sale');
+          $count = $explorerStore->publicSearch($search, [], false, $filter)['total'];
+          $items[] = [
+            'label' => (string)$child['label'],
+            'count' => (int)$count,
+            'url' => 'project.php?'.http_build_query(['project' => $slug, 'layer2' => (string)$root['key'], 'tree' => (string)$child['id']], '', '&', PHP_QUERY_RFC3986),
+          ];
+        }
+        continue;
+      }
+      $filter = [
+        'project' => $slug,
+        'source_id' => (string)$root['source_id'],
+        'head_id' => (string)$root['head_id'],
+        'kind' => (string)$root['kind'],
+        'value' => (string)$root['value'],
+      ];
+      $search = \App\Services\PublicListingSearch::filters(['project' => $slug, 'page' => '1', 'per_page' => '12'], 'sale');
+      $count = $explorerStore->publicSearch($search, [], false, $filter)['total'];
+      $items[] = ['label' => (string)$root['label'], 'count' => (int)$count, 'url' => 'project.php?'.http_build_query(['project'=>$slug,'layer2'=>$root['key']],'','&',PHP_QUERY_RFC3986)];
+    }
+    $explorerFiltersByProject[$slug] = $items;
+  }
+} catch (\Throwable $error) {
+  error_log('Homepage Explorer filter summary unavailable: '.get_class($error));
+}
 $catCount = function (string $c) use ($live) { return count(array_filter($live, fn($l) => $l['category'] === $c)); };
 $cities = array_values(array_unique(array_filter(array_map(fn($p) => $p['city'] ?? '', $projects))));
 
-/* Official completed ERP resales, last 30 Pakistan-local calendar days → existing sparkline. */
+/* ERP deals, last 30 Pakistan-local calendar days → existing sparkline. */
 $days = $market['daily'];
 $maxDay = max(1, max($days ?: [0]));
 $pts = [];
@@ -24,7 +71,7 @@ $sparkArea = $spark . ' L300,96 L0,96 Z';
 
 /* stories: illustrative owner & buyer stories (initials only, no personal photos) */
 $stories = [
-  ['Hamza Tariq', 'Bought a plot', 'shalimar-smart-city', 'ssc-gate-render', 'The plot file, price and block were exactly as listed. Transfer at the Shalimar office was done the same week.', ['10 Marla plot', 'Sector II · Golf Avenue', 'Transferred in 6 days'], '2 weeks ago'],
+  ['Hamza Tariq', 'Bought a plot', 'shalimar-smart-city', 'ssc-gate-render', 'The plot file, price and block were exactly as listed. The deal at the Shalimar office was completed the same week.', ['10 Marla plot', 'Sector II · Golf Avenue', 'Deal completed in 6 days'], '2 weeks ago'],
   ['Rabia Anwar', 'Bought a house', 'gulberg-city', 'gc-villas', 'I could see that the agency was authorized before I even called. That alone gave my family confidence.', ['5 Marla house', 'Gulberg City, Sargodha', 'Authorized agency'], '3 weeks ago'],
   ['Faisal Nadeem', 'Investor', 'shalimar-smart-city', 'ssc-business-district', 'The market report showed me last month’s actual resale prices in Sector II. I negotiated with real numbers.', ['2 commercial plots', 'Smart Business District', 'Priced from live data'], '1 month ago'],
   ['Ayesha Khan', 'Rented out her home', 'gulberg-city', 'gc-homes', 'Our rental was marked “Rented” the day the agreement was signed — no more calls for a house already taken.', ['3-bed home', 'Gulberg City', 'Rental listing example'], '1 month ago'],
@@ -39,11 +86,17 @@ foreach ($stories as $s) {
                 'img' => photo($s[3], true), 'quote' => $s[4], 'facts' => $s[5], 'when' => 'Illustrative example'];
 }
 $typeTiles = [
-  ['plot', 'Plots', 'fa-solid fa-map-location-dot', 'buy.php?type=plot', 'Residential & commercial'],
-  ['house', 'Houses & villas', 'fa-solid fa-house-chimney', 'buy.php?type=house', 'Ready to move in'],
-  ['apartment', 'Apartments', 'fa-solid fa-building', 'buy.php?type=apartment', 'Gulberg City homes'],
-  ['office', 'Offices & shops', 'fa-solid fa-briefcase', 'projects.php?project=zalmi-x#units', 'Zalmi X, Lahore'],
+  ['plot', 'Plots', 'fa-solid fa-map-location-dot', 'properties.php?type=plot', 'Residential & commercial'],
+  ['house', 'Houses & villas', 'fa-solid fa-house-chimney', 'properties.php?type=house', 'Ready to move in'],
+  ['apartment', 'Apartments', 'fa-solid fa-building', 'properties.php?type=apartment', 'Gulberg City homes'],
+  ['commercial', 'Commercial', 'fa-solid fa-briefcase', 'properties.php?type=commercial', 'Sale & rent listings'],
 ];
+$commercialCount = count(array_filter($live, static function ($listing): bool {
+  $category = strtolower(trim((string)($listing['category'] ?? '')));
+  return in_array($category, ['commercial', 'office', 'shop', 'plaza', 'tower'], true)
+    // Zalmi X corporate offices use the existing Apartment classification.
+    || (($listing['project'] ?? '') === 'zalmi-x' && $category === 'apartment');
+}));
 $cardPos = ['c1', 'c2', 'c3', 'c4'];
 
 /* section renderer: sec('name', [copy overrides]) */

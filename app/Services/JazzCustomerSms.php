@@ -1,18 +1,30 @@
 <?php
 namespace App\Services;
-class JazzCustomerSms implements CustomerSmsGateway
+class JazzCustomerSms implements CustomerSmsGateway,BusinessSmsGateway
 {
  public function __construct(private \Config\Sms $settings){}
  public function sendCode(string $verifiedMobile,string $otp):void
  {
+  if(!preg_match('/\A[0-9]{6}\z/D',$otp))throw new \InvalidArgumentException('Invalid OTP format.');
+  $whatsapp=config('Whatsapp');$delivered=false;
+  // Resolve once before either channel: a malformed test override never falls
+  // back to the customer's registered number on WhatsApp or SMS.
+  $mobile=$this->deliveryRecipient($verifiedMobile);
+  if($this->settings->enabled){try{$this->sendMessage($mobile,'Your Shalimar Properties login verification code is '.$otp.'. This code expires in 5 minutes. Do not share it.');$delivered=true;}catch(\Throwable $error){log_message('error','OTP SMS channel failed: exception_type={exception_type}.',['exception_type'=>get_class($error)]);}}
+  if($whatsapp->enabled){try{$this->whatsappGateway($whatsapp)->sendCode($mobile,$otp);$delivered=true;}catch(\Throwable $error){log_message('error','OTP WhatsApp channel failed: exception_type={exception_type}.',['exception_type'=>get_class($error)]);}}
+  if(!$delivered)throw new \RuntimeException('SMS/WhatsApp OTP delivery failed.');
+ }
+ protected function whatsappGateway(\Config\Whatsapp $settings):CustomerSmsGateway{return new MetaWhatsappOtp($settings);}
+ public function sendMessage(string $verifiedMobile,string $message):void
+ {
   if(!$this->settings->enabled||$this->settings->gatewayKey==='')throw new \RuntimeException('SMS delivery is not configured.');
-  $mobile=$this->deliveryRecipient($verifiedMobile);if(!preg_match('/\A[0-9]{6}\z/D',$otp))throw new \InvalidArgumentException('Invalid OTP format.');
+  if(!mb_check_encoding($message,'UTF-8')||trim($message)===''||mb_strlen($message)>500||preg_match('/[\x00-\x1f\x7f]/',$message))throw new \InvalidArgumentException('Invalid SMS message.');
+  $mobile=$this->deliveryRecipient($verifiedMobile);
   $url=parse_url($this->settings->gatewayURL);if(!$url||($url['scheme']??'')!=='https'||!in_array(strtolower($url['host']??''),['jaageer.com','www.jaageer.com'],true)||($url['path']??'')!=='/jazz-sms-api.php'||(isset($url['port'])&&$url['port']!==443)||isset($url['query'])||isset($url['user'])||isset($url['fragment']))throw new \RuntimeException('Invalid existing SMS gateway configuration.');
   // The existing provider redirects its apex domain to www. Use the known
   // canonical endpoint directly, including for older private configuration.
   $gateway='https://www.jaageer.com/jazz-sms-api.php';
   $phone=$this->settings->phoneFormat==='national'?'0'.substr($mobile,2):$mobile;
-  $message='Your Shalimar Properties login verification code is '.$otp.'. This code expires in 5 minutes. Do not share it.';
   $query=http_build_query(['key'=>$this->settings->gatewayKey,'phone'=>$phone,'msg'=>str_replace(' ','<<>>',$message)],'', '&',PHP_QUERY_RFC3986);
   if(trim($this->performGatewayRequest($gateway.'?'.$query))!=='Message Sent Successfully!'){log_message('error','SMS gateway rejected the delivery request. Response body omitted.');throw new \RuntimeException('SMS delivery failed.');}
  }
@@ -53,7 +65,7 @@ class JazzCustomerSms implements CustomerSmsGateway
  }
  protected function performGatewayRequest(string $url):string
  {
-  $ch=curl_init($url);$body='';curl_setopt_array($ch,[CURLOPT_HTTPGET=>true,CURLOPT_FOLLOWLOCATION=>false,CURLOPT_PROXY=>'',CURLOPT_PROTOCOLS=>CURLPROTO_HTTPS,CURLOPT_IPRESOLVE=>CURL_IPRESOLVE_V4,CURLOPT_SSL_VERIFYPEER=>true,CURLOPT_SSL_VERIFYHOST=>2,CURLOPT_CONNECTTIMEOUT=>4,CURLOPT_TIMEOUT=>12,CURLOPT_WRITEFUNCTION=>static function($curl,string $chunk)use(&$body):int{if(strlen($body)+strlen($chunk)>4096)return 0;$body.=$chunk;return strlen($chunk);}]);
+  $ch=curl_init($url);$body='';curl_setopt_array($ch,[CURLOPT_HTTPGET=>true,CURLOPT_FOLLOWLOCATION=>false,CURLOPT_PROXY=>'',CURLOPT_PROTOCOLS=>CURLPROTO_HTTPS,CURLOPT_IPRESOLVE=>CURL_IPRESOLVE_V4,CURLOPT_SSL_VERIFYPEER=>true,CURLOPT_SSL_VERIFYHOST=>2,CURLOPT_CONNECTTIMEOUT=>4,CURLOPT_TIMEOUT=>12,CURLOPT_USERAGENT=>'Shalimar-SMS-Connectivity-Check/1.0',CURLOPT_WRITEFUNCTION=>static function($curl,string $chunk)use(&$body):int{if(strlen($body)+strlen($chunk)>4096)return 0;$body.=$chunk;return strlen($chunk);}]);
   try{$ok=curl_exec($ch);$status=(int)curl_getinfo($ch,CURLINFO_RESPONSE_CODE);if($ok===false){log_message('error','SMS gateway transport failed: curl_errno={curl_errno} http_status={http_status} dns_ms={dns_ms} connect_ms={connect_ms} tls_ms={tls_ms} total_ms={total_ms}.',['curl_errno'=>(string)curl_errno($ch),'http_status'=>(string)$status,'dns_ms'=>(string)round(curl_getinfo($ch,CURLINFO_NAMELOOKUP_TIME)*1000),'connect_ms'=>(string)round(curl_getinfo($ch,CURLINFO_CONNECT_TIME)*1000),'tls_ms'=>(string)round(curl_getinfo($ch,CURLINFO_APPCONNECT_TIME)*1000),'total_ms'=>(string)round(curl_getinfo($ch,CURLINFO_TOTAL_TIME)*1000)]);throw new \RuntimeException('SMS delivery failed.');}if($status!==200){log_message('error','SMS gateway returned non-200: http_status={http_status}.',['http_status'=>(string)$status]);throw new \RuntimeException('SMS delivery failed.');}return $body;}finally{curl_close($ch);}
  }
 }

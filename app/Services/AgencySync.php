@@ -5,7 +5,7 @@ use RuntimeException;
 
 final class AgencySync
 {
-    public function __construct(private BaseConnection $db) {}
+    public function __construct(private BaseConnection $db, private ?AgencyLogoCache $logos = null) {}
     private static function id($value,bool $zero=false): string
     {
         if ((!is_int($value)&&!is_string($value))||!preg_match($zero?'/\A(?:0|[1-9][0-9]{0,17})\z/D':'/\A[1-9][0-9]{0,17}\z/D',(string)$value)) throw new RuntimeException('Invalid agency pagination/identity response.');return (string)$value;
@@ -24,6 +24,8 @@ final class AgencySync
             $status=AgencyDirectory::authorization($row['authorize'],$row['locked'],$row['restricted']);
             if (($row['authorization_status']??null)!==$status) throw new RuntimeException('ERP agency authorization proof is inconsistent.');
             $contact=[];foreach (['cell','cell2','phone','phone2','email','city','address'] as $key) {$value=$row[$key]??'';if (!is_string($value)||!mb_check_encoding($value,'UTF-8')||mb_strlen($value)>2000) throw new RuntimeException('Invalid agency contact response.');$contact[$key]=$value;}
+            // Optional on older API versions; malformed image metadata cannot break authorization sync.
+            $contact['logo'] = AgencyLogo::filename($row['logo'] ?? '');
             $rows[]=['id'=>$id,'name'=>$name,'normalized_name'=>AgencyDirectory::normalize($name),'authorize'=>$row['authorize'],'locked'=>$row['locked'],'restricted'=>$row['restricted'],'authorization_status'=>$status,'contact'=>$contact];$last=$id;
         }
         if (self::id($data['next_after_id']??null,true)!==$last||($data['has_more']&&!$rows)) throw new RuntimeException('Agency pagination did not advance.');
@@ -42,6 +44,10 @@ final class AgencySync
                 if (!$data['has_more']) {$complete=true;break;}
             }
             if (!$complete||count($records)!==$total) throw new RuntimeException('The complete agency snapshot was not received. Previous data retained.');
+            $logos = $this->logos ?? new AgencyLogoCache();
+            foreach ($records as $record) {
+                if ($record['authorize'] === 'yes' && $record['contact']['logo'] !== '') $logos->store($source['code'], $record['contact']['logo']);
+            }
             $this->db->transBegin();
             try {
                 $current=$this->db->query('SELECT * FROM erp_sources WHERE id=? FOR UPDATE',[$sourceId])->getRowArray();

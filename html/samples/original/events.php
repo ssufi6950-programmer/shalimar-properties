@@ -6,7 +6,7 @@ require __DIR__ . '/includes/header.php';
 $events = [
   ['18','OCT','Open house · DHA Phase 6','Sat 11:00–14:00 · Lahore','Walk three kanal homes with our photography and measurement team on site. RSVP required.','fa-house'],
   ['22','OCT','Investor evening · Canal Road','Wed 18:30 · Lahore','Developer Q&A on two new commercial floors and payment schedules.','fa-chart-line'],
-  ['02','NOV','First-time buyer workshop','Sun 15:00 · Online','Stamp duty, token money and how to use the registry calculator before you bid.','fa-chalkboard-user'],
+  ['02','NOV','First-time buyer workshop','Sun 15:00 · Online','Stamp duty, token money and preparing your paperwork before you bid.','fa-chalkboard-user'],
   ['09','NOV','Karachi waterfront tour','Sun 10:00–13:00 · Clifton','Guided visits of three sea-facing apartments ready for transfer.','fa-water'],
   ['16','NOV','Agency partner meetup','Sat 16:00 · Islamabad','Networking for verified agencies — lead routing and photography slots.','fa-handshake'],
 ];

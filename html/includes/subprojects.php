@@ -116,8 +116,22 @@ function apply_subprojects(array $rows): array
 
 function project_tree(?string $slug): array { $p = $slug ? (projects(true)[$slug] ?? null) : null; return $p['tree'] ?? []; }
 function subproject_types(string $slug, string $cat): array { return SUBPROJECTS[$slug][$cat]['types'] ?? []; }
-function cat_label(?string $slug, ?string $cat): string { return (string)(project_tree($slug)[$cat]['label'] ?? $cat); }
-function sub_label(?string $slug, ?string $cat, ?string $sub): string { return (string)(project_tree($slug)[$cat]['subs'][$sub]['label'] ?? $sub); }
+/** Human-readable labels only; saved category keys and URL parameters stay unchanged. */
+function subproject_display_label(string $label): string
+{
+    $label = preg_replace('/\s+/u', ' ', str_replace('_', ' ', trim($label))) ?? '';
+    return ucwords(trim($label));
+}
+
+function cat_label(?string $slug, ?string $cat): string
+{
+    return subproject_display_label((string) (project_tree($slug)[$cat]['label'] ?? $cat));
+}
+
+function sub_label(?string $slug, ?string $cat, ?string $sub): string
+{
+    return subproject_display_label((string) (project_tree($slug)[$cat]['subs'][$sub]['label'] ?? $sub));
+}
 function sub_link(string $slug, string $cat = '', string $sub = ''): string
 {
     return 'buy.php?' . http_build_query(array_filter(['project' => $slug, 'sector' => $cat, 'block' => $sub], fn($v) => $v !== ''));
