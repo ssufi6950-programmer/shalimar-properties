@@ -8,7 +8,7 @@ Open Admin > Company Properties (`/public/admin/company-properties`). Each selec
 
 Choose For Sale / Resale or For Rent; enter asking price or monthly rent and optional rental terms, description, Negotiable and Shalimar Agent. Add photos and confirm authorization, then **Publish Company Listing**. Rent requires a fresh verified Constructed maintenance status in every project; there are no commercial exceptions. New listing creation is explicit; viewing inventory never creates or publishes anything.
 
-Below the inventory, **Company Listings** shows the latest 100 records. Manage an active listing to edit its content/photos and choose its main image. Purpose is fixed after creation. **Unpublish** requires resale_listings.deactivate and immediately removes public visibility. Historical rows/files remain; inactive listings are read-only. New files use the existing random legacy image format, are decoded/re-encoded, obey configured upload limits and are served from html/uploads/listings. This directory must be writable. The first uploaded image is the main image; change it from Manage after initial publication.
+Company offers appear in the existing **Property Listings** page, alongside customer offers, with its server-side filters and pagination. Company Properties has one inventory table with listing status only. Open a company offer?s details to edit its content/photos and choose its main image. Purpose is fixed after creation. **Unpublish** requires resale_listings.deactivate and immediately removes public visibility. Historical rows/files remain; inactive listings are read-only. New files use the existing random legacy image format, are decoded/re-encoded, obey configured upload limits and are served from html/uploads/listings. This directory must be writable. The first uploaded image is the main image; change it from Manage after initial publication.
 
 ## Data and authorization
 
@@ -39,3 +39,8 @@ Deployment package: deploy/company-property-listings/README.md. Live deployment 
 
 
 Live deployment completed on 18 November 2026 with explicit user authorization. Two ERP controller files and ten Portal files were backed up, server PHP linted, uploaded and SHA-256 verified. Backup: `D:/xampp/htdocs/shalimar-properties/.qa/live-backups/company-property-listings-20261118-070213/`; manifest: `.qa/company-property-listings-live-deployment.json`. Live read-only preflight confirmed PHP 8.3.6, GD, writable legacy image directory, required columns, InnoDB tables, nullable customer, auto ID and unique generated source/property/purpose key. Public and company listing SQL smoke queries passed; both Admin URLs redirected unauthenticated requests to login. No listing was created or published during deployment. Actual authenticated create/edit/photo/unpublish interactions remain unverified.
+
+
+## Single-table and rental-form follow-up (local only)
+
+Company Properties now has one table with current listing status and compact controls. Company offers are included in Property Listings; default All includes customer and company records. Security deposit, advance rent and lease duration are removed from the company form and ignored by company-only draft validation. Read-only viewers retain company details access; stale/unavailable inventory can show saved details but cannot be published. See `deploy/company-listings-summary-cleanup/README.md` for the eight exact Portal file mappings and verification limits. This follow-up has not been uploaded live.

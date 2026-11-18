@@ -13,7 +13,7 @@ final class CompanyPropertyListings extends \App\Controllers\BaseController
     }
     public function form(?int $id=null)
     {
-        if(!$this->allowed())return admin_denied();
+        if($id===null?!$this->allowed():(!can('properties.view')||!can('resale_listings.view')))return admin_denied();
         try{
             $listing=$id?$this->service()->row($id):null;
             [$source,$property]=$listing?[(int)$listing['erp_source_id'],(string)$listing['erp_property_id']]:$this->scope($this->request->getGet('source'),$this->request->getGet('property'));
@@ -25,10 +25,19 @@ final class CompanyPropertyListings extends \App\Controllers\BaseController
         $input=array_filter($input,static fn($value)=>is_string($value)||is_int($value)||is_bool($value)||is_array($value));
         foreach($input as$key=>$value)if(is_array($value)&&$key!=='rental')unset($input[$key]);
         if(isset($input['rental']))$input['rental']=is_array($input['rental'])?array_filter($input['rental'],static fn($value)=>is_string($value)||is_int($value)):[];
-        $fresh=$this->service()->property($source,$property);$forms=session()->get('company_listing_forms')??[];
+        $current=true;
+        try{$fresh=$this->service()->property($source,$property);}
+        catch(\Throwable $failure){
+            if(!$listing)throw $failure;
+            $saved=json_decode($listing['payload'],true)?:[];$current=false;
+            $sourceRow=db_connect()->table('erp_sources')->select('id,code')->where('id',$source)->get()->getRowArray();
+            $project=db_connect()->table('portal_projects')->select('name')->where('slug',$listing['project_slug'])->get()->getRowArray();
+            $fresh=['inventory'=>['id'=>$property,'property_no'=>$saved['plot_no']??$property,'size_label'=>$saved['size_label']??'','floor'=>$saved['floor']??'','status'=>$saved['_company_inventory']['inventory_status']??'Not recorded'],'source'=>$sourceRow?:['id'=>$source,'code'=>'Not recorded'],'mapping'=>['project_name'=>$project['name']??$listing['project_slug']],'classification'=>['type'=>\App\Services\ErpPropertyClassification::listingType($saved,$sourceRow['code']??''),'construction_status'=>'Not freshly verified']];
+        }
+        $forms=session()->get('company_listing_forms')??[];
         if(!is_array($forms))$forms=[];$key=bin2hex(random_bytes(32));$forms[$key]=[(int)admin_user()['id'],$source,$property,$listing['id']??null,time()];
         session()->set('company_listing_forms',array_slice($forms,-20,null,true));
-        return view('admin/company_listing_form',['pageTitle'=>$listing?'Manage Company Listing SP-'.$listing['id']:'Create Company Listing','tab'=>'company-properties','fresh'=>$fresh,'listing'=>$listing,'input'=>$input,'error'=>$error,'key'=>$key,'agents'=>(new \App\Services\ShalimarAgents(db_connect()))->adminAssignmentOptions($source)]);
+        return view('admin/company_listing_form',['pageTitle'=>$listing?'Manage Company Listing SP-'.$listing['id']:'Create Company Listing','tab'=>'company-properties','fresh'=>$fresh,'listing'=>$listing,'input'=>$input,'error'=>$error,'key'=>$key,'current'=>$current,'mayEdit'=>$current&&$this->allowed(),'agents'=>$current&&$this->allowed()?(new \App\Services\ShalimarAgents(db_connect()))->adminAssignmentOptions($source):[]]);
     }
     public function save()
     {
@@ -42,7 +51,7 @@ final class CompanyPropertyListings extends \App\Controllers\BaseController
             $files=$this->request->getFileMultiple('photos')??[];
             $saved=$this->service()->save((int)admin_user()['id'],$source,$property,$input,$files,$id);
             unset($forms[$key]);session()->set('company_listing_forms',$forms);session()->setFlashdata('company_message','Company listing SP-'.$saved.' published successfully.');
-            return redirect()->to(site_url('admin/company-properties'));
+            return redirect()->to(site_url('admin/listings').'?review=approved&q=SP-'.$saved);
         }catch(\InvalidArgumentException $e){
             try{if(isset($source,$property))return $this->renderForm($source,$property,isset($id)&&$id?$this->service()->row($id):null,$input??[],$e->getMessage());}catch(\Throwable $ignored){}
             return $this->failed($e);
@@ -54,7 +63,7 @@ final class CompanyPropertyListings extends \App\Controllers\BaseController
         try{
             $version=$this->request->getPost('version');if(!is_string($version)||!preg_match('/\A[1-9][0-9]{0,9}\z/D',$version))throw new \InvalidArgumentException('Reload the listing.');
             $this->service()->unpublish($id,(int)admin_user()['id'],(int)$version);session()->setFlashdata('company_message','Company listing unpublished.');
-            return redirect()->to(site_url('admin/company-properties'));
+            return redirect()->to(site_url('admin/listings').'?review=&q=SP-'.$id);
         }catch(\Throwable $e){return $this->failed($e);}
     }
     private function failed(\Throwable $error)

@@ -8,16 +8,16 @@ final class AdminListingReviewReadModel
     public function __construct(private BaseConnection $db){}
     public function queue(array $input):array
     {
-        $filters=AdminPortalData::filters($input);$review=$input['review']??'under_review';$purpose=$input['purpose']??'';
+        $filters=AdminPortalData::filters($input);$review=$input['review']??'';$purpose=$input['purpose']??'';
         if(!is_string($review)||!in_array($review,['','under_review','approved','rejected','needs_changes','deleted'],true)||!is_string($purpose)||!in_array($purpose,['','sale','rent'],true))throw new \InvalidArgumentException('Choose a valid review state and purpose.');
-        $query=$this->db->table('portal_listings l')->join('erp_sources s','s.id=l.erp_source_id')->join('portal_customers c','c.id=l.portal_customer_id')->join('portal_projects p','p.slug=l.project_slug','left')->where('l.erp_property_id IS NOT NULL',null,false);
+        $query=$this->db->table('portal_listings l')->join('erp_sources s','s.id=l.erp_source_id')->join('portal_customers c','c.id=l.portal_customer_id','left')->join('portal_projects p','p.slug=l.project_slug','left')->where('l.erp_property_id IS NOT NULL',null,false)->groupStart()->where('l.portal_customer_id IS NOT NULL',null,false)->orWhere("JSON_UNQUOTE(JSON_EXTRACT(l.payload,'$._company_inventory.origin'))",'admin_company_inventory')->groupEnd();
         $retained=AdminListingDeletion::retainedSql();$bucket="CASE WHEN $retained THEN l.review_state ELSE 'deleted' END";
         $counts=[];foreach((clone$query)->select($bucket.' AS bucket,COUNT(*) AS records',false)->groupBy('bucket')->get()->getResultArray()as$row)$counts[$row['bucket']]=(int)$row['records'];
         $query->where($review==='deleted'?'NOT ('.$retained.')':$retained,null,false);
         if($review!==''&&$review!=='deleted')$query->where('l.review_state',$review);if($purpose!=='')$query->where('l.listing_purpose',$purpose);if($filters['source'])$query->where('l.erp_source_id',$filters['source']);if($filters['project']!=='')$query->where('l.project_slug',$filters['project']);
         if($filters['q']!=='')$query->groupStart()->like('l.payload',$filters['q'])->orLike('l.id',$filters['q'])->orLike('c.display_name',$filters['q'])->orLike('s.name',$filters['q'])->groupEnd();
         $total=(clone$query)->countAllResults();$size=$filters['per_page'];$pages=max(1,(int)ceil($total/$size));$page=min($pages,$filters['page']);
-        $rows=$query->select('l.id,l.status,l.deal,l.listing_purpose,l.review_state,l.payload,l.asking_price,l.selling_method,l.created_at,l.erp_property_id,s.name AS source_name,s.code AS source_code,p.name AS project_name,c.display_name AS customer_name')->orderBy('l.id','DESC')->limit($size,($page-1)*$size)->get()->getResultArray();
+        $rows=$query->select('l.id,l.portal_customer_id,l.record_version,l.status,l.deal,l.listing_purpose,l.review_state,l.payload,l.asking_price,l.selling_method,l.created_at,l.erp_property_id,s.name AS source_name,s.code AS source_code,p.name AS project_name,c.display_name AS customer_name')->orderBy('l.id','DESC')->limit($size,($page-1)*$size)->get()->getResultArray();
         return ['rows'=>$rows,'counts'=>$counts,'total'=>$total,'size'=>$size,'pages'=>$pages,'page'=>$page,'filters'=>array_replace($filters,['review'=>$review,'purpose'=>$purpose]),'options'=>(new AdminPortalData($this->db))->options()];
     }
     public function detail(int $id,bool $internalContact):array

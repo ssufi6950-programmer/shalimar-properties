@@ -40,8 +40,14 @@ final class CompanyProperties extends \App\Controllers\BaseController
             }
             $sections[]=$section;
         }
-        $companyListings=[];
-        if(can('resale_listings.view'))$companyListings=$db->table('portal_listings l')->select('l.id,l.erp_source_id,l.erp_property_id,l.listing_purpose,l.record_version,l.status,l.deal,l.payload,l.asking_price,s.code AS source_code')->join('erp_sources s','s.id=l.erp_source_id')->where('l.portal_customer_id',null)->where("JSON_UNQUOTE(JSON_EXTRACT(l.payload,'$._company_inventory.origin'))",'admin_company_inventory')->orderBy('l.id','DESC')->limit(100)->get()->getResultArray();
-        return view('admin/company_properties',['pageTitle'=>'Company Properties','tab'=>'company-properties','sections'=>$sections,'rows'=>$rows,'companyListings'=>$companyListings]);
+        $listingKeys=[];foreach($rows as$row)foreach(['sale','rent']as$purpose)$listingKeys[]=\App\Services\ListingPolicy::key((int)$row['source_id'],(string)$row['id'],$purpose);
+        $offers=[];
+        if($listingKeys){
+            $public='EXISTS (SELECT 1'.\App\Services\PublicListingSearch::fromSql().' AND l.id=x.id)';
+            $sql='SELECT x.id,x.erp_source_id,x.erp_property_id,x.listing_purpose,x.portal_customer_id,x.status,x.review_state,x.payload,'.$public.' AS is_public FROM portal_listings x WHERE x.active_erp_property IN ('.implode(',',array_fill(0,count($listingKeys),'?')).') AND '.\App\Services\AdminListingDeletion::retainedSql('x');
+            foreach($db->query($sql,$listingKeys)->getResultArray()as$offer)$offers[$offer['erp_source_id'].':'.$offer['erp_property_id']][]=$offer;
+        }
+        foreach($rows as&$row)$row['offers']=$offers[$row['source_id'].':'.$row['id']]??[];unset($row);
+        return view('admin/company_properties',['pageTitle'=>'Company Properties','tab'=>'company-properties','sections'=>$sections,'rows'=>$rows]);
     }
 }

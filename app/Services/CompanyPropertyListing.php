@@ -35,7 +35,8 @@ final class CompanyPropertyListing
         $purpose=ListingPolicy::purpose($input['listing_purpose']??'sale');
         $description=$input['description']??'';
         if(!is_string($description)||!mb_check_encoding($description,'UTF-8')||mb_strlen($description)>500||trim($description)==='')throw new \InvalidArgumentException('Enter a description of 1?500 characters.');
-        $rental=$purpose==='rent'?ListingRentalTerms::validate(is_array($input['rental']??null)?$input['rental']:[]):null;
+        $rentalInput=is_array($input['rental']??null)?array_intersect_key($input['rental'],array_flip(['monthly_rent','furnishing'])):[];
+        $rental=$purpose==='rent'?ListingRentalTerms::validate($rentalInput):null;
         $price=$purpose==='rent'?$rental['monthly_rent']:ListingRentalTerms::amount($input['asking_price']??null,'Asking sale price');
         $agent=$input['portal_agent_id']??'';
         if(!is_string($agent)||!preg_match('/\A[1-9][0-9]{0,9}\z/D',$agent))throw new \InvalidArgumentException('Select a Shalimar Agent.');
