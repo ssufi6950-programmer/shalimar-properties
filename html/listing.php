@@ -23,6 +23,7 @@ if($l&&!is_admin()){
 
 $active = $l ? ($l['purpose'] === 'rent' ? 'rent' : ($l['purpose'] === 'project' ? 'projects' : 'buy')) : '';
 $pageTitle = $l ? $displayTitle . ' — Shalimar Properties' : 'Listing not found — Shalimar Properties';
+$extraCss = ['assets/css/gallery-slider.css?v=' . filemtime(__DIR__ . '/assets/css/gallery-slider.css')];
 require __DIR__ . '/includes/header.php';
 
 if (!$l): ?>
@@ -77,14 +78,17 @@ $similar = array_slice(array_filter(filter_listings([$l['purpose']], ['project' 
 <section class="sec-tight" style="padding-top:6px">
   <div class="wrap ld-grid">
     <div class="rv">
-      <div class="gallery"><img width="900" height="600" decoding="async" id="gMain" src="<?= e(img_url($images[0])) ?>" alt="<?= e($displayTitle) ?>">
+      <div class="gallery" data-gallery-open title="Click to open interactive photo slider">
+        <img width="900" height="600" decoding="async" id="gMain" src="<?= e(img_url($images[0])) ?>" alt="<?= e($displayTitle) ?>">
+        <div class="gallery-hover-overlay"><span class="gallery-hover-circle"><i class="fa-solid fa-expand"></i></span></div>
+        <button type="button" class="gallery-expand-badge" data-gallery-open aria-label="Open interactive photo slider"><i class="fa-solid fa-images"></i> <span>View all <?= count($images) ?> photos</span></button>
         <span class="chip<?= $l['purpose'] === 'rent' ? ' rent' : ($l['purpose'] === 'project' ? ' proj' : '') ?>"><?= e(purpose_label($l['purpose'])) ?></span>
         <?php if ($deal !== 'available'): ?><span class="ribbon ribbon-<?= e($deal) ?>"><?= e(deal_label($deal)) ?></span><?php endif; ?>
       </div>
       <?php if (!images_public($l)||empty($l['images'])||is_placeholder((string)($l['images'][0]??''))): ?><p class="public-photo-placeholder">Property photo not provided. Illustration shown.</p><?php endif ?>
       <?php if (count($images) > 1): ?>
       <div class="gthumbs">
-        <?php foreach ($images as $i => $img): ?><button type="button" class="<?= $i ? '' : 'on' ?>" data-src="<?= e(img_url($img)) ?>" aria-label="Photo <?= $i + 1 ?>"><img src="<?= e(img_url($img)) ?>" alt="" loading="lazy" width="120" height="80"></button><?php endforeach; ?>
+        <?php foreach ($images as $i => $img): ?><button type="button" class="<?= $i ? '' : 'on' ?>" data-src="<?= e(img_url($img)) ?>" aria-label="Photo <?= $i + 1 ?>" title="Click to view · Double-click to open slider"><img src="<?= e(img_url($img)) ?>" alt="" loading="lazy" width="120" height="80"></button><?php endforeach; ?>
       </div>
       <?php endif; ?>
 
@@ -165,11 +169,59 @@ $similar = array_slice(array_filter(filter_listings([$l['purpose']], ['project' 
 </main>
 
 <?php require __DIR__ . '/includes/footer.php'; ?>
-<script>
-document.querySelectorAll(".gthumbs button").forEach((b) => b.addEventListener("click", () => {
-  document.getElementById("gMain").src = b.dataset.src;
-  document.querySelectorAll(".gthumbs button").forEach((x) => x.classList.toggle("on", x === b));
-}));
-</script>
+
+<!-- Interactive Modern Gallery Slider Modal Popup -->
+<div id="galleryLightbox" class="gl-modal" role="dialog" aria-modal="true" aria-label="Property Photos Slider">
+  <div class="gl-backdrop" id="glBackdrop" title="Click to close"></div>
+
+  <div class="gl-dialog" id="glDialog">
+    <div class="gl-progress-bar" id="glProgress"></div>
+
+    <!-- Header -->
+    <div class="gl-header">
+      <div class="gl-header-info">
+        <span class="gl-counter-badge"><i class="fa-regular fa-image"></i> <b id="glCurrent">1</b> / <span id="glTotal"><?= count($images) ?></span></span>
+      </div>
+      <div class="gl-actions">
+        <?php if (count($images) > 1): ?>
+        <button type="button" class="gl-btn" id="glPlay" title="Autoplay Slideshow (Space)" aria-label="Play Slideshow"><i class="fa-solid fa-play"></i></button>
+        <?php endif; ?>
+        <button type="button" class="gl-btn" id="glZoomIn" title="Zoom In" aria-label="Zoom In"><i class="fa-solid fa-magnifying-glass-plus"></i></button>
+        <button type="button" class="gl-btn" id="glZoomOut" title="Reset Zoom" aria-label="Reset Zoom"><i class="fa-solid fa-magnifying-glass-minus"></i></button>
+        <button type="button" class="gl-btn gl-btn-expand" id="glFullscreen" title="Full Screen (F)" aria-label="Toggle Fullscreen"><i class="fa-solid fa-expand"></i> <span class="gl-btn-label">Full Screen</span></button>
+        <button type="button" class="gl-btn gl-btn-close" id="glClose" title="Close (Esc)" aria-label="Close Slider"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+    </div>
+
+    <!-- Center Stage -->
+    <div class="gl-stage">
+      <div class="gl-ambient-glow"></div>
+      <?php if (count($images) > 1): ?>
+      <button type="button" class="gl-arrow gl-prev" id="glPrev" title="Previous Photo (←)" aria-label="Previous Photo"><i class="fa-solid fa-chevron-left"></i></button>
+      <button type="button" class="gl-arrow gl-next" id="glNext" title="Next Photo (→)" aria-label="Next Photo"><i class="fa-solid fa-chevron-right"></i></button>
+      <?php endif; ?>
+
+      <div class="gl-slide-container">
+        <img id="glMainImg" class="gl-main-img" src="<?= e(img_url($images[0])) ?>" alt="<?= e($displayTitle) ?>" title="Click to zoom in / out">
+      </div>
+    </div>
+
+    <!-- Footer Thumbnails Strip -->
+    <div class="gl-footer">
+      <?php if (count($images) > 1): ?>
+      <div class="gl-thumb-rail" id="glThumbRail"></div>
+      <?php endif; ?>
+      <div class="gl-hints">
+        <span><kbd>←</kbd> <kbd>→</kbd> Navigate</span>
+        <span><kbd>Space</kbd> Slideshow</span>
+        <span><kbd>F</kbd> Full Screen</span>
+        <span><kbd>Esc</kbd> Close</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script id="galleryImagesData" type="application/json"><?= json_encode(array_map('img_url', $images), JSON_UNESCAPED_SLASHES) ?></script>
+<script src="assets/js/gallery-slider.js?v=<?= filemtime(__DIR__.'/assets/js/gallery-slider.js') ?>" defer></script>
 </body>
 </html>

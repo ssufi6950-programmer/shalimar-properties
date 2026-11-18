@@ -69,6 +69,7 @@ if(!isset($canonical)&&in_array($active,['home','buy','rent','projects','insight
 <link rel="stylesheet" href="assets/css/design.css?v=9">
 <link rel="stylesheet" href="assets/css/subprojects.css?v=4">
 <link rel="stylesheet" href="assets/css/public-listings.css?v=<?= filemtime(__DIR__.'/../assets/css/public-listings.css') ?>">
+<?php if (isset($extraCss)): foreach ((array)$extraCss as $cssFile): ?><link rel="stylesheet" href="<?= e($cssFile) ?>"><?php endforeach; endif; ?>
 <script src="assets/js/public-listings.js?v=<?= filemtime(__DIR__.'/../assets/js/public-listings.js') ?>" defer></script>
 </head>
 <body class="<?= e($bodyClasses) ?>"<?= $bodyStyle ?>>
