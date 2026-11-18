@@ -42,6 +42,7 @@ if(!isset($canonical)&&in_array($active,['home','buy','rent','projects','insight
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title><?= e($pageTitle) ?></title>
+<?php if (!empty($prettyRoute)): ?><base href="<?= e($__base) ?>"><?php endif ?>
 <meta name="description" content="<?= e($metaDesc) ?>">
 <meta name="theme-color" content="#0E4B31">
 <?php if(isset($canonical)): ?><link rel="canonical" href="<?= e($canonical) ?>"><?php endif ?>

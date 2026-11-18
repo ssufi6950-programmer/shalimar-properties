@@ -4,13 +4,16 @@ require_once __DIR__ . '/includes/market.php';
 
 $rawId = get_str('id',20);
 $id = preg_match('/\A[1-9][0-9]{0,17}\z/D',$rawId) ? (int)$rawId : 0;
-$l = $id ? find_listing($id) : null;
+$rawReference = get_str('ref', 40);
+$reference = preg_match('/\ASP-[0-9]{1,20}\z/D', $rawReference) ? strtoupper($rawReference) : '';
+$l = $reference !== '' ? find_listing_by_reference($reference) : ($id ? find_listing($id) : null);
+$prettyRoute = preg_match('~(?:^|/)property/SP-[0-9]+(?:-[a-z0-9-]+)?/?(?:\?.*)?$~i', (string)($_SERVER['REQUEST_URI'] ?? '')) === 1;
 $displayTitle = $l ? listing_display_title($l) : '';
 if ($l && !in_array($l['status'], ['live','approved','active'], true) && !is_admin()) $l = null;
 if (!$l) {http_response_code(404);header('X-Robots-Tag: noindex, nofollow');}
 $robots=(!$l||is_admin())?'noindex,nofollow':'index,follow';
 if($l&&!is_admin()){
- $canonical=\App\Libraries\PublicWebsiteUrl::make('listing.php',['id'=>$id]);
+ $canonical=listing_seo_url($l);
  $metaDesc=mb_substr(trim(preg_replace('/\s+/u',' ',strip_tags($l['description']??$displayTitle))),0,160);
  $social=['title'=>$displayTitle.' ? '.($l['purpose']==='rent'?'For Rent':'For Sale'),'description'=>$metaDesc,'url'=>$canonical,'image'=>listing_image($l)];
  $seo=['@context'=>'https://schema.org','@type'=>'RealEstateListing','name'=>$social['title'],'url'=>$canonical,'description'=>$metaDesc,'offers'=>['@type'=>'Offer','price'=>(string)$l['price'],'priceCurrency'=>'PKR','url'=>$canonical]];

@@ -524,6 +524,29 @@ function find_listing(int $id): ?array
     return null;
 }
 
+function find_listing_by_reference(string $reference): ?array
+{
+    // SEO routes resolve through the public eligibility query, including for signed-in admins.
+    return \App\Libraries\PortalCatalogStore::connect()->publicListingByReference($reference);
+}
+
+function listing_seo_url(array $listing): string
+{
+    $reference = strtoupper(trim((string)($listing['ref'] ?? '')));
+    if (!preg_match('/\ASP-[0-9]{1,20}\z/D', $reference)) $reference = 'SP-' . (int)($listing['id'] ?? 0);
+    $title = listing_display_title($listing);
+    $ascii = function_exists('iconv') ? iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $title) : false;
+    $slug = strtolower((string)preg_replace('/[^a-z0-9]+/i', '-', $ascii === false ? $title : $ascii));
+    $slug = trim(substr($slug, 0, 72), '-');
+    if ($slug === '') $slug = 'listing';
+    return \App\Libraries\PublicWebsiteUrl::route('property/' . $reference . '-' . $slug);
+}
+
+function project_seo_url(string $slug): string
+{
+    return \App\Libraries\PublicWebsiteUrl::route('project/' . $slug);
+}
+
 function listing_price(array $l): string
 {
     $p = e(fmt_pkr($l['price'] ?? 0));
@@ -594,7 +617,7 @@ function render_card(array $l, int $delay = 0): string
   </div>
   <div class="card-body">
     <p class="price"><?= listing_price($l) ?></p>
-    <h4><a href="listing.php?id=<?= (int)$l['id'] ?>" class="stretched"><?= e($displayTitle) ?></a></h4>
+  <h4><a href="<?= e(listing_seo_url($l)) ?>" class="stretched"><?= e($displayTitle) ?></a></h4>
     <p class="addr"><i class="fa-solid fa-location-dot"></i> <?= e(listing_location($l)) ?></p>
     <div class="feats">
       <span><?= e(category_label($l['category']??'', $l['_erp_source_code']??'')) ?></span>

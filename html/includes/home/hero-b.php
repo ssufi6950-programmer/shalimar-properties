@@ -46,7 +46,7 @@
       </div>
 
       <?php foreach (array_slice($projects, 0, 3) as $i => $p): ?>
-      <a class="h3-pcard <?= $cardPos[$i] ?><?= $p['slug']==='shalimar-smart-city'?' h3-pcard--smart-city':'' ?>" href="project.php?project=<?= e(rawurlencode($p['slug'])) ?>" aria-label="<?= e($p['name']) ?>" style="--d:<?= 500 + $i * 160 ?>ms;--f:<?= $i * 1.3 ?>s">
+      <a class="h3-pcard <?= $cardPos[$i] ?><?= $p['slug']==='shalimar-smart-city'?' h3-pcard--smart-city':'' ?>" href="<?= e(project_seo_url((string)$p['slug'])) ?>" aria-label="<?= e($p['name']) ?>" style="--d:<?= 500 + $i * 160 ?>ms;--f:<?= $i * 1.3 ?>s">
         <span class="pc-logo"><?= project_logo_html($p, 'plogo') ?></span>
         <span class="pc-action">Explore project <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></span>
         <span class="pc-txt"><small><i class="fa-solid fa-location-dot"></i> <?= e($p['city']) ?> · <?= (int)($liveByProject[$p['slug']] ?? 0) ?> live</small></span>
@@ -86,4 +86,3 @@
     </span><?php endfor; ?>
   </div></div>
 </section>
-

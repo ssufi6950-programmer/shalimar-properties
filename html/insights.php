@@ -57,7 +57,7 @@ $scope = 'All Shalimar projects';
         <?php if ($projectLogoList): ?>
           <nav class="proj-tabs chips-scroll insights-project-logos" aria-label="Shalimar projects" style="margin-top:14px">
             <?php foreach ($projectLogoList as $projectCard): ?>
-              <a class="proj-tab" href="project.php?project=<?= e(rawurlencode((string) $projectCard['slug'])) ?>" aria-label="Explore <?= e($projectCard['name']) ?>">
+              <a class="proj-tab" href="<?= e(project_seo_url((string) $projectCard['slug'])) ?>" aria-label="Explore <?= e($projectCard['name']) ?>">
                 <?= project_logo_html($projectCard, 'plogo') ?><span><?= e($projectCard['name']) ?></span>
               </a>
             <?php endforeach; ?>

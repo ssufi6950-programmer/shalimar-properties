@@ -24,4 +24,14 @@ final class PublicWebsiteUrl
         if(!$parts||!in_array($parts['scheme']??'',['http','https'],true)||empty($parts['host'])||isset($parts['user'])||isset($parts['pass'])||isset($parts['query'])||isset($parts['fragment'])||!preg_match('/\A[a-z0-9-]+\.php\z/D',$path))throw new \RuntimeException('Public website URL configuration is invalid.');
         return rtrim($base,'/').'/'.$path.($query?'?'.http_build_query($query,'','&',PHP_QUERY_RFC3986):'');
     }
+
+    /** Build only the supported public project/listing SEO aliases. */
+    public static function route(string $path):string
+    {
+        if (!preg_match('~\A(?:project/[a-z0-9-]+|property/SP-[0-9]+(?:-[a-z0-9-]+)?)\z~iD', $path)) {
+            throw new \InvalidArgumentException('Public website route is invalid.');
+        }
+        $base = self::make('index.php');
+        return substr($base, 0, -strlen('index.php')) . $path;
+    }
 }

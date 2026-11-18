@@ -4,6 +4,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/includes/bootstrap.php';
 
 $slug = $_GET['project'] ?? '';
+$prettyRoute = preg_match('~(?:^|/)project/[a-z0-9-]+/?(?:\?.*)?$~i', (string)($_SERVER['REQUEST_URI'] ?? '')) === 1;
 $availableProjects = projects();
 $selectedProject = is_string($slug) ? ($availableProjects[$slug] ?? null) : null;
 
@@ -116,11 +117,8 @@ if ($childFilterLabel !== '') $filterRowLabel = 'Filter by: ' . $childFilterLabe
 $active = 'projects';
 $pageTitle = $heading . ' | Shalimar Properties';
 $metaDesc = $heading;
-$robots = 'noindex,follow';
-$canonical = \App\Libraries\PublicWebsiteUrl::make(
-    'project.php',
-    $selectedProject === null ? [] : ['project' => $slug]
-);
+$robots = $selectedProject === null ? 'noindex,nofollow' : 'index,follow';
+$canonical = $selectedProject === null ? \App\Libraries\PublicWebsiteUrl::make('project.php') : project_seo_url($slug);
 
 require __DIR__ . '/includes/header.php';
 ?>

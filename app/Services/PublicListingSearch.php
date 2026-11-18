@@ -102,6 +102,16 @@ final class PublicListingSearch
         $query->execute([$id]);$row=$query->fetch(PDO::FETCH_ASSOC);return $row?self::decorate($row):null;
     }
 
+    /** Resolve a public listing by its exact customer-facing reference. */
+    public function findByReference(string $reference):?array
+    {
+        $refExpr="COALESCE(NULLIF(JSON_UNQUOTE(JSON_EXTRACT(l.payload,'$.ref')),''),CONCAT('SP-',l.id))";
+        $sql='SELECT l.*,s.code AS erp_source_code,c.portal_customer_id AS otp_customer_id,c.submission_key AS otp_submission_key,c.delivery_state AS otp_delivery_state,c.verified_at AS otp_verified_at,c.consumed_at AS otp_consumed_at'.preg_replace('/ WHERE /',' LEFT JOIN resale_otp_challenges c ON c.id=l.resale_verification_id WHERE ',self::fromSql(),1)." AND BINARY $refExpr=BINARY ? ORDER BY l.id DESC LIMIT 2";
+        $query=$this->pdo->prepare($sql);$query->execute([$reference]);$rows=$query->fetchAll(PDO::FETCH_ASSOC);
+        // Ambiguous refs are rejected rather than resolving to an arbitrary listing.
+        return count($rows)===1?self::decorate($rows[0]):null;
+    }
+
     public static function decorate(array $row):array
     {
         $payload=json_decode($row['payload'],true,128,JSON_THROW_ON_ERROR);

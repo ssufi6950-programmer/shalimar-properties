@@ -1,0 +1,7 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # SEO aliases use existing PHP pages; old query-string URLs remain supported.
+    RewriteRule ^property/(SP-[0-9]{1,20})(?:-[a-z0-9-]+)?/?$ listing.php?ref=$1 [QSA,L,NC]
+    RewriteRule ^project/([a-z0-9-]+)/?$ project.php?project=$1 [QSA,L,NC]
+</IfModule>

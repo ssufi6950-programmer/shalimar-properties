@@ -119,6 +119,12 @@ final class PortalCatalogStore
     {
         return (new \App\Services\PublicListingSearch($this->pdo))->find($id);
     }
+    public function publicListingByReference(string $reference):?array
+    {
+        $listing=(new \App\Services\PublicListingSearch($this->pdo))->findByReference($reference);
+        if($listing!==null){$this->contacts()->prime([(int)$listing['id']]);$listing['_public_contact']=$this->contacts()->resolve((int)$listing['id']);}
+        return $listing;
+    }
     /** Display room facts only for the exact locally saved, verified construction record. */
     public function publicListingConstructed(int $id):bool
     {
