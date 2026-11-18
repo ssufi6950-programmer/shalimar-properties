@@ -27,6 +27,7 @@ if (get_str('export') === 'csv') {
 }
 
 $active = 'insights';
+$showPriceTracker = false; // Enable after verified live price data is configured.
 $pageTitle = 'Market Insights â€” Shalimar Properties';
 $metaDesc = 'Sale, resale and property check-in activity across Shalimar communities.';
 require __DIR__ . '/includes/header.php';
@@ -75,6 +76,7 @@ $scope = 'All Shalimar projects';
   </div>
 </section>
 
+<?php if ($showPriceTracker): ?>
 <section class="sec-tight" id="prices">
   <div class="wrap">
     <div class="sec-head"><div><span class="kicker">Price tracker</span><h2>Actual resale prices vs last year</h2><p>Actual completed resale consideration is not verified in the available records. The resale form can carry forward installment balances; booking totals, processing fees and commissions cannot be used as sale prices. Price comparison is N/A.</p></div></div>
@@ -98,6 +100,7 @@ $scope = 'All Shalimar projects';
     </div>
   </div>
 </section>
+<?php endif; ?>
 
 </main>
 
@@ -141,12 +144,15 @@ $scope = 'All Shalimar projects';
     options: { plugins: { legend: { position: "bottom" }, tooltip: { mode: "index", intersect: false } }, scales: { x: { stacked: true, grid: { display: false } }, y: { stacked: true, beginAtZero: true, grid, ticks: { precision: 0 } } } }
   });
 
+  const yoyCanvas = document.getElementById("chYoy");
+  if (yoyCanvas) {
   const yoy = <?= market_json(array_values(array_map(fn($r) => ['label' => $marketProjectName($r['project']).' / '.$r['category'].' / '.$r['size'].' '.$r['unit'].' / '.$r['block'], 'v' => round($r['change'], 1)], $prices))) ?>;
-  new Chart(document.getElementById("chYoy"), {
+  new Chart(yoyCanvas, {
     type: "bar",
     data: { labels: yoy.map((r) => r.label), datasets: [{ label: "% change", data: yoy.map((r) => r.v), backgroundColor: yoy.map((r) => (r.v >= 0 ? G : "#B4423A")), borderRadius: 5, maxBarThickness: 26 }] },
     options: { plugins: { legend: { display: false }, tooltip: { callbacks: { label: (c) => (c.raw >= 0 ? "+" : "") + c.raw + "%" } } }, scales: { x: { grid: { display: false }, ticks: { maxRotation: 45, minRotation: 0 } }, y: { grid, ticks: { callback: (v) => v + "%" } } } }
   });
+  }
 })();
 </script>
 </body>
