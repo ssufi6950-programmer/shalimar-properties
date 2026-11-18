@@ -35,4 +35,7 @@ All 12 changed PHP sources linted successfully. Both inline JavaScript blocks pa
 
 Local database access failed with connection error 2002. Actual target DDL, database save/rollback/duplicate races, filesystem/database integration, authenticated browser flow and real ERP integration remain UNVERIFIED. Schema compatibility is based on inspected repository migrations (nullable customer, existing unique active property/purpose and event/audit tables); no SQL or migration was executed. No real listing was created and no message was sent. Verify the complete save/publish workflow in a controlled environment before live use.
 
-Deployment package: deploy/company-property-listings/README.md. No live deployment performed.
+Deployment package: deploy/company-property-listings/README.md. Live deployment completed on 18 November 2026; see verification below.
+
+
+Live deployment completed on 18 November 2026 with explicit user authorization. Two ERP controller files and ten Portal files were backed up, server PHP linted, uploaded and SHA-256 verified. Backup: `D:/xampp/htdocs/shalimar-properties/.qa/live-backups/company-property-listings-20261118-070213/`; manifest: `.qa/company-property-listings-live-deployment.json`. Live read-only preflight confirmed PHP 8.3.6, GD, writable legacy image directory, required columns, InnoDB tables, nullable customer, auto ID and unique generated source/property/purpose key. Public and company listing SQL smoke queries passed; both Admin URLs redirected unauthenticated requests to login. No listing was created or published during deployment. Actual authenticated create/edit/photo/unpublish interactions remain unverified.

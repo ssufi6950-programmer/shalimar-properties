@@ -2,7 +2,7 @@
 
 Admin page: https://shalimarproperties.com/public/admin/company-properties
 
-Package prepared locally on 18 November 2026. **Not uploaded live.** This extends the already-installed Company Properties API/page.
+Package prepared locally on 18 November 2026. **Uploaded live on 18 November 2026; see deployment verification below.** This extends the already-installed Company Properties API/page.
 
 ## FTP upload
 
@@ -40,3 +40,6 @@ Company offers have no customer login/OTP identity. They are manually authorized
 Report (local documentation, no FTP upload required): D:/xampp/htdocs/shalimar-properties/COMPANY-PROPERTY-LISTINGS.md.
 
 After deployment, verify permissions/CSRF, real source mappings, fresh selection, photo storage, Sale/Rent duplicate handling, Constructed-only Rent, exact public revision, main image and Unpublish in a controlled test. Do not claim these live checks have already passed.
+
+
+Live deployment completed on 18 November 2026 with explicit user authorization. Two ERP controller files and ten Portal files were backed up, server PHP linted, uploaded and SHA-256 verified. Backup: `D:/xampp/htdocs/shalimar-properties/.qa/live-backups/company-property-listings-20261118-070213/`; manifest: `.qa/company-property-listings-live-deployment.json`. Live read-only preflight confirmed PHP 8.3.6, GD, writable legacy image directory, required columns, InnoDB tables, nullable customer, auto ID and unique generated source/property/purpose key. Public and company listing SQL smoke queries passed; both Admin URLs redirected unauthenticated requests to login. No listing was created or published during deployment. Actual authenticated create/edit/photo/unpublish interactions remain unverified.
