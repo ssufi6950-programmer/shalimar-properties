@@ -11,7 +11,7 @@
           <h3><?= e($p['name']) ?></h3>
           <p><?= e($m['tagline']) ?> — <?= e($p['location']) ?></p>
           <div class="c-pk"><span><b><?= (int)($liveByProject[$p['slug']] ?? 0) ?></b>live</span><span><b><?= (int)($byProject[$p['slug']] ?? 0) ?></b>deals / mo</span><span><b><?= (int)($p['progress'] ?? 0) ?>%</b>developed</span></div>
-          <a href="projects.php#<?= e($p['slug']) ?>" class="c-btn">Open project <i class="fa-solid fa-arrow-right"></i></a>
+          <a href="projects#<?= e($p['slug']) ?>" class="c-btn">Open project <i class="fa-solid fa-arrow-right"></i></a>
         </div>
       </article>
       <?php endforeach; ?>

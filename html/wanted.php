@@ -17,11 +17,11 @@ $wa = 'https://wa.me/' . SITE_WHATSAPP . '?text=';
 <section class="page-hero">
   <div class="wrap page-hero-row">
     <div>
-      <div class="crumbs"><a href="index.php">Home</a><span>/</span><span>Wanted</span></div>
+      <div class="crumbs"><a href="home">Home</a><span>/</span><span>Wanted</span></div>
       <h1>Buyers &amp; tenants looking now</h1>
       <p class="lede">Have something that fits? Offer a match through our team — contact details stay private until both sides agree.</p>
     </div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap"><a href="#post" class="btn btn-solid">Post a wanted ad</a><a href="buy.php" class="btn btn-ghost">Browse listings</a></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><a href="#post" class="btn btn-solid">Post a wanted ad</a><a href="buy" class="btn btn-ghost">Browse listings</a></div>
   </div>
 </section>
 

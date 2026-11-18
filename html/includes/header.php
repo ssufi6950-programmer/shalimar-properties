@@ -4,14 +4,16 @@ require_once __DIR__ . '/design.php';
 require_once dirname(__DIR__, 2) . '/app/Libraries/PortalLinks.php';
 if (!isset($active)) $active = '';
 if (!isset($pageTitle)) $pageTitle = 'Shalimar Properties';
+$__requestPath = parse_url((string) ($_SERVER['REQUEST_URI'] ?? ''), PHP_URL_PATH) ?: '';
+if (preg_match('~/(?:home|buy|rent|projects|insights|agencies)/?$~i', $__requestPath)) $prettyRoute = true;
 if (!isset($metaDesc)) $metaDesc = 'Shalimar Properties — verified plots, homes, rentals and project units in Shalimar Smart City, Gulberg City and Zalmi X.';
 $nav = [
-  'home'     => ['Home', 'index.php', 'fa-house'],
-  'buy'      => ['Buy', 'buy.php', 'fa-key'],
-  'rent'     => ['Rent', 'rent.php', 'fa-building'],
-  'projects' => ['Projects', 'projects.php', 'fa-city'],
-  'insights' => ['Market Insights', 'insights.php', 'fa-chart-line'],
-  'agencies' => ['Agencies', 'agencies.php', 'fa-briefcase'],
+  'home'     => ['Home', 'home', 'fa-house'],
+  'buy'      => ['Buy', 'buy', 'fa-key'],
+  'rent'     => ['Rent', 'rent', 'fa-building'],
+  'projects' => ['Projects', 'projects', 'fa-city'],
+  'insights' => ['Market Insights', 'insights', 'fa-chart-line'],
+  'agencies' => ['Agencies', 'agencies', 'fa-briefcase'],
 ];
 $more = [
   'blog'     => ['Blog', 'blog.php', 'fa-newspaper'],
@@ -33,8 +35,12 @@ if (!isset($heroPhoto)) {
 if (!DESIGN_BANNER) $heroPhoto = '';
 $bodyClasses = 'dz dz-' . DESIGN_ID . ' ' . trim(($bodyClass ?? '') . ($heroPhoto !== '' ? ' photo-hero' : ''));
 $__base = rtrim(str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? '/')), '/') . '/';
+if (!empty($prettyRoute)) {
+  $publicBase = parse_url(\App\Libraries\PublicWebsiteUrl::make('index.php'), PHP_URL_PATH) ?: '/';
+  $__base = rtrim(str_replace('\\', '/', dirname($publicBase)), '/') . '/';
+}
 $bodyStyle = $heroPhoto !== '' ? ' style="--hero-img:url(\'' . e($__base . photo($heroPhoto, true)) . '\')"' : '';
-if(!isset($canonical)&&in_array($active,['home','buy','rent','projects','insights'],true))$canonical=\App\Libraries\PublicWebsiteUrl::make($active==='home'?'index.php':$active.'.php');
+if(!isset($canonical)&&in_array($active,['home','buy','rent','projects','insights','agencies'],true))$canonical=\App\Libraries\PublicWebsiteUrl::route($active);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -70,7 +76,7 @@ if(!isset($canonical)&&in_array($active,['home','buy','rent','projects','insight
 
 <header class="hdr" id="hdr">
   <div class="wrap hdr-in">
-    <a href="index.php" class="brand" aria-label="Shalimar Properties — home">
+    <a href="home" class="brand" aria-label="Shalimar Properties — home">
       <img class="logo logo-c" src="assets/images/logos/sp-logo.svg?v=7" alt="Shalimar Properties" width="189" height="46">
       <img class="logo logo-w" src="assets/images/logos/sp-logo-white.svg?v=7" alt="" width="189" height="46">
     </a>
@@ -101,7 +107,7 @@ if(!isset($canonical)&&in_array($active,['home','buy','rent','projects','insight
 
 <div class="drawer" id="drawer" role="dialog" aria-modal="true" aria-label="Menu">
   <div class="drawer-top">
-    <a href="index.php" class="brand" aria-label="Shalimar Properties — home"><img class="logo" src="assets/images/logos/sp-logo.svg?v=7" alt="Shalimar Properties" width="165" height="40"></a>
+    <a href="home" class="brand" aria-label="Shalimar Properties — home"><img class="logo" src="assets/images/logos/sp-logo.svg?v=7" alt="Shalimar Properties" width="165" height="40"></a>
     <button class="drawer-close" id="drawerClose" aria-label="Close menu"><i class="fa-solid fa-xmark"></i></button>
   </div>
   <a href="post-property.php" class="btn btn-solid btn-block"><i class="fa-solid fa-plus"></i> Post a property</a>
@@ -124,9 +130,9 @@ if(!isset($canonical)&&in_array($active,['home','buy','rent','projects','insight
 <div class="mobile-menu-overlay" id="drawerOverlay"></div>
 
 <nav class="tabbar" aria-label="App navigation">
-  <a href="index.php" class="<?= $active === 'home' ? 'on' : '' ?>"><i class="fa-solid fa-house"></i>Home</a>
-  <a href="buy.php" class="<?= $active === 'buy' ? 'on' : '' ?>"><i class="fa-solid fa-key"></i>Buy</a>
-  <a href="rent.php" class="<?= $active === 'rent' ? 'on' : '' ?>"><i class="fa-solid fa-building"></i>Rent</a>
-  <a href="projects.php" class="<?= $active === 'projects' ? 'on' : '' ?>"><i class="fa-solid fa-city"></i>Projects</a>
+  <a href="home" class="<?= $active === 'home' ? 'on' : '' ?>"><i class="fa-solid fa-house"></i>Home</a>
+  <a href="buy" class="<?= $active === 'buy' ? 'on' : '' ?>"><i class="fa-solid fa-key"></i>Buy</a>
+  <a href="rent" class="<?= $active === 'rent' ? 'on' : '' ?>"><i class="fa-solid fa-building"></i>Rent</a>
+  <a href="projects" class="<?= $active === 'projects' ? 'on' : '' ?>"><i class="fa-solid fa-city"></i>Projects</a>
   <button type="button" id="tabMore" class="<?= !in_array($active, ['home', 'buy', 'rent', 'projects'], true) ? 'on' : '' ?>" aria-controls="drawer"><i class="fa-solid fa-grip"></i>More</button>
 </nav>

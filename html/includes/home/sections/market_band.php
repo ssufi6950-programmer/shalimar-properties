@@ -5,7 +5,7 @@
         <span class="kicker light">Market intelligence</span>
         <h2 class="display-sm light"><?= $T('title_h', 'Negotiate with real numbers, <em>not rumours.</em>') ?></h2>
         <p>Explore SGC and Zalmi deals, including sales, resales and property check-ins, reported for each period.</p>
-        <a href="insights.php" class="btn btn-gold"><i class="fa-solid fa-chart-line"></i> Open the market report</a>
+        <a href="insights" class="btn btn-gold"><i class="fa-solid fa-chart-line"></i> Open the market report</a>
       </div>
       <div class="hm-viz">
         <div class="hm-head"><span>Deals per day · last 30 days</span><b data-market-chart-total><?= market_count($market['chart_total']) ?><?= $market['available'] ? ' deals' : '' ?></b></div>

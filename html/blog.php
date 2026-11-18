@@ -19,9 +19,9 @@ if ($cat !== '') $posts = array_values(array_filter($posts, fn($p) => $p[0] === 
 <main id="main">
 <section class="page-hero">
   <div class="wrap">
-    <div class="crumbs"><a href="index.php">Home</a><span>/</span><span>Blog</span></div>
+    <div class="crumbs"><a href="home">Home</a><span>/</span><span>Blog</span></div>
     <h1>Guides &amp; market notes</h1>
-    <p class="lede">Practical reading for buyers, owners and investors — plus live numbers in our <a href="insights.php" class="gold">market insights</a>.</p>
+    <p class="lede">Practical reading for buyers, owners and investors — plus live numbers in our <a href="insights" class="gold">market insights</a>.</p>
     <div class="tag-row chips-scroll" style="margin-top:14px">
       <a href="blog.php" class="pill<?= $cat === '' ? '' : ' muted' ?>">All</a>
       <?php foreach ($cats as $c): ?><a href="blog.php?cat=<?= urlencode($c) ?>" class="pill<?= $cat === $c ? '' : ' muted' ?>"><?= e($c) ?></a><?php endforeach; ?>
@@ -55,7 +55,7 @@ if ($cat !== '') $posts = array_values(array_filter($posts, fn($p) => $p[0] === 
   <div class="wrap">
     <div class="cta-box rv rv-z">
       <div><h2>Prefer numbers to opinions?</h2><p>Daily and monthly transactions, most-traded sizes and block-wise prices — updated as deals are recorded.</p></div>
-      <div class="cta-actions"><a href="insights.php" class="btn btn-light"><i class="fa-solid fa-chart-line"></i> View market insights</a></div>
+      <div class="cta-actions"><a href="insights" class="btn btn-light"><i class="fa-solid fa-chart-line"></i> View market insights</a></div>
     </div>
   </div>
 </section>

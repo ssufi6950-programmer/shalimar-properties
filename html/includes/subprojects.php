@@ -134,7 +134,7 @@ function sub_label(?string $slug, ?string $cat, ?string $sub): string
 }
 function sub_link(string $slug, string $cat = '', string $sub = ''): string
 {
-    return 'buy.php?' . http_build_query(array_filter(['project' => $slug, 'sector' => $cat, 'block' => $sub], fn($v) => $v !== ''));
+    return 'buy?' . http_build_query(array_filter(['project' => $slug, 'sector' => $cat, 'block' => $sub], fn($v) => $v !== ''));
 }
 
 /** Compact "sub-projects" block. $mode: 'full' (categories + sub links) or 'mini' (category links only). */

@@ -4,7 +4,7 @@ require_once __DIR__.'/includes/bootstrap.php';
 header('Content-Type: application/xml; charset=utf-8');
 header('X-Content-Type-Options: nosniff');
 $urls=[];
-foreach(['index.php','buy.php','rent.php','projects.php','insights.php']as$page)$urls[]=\App\Libraries\PublicWebsiteUrl::make($page);
+foreach(['home','buy','rent','projects','insights','agencies']as$route)$urls[]=\App\Libraries\PublicWebsiteUrl::route($route);
 foreach(projects()as$project)$urls[]=project_seo_url((string)$project['slug']);
 $listings=\App\Libraries\PortalCatalogStore::connect()->publicSearch(\App\Services\PublicListingSearch::filters([]),[],false)['rows'];
 foreach($listings as$listing)$urls[]=listing_seo_url($listing);

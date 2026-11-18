@@ -7,7 +7,7 @@ require_once __DIR__ . '/bootstrap.php';
 $isAll = $browsePurpose === 'all';
 $active = $browsePurpose === 'rent' ? 'rent' : ($isAll ? '' : 'buy');
 $isRent = $browsePurpose === 'rent';
-$route = $isAll ? 'properties.php' : $active . '.php';
+$route = $isAll ? 'properties.php' : $active;
 $projects = projects();
 $projectInput = $_GET['project'] ?? '';
 $slug = is_string($projectInput) ? trim($projectInput) : '';
@@ -140,7 +140,9 @@ $metaDesc = $isAll
     : ($isRent
     ? 'Explore approved rental properties by project and configured property filters.'
     : 'Explore approved properties for sale by project and configured property filters.');
-$canonical = \App\Libraries\PublicWebsiteUrl::make($route, $result['page'] > 1 ? ['page' => $result['page']] : []);
+$canonical = $isAll
+    ? \App\Libraries\PublicWebsiteUrl::make($route, $result['page'] > 1 ? ['page' => $result['page']] : [])
+    : \App\Libraries\PublicWebsiteUrl::route($route) . ($result['page'] > 1 ? '?page=' . (int) $result['page'] : '');
 $robots = ($_GET || $filters['errors']) ? 'noindex,follow' : 'index,follow';
 
 require __DIR__ . '/header.php';
@@ -175,7 +177,7 @@ require __DIR__ . '/header.php';
 <main id="main" class="public-discovery browse-explorer-shell<?= $isAll ? ' browse-all-types' : '' ?>" data-browse-explorer>
 <div id="browseExplorerPanel">
 <section class="page-hero"><div class="wrap">
-    <div class="crumbs"><a href="index.php">Home</a><span>/</span><span><?= $isAll ? 'Properties' : ($isRent ? 'Rent' : 'Buy') ?></span></div>
+    <div class="crumbs"><a href="home">Home</a><span>/</span><span><?= $isAll ? 'Properties' : ($isRent ? 'Rent' : 'Buy') ?></span></div>
     <h1><?= e($pageHeading ?: 'Properties for sale & rent') ?></h1>
     <p class="lede"><?= $isAll ? 'Browse approved sale and rental properties. Rental prices are monthly.' : ($isRent ? 'Browse approved rental properties. Every price is monthly rent.' : 'Browse approved properties for sale with clear asking prices.') ?></p>
     <div class="explorer-controls">

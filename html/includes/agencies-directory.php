@@ -20,14 +20,14 @@ $agencies=array_values(array_filter($directory,static function($agency)use($sear
 @media(prefers-reduced-motion:reduce){.public-agency-directory .agency .logo{transition:none}}
 </style>
 <section class="page-hero"><div class="wrap">
-  <div class="crumbs"><a href="index.php">Home</a><span>/</span><span>Agencies</span></div>
+  <div class="crumbs"><a href="home">Home</a><span>/</span><span>Agencies</span></div>
   <h1>Authorized Agencies</h1>
   <p class="lede">Explore agencies currently authorized by SGC or Zalmi.</p>
-  <form class="filters" method="get" action="agencies.php">
+  <form class="filters" method="get" action="agencies">
     <input type="search" name="q" value="<?= e($search) ?>" placeholder="Search agency or area" aria-label="Search agencies" style="flex:1 1 220px">
     <select name="city" aria-label="City"><option value="">All cities</option><?php foreach($cities as$c): ?><option value="<?= e($c) ?>" <?= strcasecmp($city,$c)===0?'selected':'' ?>><?= e($c) ?></option><?php endforeach ?></select>
     <button class="btn btn-solid" type="submit">Find agencies</button>
-    <?php if($search!==''||$city!==''): ?><a class="btn btn-ghost" href="agencies.php">Reset</a><?php endif ?>
+    <?php if($search!==''||$city!==''): ?><a class="btn btn-ghost" href="agencies">Reset</a><?php endif ?>
   </form>
 </div></section>
 <section class="sec-tight public-agency-directory" style="padding-top:8px"><div class="wrap">
@@ -41,12 +41,12 @@ $agencies=array_values(array_filter($directory,static function($agency)use($sear
         <span class="vbadge"><i class="fa-solid fa-circle-check" aria-hidden="true"></i> Authorized Agency</span>
         <?php if($a['email']!==''): ?><p class="meta"><?= e($a['email']) ?></p><?php endif ?>
         <div class="acts">
-          <?php if($a['portal_agency_id']!==null): ?><a class="btn btn-solid btn-sm" href="buy.php?agency=<?= $a['portal_agency_id'] ?>">Sale listings</a><a class="btn btn-ghost btn-sm" href="rent.php?agency=<?= $a['portal_agency_id'] ?>">Rent listings</a><?php endif ?>
+          <?php if($a['portal_agency_id']!==null): ?><a class="btn btn-solid btn-sm" href="buy?agency=<?= $a['portal_agency_id'] ?>">Sale listings</a><a class="btn btn-ghost btn-sm" href="rent?agency=<?= $a['portal_agency_id'] ?>">Rent listings</a><?php endif ?>
           <?php if($a['tel']!==''): ?><a class="btn btn-ghost btn-sm" href="<?= e($a['tel']) ?>">Call</a><?php endif ?>
           <?php if($a['whatsapp']!==''): ?><a class="btn btn-ghost btn-sm" href="<?= e($a['whatsapp']) ?>">WhatsApp</a><?php endif ?>
           <?php if($a['mailto']!==''): ?><a class="btn btn-ghost btn-sm" href="<?= e($a['mailto']) ?>">Email</a><?php endif ?>
         </div>
       </div>
     </article><?php endforeach ?>
-  </div><?php else: ?><div class="empty-note" role="status">No authorized agencies match your search. <a class="gold" href="agencies.php">Show all</a></div><?php endif ?>
+  </div><?php else: ?><div class="empty-note" role="status">No authorized agencies match your search. <a class="gold" href="agencies">Show all</a></div><?php endif ?>
 </div></section>

@@ -2,12 +2,12 @@
   <div class="wrap">
     <div class="sec-head rv">
       <div><span class="kicker"><?= e($T('kicker', 'Our communities')) ?></span><h2 class="display-sm"><?= $T('title_h', 'Where Shalimar builds') ?></h2></div>
-      <a href="projects.php" class="link-more">All projects <i class="fa-solid fa-arrow-right-long"></i></a>
+      <a href="projects" class="link-more">All projects <i class="fa-solid fa-arrow-right-long"></i></a>
     </div>
     <div class="pr-rows rv">
       <div class="pr-float" aria-hidden="true"><?php foreach ($projects as $i => $p): $m = project_media($p); ?><img data-k="<?= $i ?>" src="<?= e($m['cover']) ?>" alt=""<?= $i ? '' : ' class="on"' ?> loading="lazy"><?php endforeach; ?></div>
       <?php foreach ($projects as $i => $p): $m = project_media($p); ?>
-      <a class="pr-row" data-k="<?= $i ?>" href="projects.php#<?= e($p['slug']) ?>">
+      <a class="pr-row" data-k="<?= $i ?>" href="projects#<?= e($p['slug']) ?>">
         <span class="pr-no"><?= str_pad((string)($i + 1), 2, '0', STR_PAD_LEFT) ?></span>
         <span class="pr-thumb"><img src="<?= e($m['cover']) ?>" alt="" loading="lazy"></span>
         <span class="pr-name"><b><?= e($p['name']) ?></b><small><?= e($m['tagline']) ?></small></span>

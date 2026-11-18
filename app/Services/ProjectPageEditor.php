@@ -104,9 +104,9 @@ final class ProjectPageEditor
             'categories' => $categories,
             'facts' => [],
             'actions' => [
-                ['label' => 'Available units', 'url' => 'projects.php?project=' . rawurlencode($slug) . '#units'],
-                ['label' => 'Resale', 'url' => 'buy.php?project=' . rawurlencode($slug)],
-                ['label' => 'Prices', 'url' => 'insights.php?project=' . rawurlencode($slug)],
+                ['label' => 'Available units', 'url' => 'projects?project=' . rawurlencode($slug) . '#units'],
+                ['label' => 'Resale', 'url' => 'buy?project=' . rawurlencode($slug)],
+                ['label' => 'Prices', 'url' => 'insights?project=' . rawurlencode($slug)],
             ],
         ];
         $galleries = [

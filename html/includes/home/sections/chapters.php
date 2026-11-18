@@ -10,7 +10,7 @@
         <p class="a-tag"><?= e($m['tagline']) ?> · <?= e($p['location']) ?></p>
         <ul class="a-feats"><?php foreach (array_slice($m['features'], 0, 6) as $f): ?><li><?= e($f) ?></li><?php endforeach; ?></ul>
         <div class="a-facts"><span><b><?= (int)($liveByProject[$p['slug']] ?? 0) ?></b> live listings</span><span><b><?= (int)($byProject[$p['slug']] ?? 0) ?></b> deals this month</span><span>from <b><?= e(preg_replace('/\s*\(.*$/', '', (string)$p['price_from'])) ?></b></span></div>
-        <a class="a-link" href="projects.php#<?= e($p['slug']) ?>">Discover <?= e($p['name']) ?> <i class="fa-solid fa-arrow-right-long"></i></a>
+        <a class="a-link" href="projects#<?= e($p['slug']) ?>">Discover <?= e($p['name']) ?> <i class="fa-solid fa-arrow-right-long"></i></a>
       </div>
     </article>
     <?php endforeach; ?>

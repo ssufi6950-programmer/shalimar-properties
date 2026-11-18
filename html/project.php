@@ -172,7 +172,7 @@ require __DIR__ . '/includes/header.php';
                 <a data-explorer-link class="explorer-option" href="<?= e($explorerUrl()) ?>" <?= $activeRootKey === '' && $selectionError === '' ? 'aria-current="true"' : '' ?>><small>All</small></a>
                 <?php if ($isRootView): ?>
                     <?php foreach ($state['roots'] as $option): ?><a data-explorer-link class="explorer-option" href="<?= e($explorerUrl($option['key'])) ?>"><small><?= e($option['label']) ?></small></a><?php endforeach ?>
-                    <a class="explorer-option explorer-back" href="index.php#hero" aria-label="Back to projects"><small>Projects</small></a>
+                    <a class="explorer-option explorer-back" href="home#hero" aria-label="Back to projects"><small>Projects</small></a>
                 <?php else: ?>
                     <?php foreach ($rowOptions as $option): $nextTree = $treeBase; $nextTree[] = $option['id']; ?><a data-explorer-link class="explorer-option" href="<?= e($explorerUrl($activeRootKey, $nextTree)) ?>"><small><?= e($option['label']) ?></small></a><?php endforeach ?>
                     <?php if ($backUrl !== ''): ?><a data-explorer-link class="explorer-option explorer-back" href="<?= e($backUrl) ?>" aria-label="Back to previous filter"><small>Back</small></a><?php endif ?>

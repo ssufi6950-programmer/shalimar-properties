@@ -27,7 +27,7 @@ require __DIR__ . '/includes/header.php';
 
 if (!$l): ?>
 <main id="main"><section class="page-hero"><div class="wrap">
-  <div class="empty-note"><i class="fa-solid fa-house-circle-xmark"></i>This listing is not available. It may be awaiting review or has been removed.<br><br><a class="btn btn-solid" href="buy.php">Browse listings</a></div>
+  <div class="empty-note"><i class="fa-solid fa-house-circle-xmark"></i>This listing is not available. It may be awaiting review or has been removed.<br><br><a class="btn btn-solid" href="buy">Browse listings</a></div>
 </div></section></main>
 <?php require __DIR__ . '/includes/footer.php'; ?></body></html>
 <?php exit; endif;
@@ -52,7 +52,7 @@ if ($sectorCommercial && !$sectorResidential) {
 }
 $deal = $l['deal'] ?? 'available';
 $images = listing_gallery($l);
-$back = ['rent' => 'rent.php', 'project' => 'projects.php'][$l['purpose']] ?? 'buy.php';
+$back = ['rent' => 'rent', 'project' => 'projects'][$l['purpose']] ?? 'buy';
 $waText = 'Assalam o Alaikum, I am interested in ' . $displayTitle . ' (Ref ' . $l['ref'] . ') listed on Shalimar Properties.';
 $publicContact = \App\Libraries\PortalCatalogStore::connect()->publicContact((int)$l['id']);
 $showRoomFacts = $propertyCategory !== 'Commercial'
@@ -69,7 +69,7 @@ $similar = array_slice(array_filter(filter_listings([$l['purpose']], ['project' 
 <main id="main">
 <section class="page-hero" style="padding-bottom:10px">
   <div class="wrap">
-    <div class="crumbs"><a href="index.php">Home</a><span>/</span><a href="<?= $back ?>"><?= e(purpose_label($l['purpose'])) ?></a><span>/</span><span><?= e($l['ref']) ?></span></div>
+    <div class="crumbs"><a href="home">Home</a><span>/</span><a href="<?= $back ?>"><?= e(purpose_label($l['purpose'])) ?></a><span>/</span><span><?= e($l['ref']) ?></span></div>
     <?php if (!in_array($l['status'], ['live','approved','active'], true)): ?><div class="alert alert-info" style="margin-top:12px"><i class="fa-solid fa-user-shield"></i> Admin preview — this listing is <b><?= e($l['status']) ?></b> and not visible to the public.</div><?php endif; ?>
   </div>
 </section>
@@ -117,7 +117,7 @@ $similar = array_slice(array_filter(filter_listings([$l['purpose']], ['project' 
       </div>
 
       <?php if ($l['purpose']==='rent'&&!empty($l['rental'])): ?><section class="panel rental-facts"><h2 style="font-size:18px">Rental terms</h2><dl><?php foreach(['security_deposit'=>'Security deposit','advance_rent'=>'Advance rent','furnishing'=>'Furnishing','lease_duration_months'=>'Lease duration']as$key=>$label): $value=$l['rental'][$key]??null;if($value===null||$value==='')continue; ?><div><dt><?= e($label) ?></dt><dd><?= e(in_array($key,['security_deposit','advance_rent'],true)?fmt_pkr($value):($key==='lease_duration_months'?$value.' months':ucwords(str_replace('_',' ',(string)$value)))) ?></dd></div><?php endforeach ?></dl></section><?php endif ?>
-      <div class="panel" style="margin-top:14px"><h3 style="font-size:18px">Official ERP market insights</h3><p class="muted">Asking prices and monthly rents are separate from completed ERP resale transactions.</p><a class="link-more" href="insights.php<?= $proj?'?project='.rawurlencode($l['project']):'' ?>">View verified market reporting</a></div>
+      <div class="panel" style="margin-top:14px"><h3 style="font-size:18px">Official ERP market insights</h3><p class="muted">Asking prices and monthly rents are separate from completed ERP resale transactions.</p><a class="link-more" href="insights<?= $proj?'?project='.rawurlencode($l['project']):'' ?>">View verified market reporting</a></div>
     </div>
 
     <aside class="panel contact-card rv rv-r sticky-aside">

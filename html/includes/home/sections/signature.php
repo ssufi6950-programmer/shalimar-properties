@@ -13,7 +13,7 @@
         $from = preg_replace('/\s*\(.*$/', '', (string)($p['price_from'] ?? ''));
         $city = trim((string)($p['city'] ?? '')); ?>
       <article class="sig-card rv" style="--d:<?= 120 * $i ?>ms">
-        <a class="sig-frame" href="projects.php#<?= e($p['slug']) ?>" aria-label="Explore <?= e($p['name']) ?>">
+        <a class="sig-frame" href="projects#<?= e($p['slug']) ?>" aria-label="Explore <?= e($p['name']) ?>">
           <img src="<?= e($img) ?>" alt="<?= e($p['name']) ?>" loading="lazy">
           <span class="sig-no"><?= str_pad((string)($i + 1), 2, '0', STR_PAD_LEFT) ?></span>
           <span class="sig-logo"><?= project_logo_html($p, 'plogo') ?></span>
@@ -25,12 +25,12 @@
           <?php if ($feats): ?><ul class="sig-feats"><?php foreach ($feats as $f): ?><li><?= e($f) ?></li><?php endforeach; ?></ul><?php endif; ?>
           <div class="sig-foot">
             <span><?php if ($from !== ''): ?><small>From</small><b><?= e($from) ?></b><?php else: ?><small>Verified</small><b><?= (int)($liveByProject[$p['slug']] ?? 0) ?> listings</b><?php endif; ?></span>
-            <a href="projects.php#<?= e($p['slug']) ?>" class="sig-go">Explore <i class="fa-solid fa-arrow-right-long"></i></a>
+            <a href="projects#<?= e($p['slug']) ?>" class="sig-go">Explore <i class="fa-solid fa-arrow-right-long"></i></a>
           </div>
         </div>
       </article>
       <?php endforeach; ?>
     </div>
-    <div class="sig-all rv"><a href="projects.php">View all projects <i class="fa-solid fa-arrow-right-long"></i></a></div>
+    <div class="sig-all rv"><a href="projects">View all projects <i class="fa-solid fa-arrow-right-long"></i></a></div>
   </div>
 </section>

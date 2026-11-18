@@ -67,7 +67,7 @@
     content.className = "sv-content f" + cf;
     content.innerHTML = cf === 0
       ? '<span class="sv-proj"><i class="fa-solid fa-location-dot"></i> ' + esc(s.project) + '</span><blockquote>“' + esc(s.quote) + '”</blockquote>'
-      : '<span class="sv-proj"><i class="fa-solid fa-circle-check"></i> The deal, on record</span><ul class="sv-facts">' + s.facts.map((f, i) => '<li style="--i:' + i + '"><b>' + esc(f) + "</b></li>").join("") + '</ul><a class="btn btn-gold btn-sm" href="projects.php#' + esc(s.slug) + '">Explore ' + esc(s.project) + ' <i class="fa-solid fa-arrow-right-long"></i></a>';
+      : '<span class="sv-proj"><i class="fa-solid fa-circle-check"></i> The deal, on record</span><ul class="sv-facts">' + s.facts.map((f, i) => '<li style="--i:' + i + '"><b>' + esc(f) + "</b></li>").join("") + '</ul><a class="btn btn-gold btn-sm" href="projects#' + esc(s.slug) + '">Explore ' + esc(s.project) + ' <i class="fa-solid fa-arrow-right-long"></i></a>';
     const run = $(".run i", segs);
     if (run) { if (FDUR) { run.style.animationDuration = FDUR + "ms"; run.addEventListener("animationend", () => next(), { once: true }); } else run.style.width = "100%"; }
   }

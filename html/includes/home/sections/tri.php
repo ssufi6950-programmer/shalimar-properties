@@ -3,11 +3,11 @@
     <div class="sec-head rv">
       <div><span class="kicker"><?= e($T('kicker', 'The Shalimar Group')) ?></span><h2 class="display-sm"><?= $T('title_h', 'Three communities, one promise') ?></h2>
         <p><?= e($T('lede', 'Every project is planned, built and managed by Shalimar Group.')) ?></p></div>
-      <a href="projects.php" class="link-more">All projects <i class="fa-solid fa-arrow-right-long"></i></a>
+      <a href="projects" class="link-more">All projects <i class="fa-solid fa-arrow-right-long"></i></a>
     </div>
     <div class="tri">
       <?php foreach ($projects as $i => $p): $m = project_media($p); ?>
-      <a class="tri-card rv" style="--d:<?= $i * 110 ?>ms" href="projects.php#<?= e($p['slug']) ?>">
+      <a class="tri-card rv" style="--d:<?= $i * 110 ?>ms" href="projects#<?= e($p['slug']) ?>">
         <img src="<?= e($m['cover_lg']) ?>" alt="<?= e($p['name']) ?>" loading="lazy">
         <span class="tri-top"><em><?= str_pad((string)($i + 1), 2, '0', STR_PAD_LEFT) ?></em><span><i class="fa-solid fa-location-dot"></i> <?= e($p['city'] ?? '') ?></span></span>
         <span class="tri-body">

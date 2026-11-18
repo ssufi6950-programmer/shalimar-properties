@@ -414,7 +414,7 @@ function listing_row(array $l, string $back): string
           <a class="btn btn-solid" href="admin.php?tab=pending"><i class="fa-solid fa-hourglass-half"></i> Review pending listings</a>
           <a class="btn btn-ghost" href="admin.php?tab=transactions"><i class="fa-solid fa-handshake"></i> Record a transaction</a>
           <a class="btn btn-ghost" href="admin.php?tab=parties"><i class="fa-solid fa-user-plus"></i> Add owner / agency</a>
-          <a class="btn btn-ghost" href="insights.php" target="_blank"><i class="fa-solid fa-chart-line"></i> Open market report</a>
+          <a class="btn btn-ghost" href="insights" target="_blank"><i class="fa-solid fa-chart-line"></i> Open market report</a>
         </div></div>
       <div class="panel"><h3 style="font-size:17px">Recent activity</h3>
         <?php foreach ($recent as $r): ?><div style="padding:8px 0;border-top:1px solid var(--line);font-size:13px"><b><?= e($r['action']) ?></b><br><span class="muted"><?= e($r['ts']) ?> · <?= e(mb_strimwidth($r['details'], 0, 110, '…')) ?></span></div><?php endforeach; ?>

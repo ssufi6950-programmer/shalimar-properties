@@ -24,12 +24,12 @@ $pad = fn($n) => str_pad((string)$n, 2, '0', STR_PAD_LEFT);
         <span class="ln"><i><?= $H['l2'] ?></i></span>
       </h1>
       <p class="d-lede"><?= e($H['lede']) ?></p>
-      <form class="h3-search d-search" id="heroSearch" action="buy.php" method="get">
+      <form class="h3-search d-search" id="heroSearch" action="buy" method="get">
         <div class="tabs" id="tabs">
           <span class="tab-pill" id="pill"></span>
-          <button type="button" class="tab on" data-action="buy.php">Buy</button>
-          <button type="button" class="tab" data-action="rent.php">Rent</button>
-          <button type="button" class="tab" data-action="projects.php">Projects</button>
+          <button type="button" class="tab on" data-action="buy">Buy</button>
+          <button type="button" class="tab" data-action="rent">Rent</button>
+          <button type="button" class="tab" data-action="projects">Projects</button>
         </div>
         <div class="fields">
           <div class="field f-loc"><label for="loc"><i class="fa-solid fa-location-dot"></i> Location</label><input id="loc" name="q" placeholder="Sector or block"></div>
@@ -107,7 +107,7 @@ $pad = fn($n) => str_pad((string)$n, 2, '0', STR_PAD_LEFT);
       <?php if ($heroMode === 'h2'): $pThumb = ['shalimar-smart-city' => 'ssc-aerial', 'gulberg-city' => 'gc-villas', 'zalmi-x' => 'zx-building']; ?>
       <nav class="h2-projects" aria-label="Shalimar Group projects">
         <?php foreach ($projects as $k => $p): ?>
-        <a class="h2-proj" href="projects.php#<?= e($p['slug']) ?>" style="--i:<?= $k ?>">
+        <a class="h2-proj" href="projects#<?= e($p['slug']) ?>" style="--i:<?= $k ?>">
           <span class="h2-pimg"><img src="assets/images/photos/<?= e($pThumb[$p['slug']] ?? 'ssc-aerial') ?>-sm.webp" alt="" loading="lazy"><span class="h2-plogo"><?= project_logo_html($p, 'plogo') ?></span></span>
           <span class="h2-ptxt"><b><?= e($p['name']) ?></b><small><span class="h2-city"><i class="fa-solid fa-location-dot"></i> <?= e($p['city'] ?? '') ?></span><span class="h2-go">Explore <i class="fa-solid fa-arrow-right-long"></i></span></small></span>
         </a>
@@ -149,7 +149,7 @@ $pad = fn($n) => str_pad((string)$n, 2, '0', STR_PAD_LEFT);
       <div class="d-card d-live d-trust" style="--d:1100ms;--f:.6s"><span class="avs" aria-hidden="true"><i>SM</i><i>AK</i><i>RF</i></span><span>Trusted by Shalimar<br>Group families</span></div>
       <div class="d-card d-logos" style="--d:1250ms;--f:2s">
         <small>Shalimar Group communities</small>
-        <span class="d-lg"><?php foreach ($projects as $p): ?><a href="projects.php#<?= e($p['slug']) ?>" aria-label="<?= e($p['name']) ?>"><?= project_logo_html($p, 'plogo') ?></a><?php endforeach; ?></span>
+        <span class="d-lg"><?php foreach ($projects as $p): ?><a href="projects#<?= e($p['slug']) ?>" aria-label="<?= e($p['name']) ?>"><?= project_logo_html($p, 'plogo') ?></a><?php endforeach; ?></span>
       </div>
       <?php endif; ?>
     </div>
@@ -165,7 +165,7 @@ $pad = fn($n) => str_pad((string)$n, 2, '0', STR_PAD_LEFT);
     <?php if ($heroMode !== 'h2'): ?>
     <div class="h-comm">
       <span class="h-comm-l"><span class="h-orn" aria-hidden="true">✦</span> The Shalimar Group communities</span>
-      <span class="h-comm-logos"><?php foreach ($projects as $p): ?><a href="projects.php#<?= e($p['slug']) ?>" aria-label="<?= e($p['name']) ?>"><?= project_logo_html($p, 'plogo') ?></a><?php endforeach; ?></span>
+      <span class="h-comm-logos"><?php foreach ($projects as $p): ?><a href="projects#<?= e($p['slug']) ?>" aria-label="<?= e($p['name']) ?>"><?= project_logo_html($p, 'plogo') ?></a><?php endforeach; ?></span>
       <?php if ($heroMode === 'h'): ?>
       <span class="h-comm-stats"><span><b data-to="<?= count($live) ?>">0</b> verified listings</span><span><b data-to="<?= $agencyCount ?>">0</b> authorized agencies</span><span><b data-to="<?= (int)$kpi['month'] ?>">0</b> deals this month</span></span>
       <?php endif; ?>

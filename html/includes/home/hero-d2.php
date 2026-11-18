@@ -22,12 +22,12 @@ $brandMsgs = [
       </h1>
       <p class="d-lede"><?= e($H['lede']) ?></p>
 
-      <form class="h3-search d-search" id="heroSearch" action="buy.php" method="get">
+      <form class="h3-search d-search" id="heroSearch" action="buy" method="get">
         <div class="tabs" id="tabs">
           <span class="tab-pill" id="pill"></span>
-          <button type="button" class="tab on" data-action="buy.php">Buy</button>
-          <button type="button" class="tab" data-action="rent.php">Rent</button>
-          <button type="button" class="tab" data-action="projects.php">Projects</button>
+          <button type="button" class="tab on" data-action="buy">Buy</button>
+          <button type="button" class="tab" data-action="rent">Rent</button>
+          <button type="button" class="tab" data-action="projects">Projects</button>
         </div>
         <div class="fields">
           <div class="field f-loc"><label for="loc"><i class="fa-solid fa-location-dot"></i> Location</label><input id="loc" name="q" placeholder="Sector or block"></div>
@@ -60,7 +60,7 @@ $brandMsgs = [
       <div class="d-card d-live d-trust" style="--d:1100ms;--f:.6s"><span class="avs" aria-hidden="true"><i>SM</i><i>AK</i><i>RF</i></span><span>Trusted by Shalimar<br>Group families</span></div>
       <div class="d-card d-logos" style="--d:1250ms;--f:2s">
         <small>Shalimar Group communities</small>
-        <span class="d-lg"><?php foreach ($projects as $p): ?><a href="projects.php#<?= e($p['slug']) ?>" aria-label="<?= e($p['name']) ?>"><?= project_logo_html($p, 'plogo') ?></a><?php endforeach; ?></span>
+        <span class="d-lg"><?php foreach ($projects as $p): ?><a href="projects#<?= e($p['slug']) ?>" aria-label="<?= e($p['name']) ?>"><?= project_logo_html($p, 'plogo') ?></a><?php endforeach; ?></span>
       </div>
             <div class="d2-dots" id="d2Dots"><?php foreach ($slideImgs as $k => $si): ?><button class="<?= $k ? '' : 'on' ?>" type="button" aria-label="<?= e($si[1]) ?>"><i></i><span><?= e($si[1]) ?></span></button><?php endforeach; ?></div>
     </div>

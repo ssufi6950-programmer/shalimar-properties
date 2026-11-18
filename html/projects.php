@@ -16,7 +16,7 @@ foreach (live_listings() as $l) if ($l['project']) $liveCount[$l['project']] = (
 <main id="main">
 <section class="page-hero">
   <div class="wrap">
-    <div class="crumbs"><a href="index.php">Home</a><span>/</span><span>Projects</span></div>
+    <div class="crumbs"><a href="home">Home</a><span>/</span><span>Projects</span></div>
     <h1>Shalimar Group projects</h1>
     <p class="lede">From master-planned communities in Sargodha to a premium commercial tower in Lahore — explore each project, its sectors and blocks, approved properties and official ERP market reporting.</p>
     <div class="proj-tabs chips-scroll" id="jsonProjectTabs" style="margin-top:14px"></div>
@@ -37,13 +37,13 @@ foreach (live_listings() as $l) if ($l['project']) $liveCount[$l['project']] = (
       <div><span class="kicker">Direct from Shalimar Group</span><h2>Project units<?= $sel ? ' · ' . e($projects[$sel]['name']) : '' ?></h2><p>New bookings and units released by the developer. Sold units remain visible with a “Sold” tag.</p></div>
     </div>
     <div class="tag-row chips-scroll" style="margin-bottom:14px">
-      <a href="projects.php#units" class="pill<?= $sel === '' ? '' : ' muted' ?>">All projects</a>
-      <?php foreach ($projects as $p): ?><a href="projects.php?project=<?= e($p['slug']) ?>#units" class="pill<?= $sel === $p['slug'] ? '' : ' muted' ?>"><?= e($p['name']) ?></a><?php endforeach; ?>
+      <a href="projects#units" class="pill<?= $sel === '' ? '' : ' muted' ?>">All projects</a>
+      <?php foreach ($projects as $p): ?><a href="projects?project=<?= e($p['slug']) ?>#units" class="pill<?= $sel === $p['slug'] ? '' : ' muted' ?>"><?= e($p['name']) ?></a><?php endforeach; ?>
     </div>
     <?php if ($units): ?>
       <div class="listing-grid"><?php foreach ($units as $i => $l) echo render_card($l, ($i % 3) * 60); ?></div>
     <?php else: ?>
-      <div class="empty-note"><i class="fa-solid fa-city"></i>No units released for this project right now. <a class="gold" href="buy.php?project=<?= e($sel) ?>">See resale listings</a>.</div>
+      <div class="empty-note"><i class="fa-solid fa-city"></i>No units released for this project right now. <a class="gold" href="buy?project=<?= e($sel) ?>">See resale listings</a>.</div>
     <?php endif; ?>
   </div>
 </section>
@@ -52,7 +52,7 @@ foreach (live_listings() as $l) if ($l['project']) $liveCount[$l['project']] = (
   <div class="wrap">
     <div class="cta-box rv rv-z">
       <div><h2>Investor briefing, backed by real numbers</h2><p>See daily and monthly transactions, most-traded sizes and price movement by block in our market insights.</p></div>
-      <div class="cta-actions"><a href="insights.php" class="btn btn-light"><i class="fa-solid fa-chart-line"></i> Open market insights</a></div>
+      <div class="cta-actions"><a href="insights" class="btn btn-light"><i class="fa-solid fa-chart-line"></i> Open market insights</a></div>
     </div>
   </div>
 </section>

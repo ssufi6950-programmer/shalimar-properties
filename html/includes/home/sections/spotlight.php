@@ -3,7 +3,7 @@
     <div class="sec-head rv">
       <div><span class="kicker"><?= e($T('kicker', 'Under the Shalimar umbrella')) ?></span><h2 class="display-sm"><?= $T('title_h', 'Signature communities') ?></h2>
         <p><?= e($T('lede', 'Each project is developed and managed by Shalimar Group — explore its story, amenities and verified units.')) ?></p></div>
-      <a href="projects.php" class="link-more">All projects <i class="fa-solid fa-arrow-right-long"></i></a>
+      <a href="projects" class="link-more">All projects <i class="fa-solid fa-arrow-right-long"></i></a>
     </div>
     <div class="spot rv" id="spot">
       <div class="spot-list" role="tablist" aria-label="Projects">
@@ -36,7 +36,7 @@
               <div><b><?= market_count($market['available'] ? (int)($byProject[$p['slug']] ?? 0) : null) ?></b><span>Deals this month</span></div>
               <div><b><?= e(preg_replace('/\s*\(.*$/', '', (string)$p['price_from'])) ?></b><span>Starting from</span></div>
             </div>
-            <a class="btn btn-solid btn-sm" href="projects.php#<?= e($p['slug']) ?>">Explore <?= e($p['name']) ?> <i class="fa-solid fa-arrow-right-long"></i></a>
+            <a class="btn btn-solid btn-sm" href="projects#<?= e($p['slug']) ?>">Explore <?= e($p['name']) ?> <i class="fa-solid fa-arrow-right-long"></i></a>
           </div>
         </article>
         <?php endforeach; ?>

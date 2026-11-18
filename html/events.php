@@ -14,7 +14,7 @@ $wa = 'https://wa.me/' . SITE_WHATSAPP . '?text=';
 <main id="main">
 <section class="page-hero">
   <div class="wrap">
-    <div class="crumbs"><a href="index.php">Home</a><span>/</span><span>Events</span></div>
+    <div class="crumbs"><a href="home">Home</a><span>/</span><span>Events</span></div>
     <h1>Open houses, balloting &amp; briefings</h1>
     <p class="lede">Meet the Shalimar team on site. Seats are limited so every visit stays personal and useful.</p>
   </div>

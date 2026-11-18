@@ -41,7 +41,7 @@ $qs = http_build_query(array_filter($f));
 <main id="main">
 <section class="page-hero">
   <div class="wrap">
-    <div class="crumbs"><a href="index.php">Home</a><span>/</span><span>Market insights</span></div>
+    <div class="crumbs"><a href="home">Home</a><span>/</span><span>Market insights</span></div>
     <div class="page-hero-row">
       <div>
         <h1>Market insights for investors</h1>
@@ -50,7 +50,7 @@ $qs = http_build_query(array_filter($f));
       <?php if ($sampleCount): ?><span class="demo-flag"><i class="fa-solid fa-flask"></i> Includes <?= number_format($sampleCount) ?> sample transactions</span><?php endif; ?>
     </div>
 
-    <form class="ins-filter" method="get" action="insights.php">
+    <form class="ins-filter" method="get" action="insights">
       <div class="fld"><label for="fp">Project</label>
         <select id="fp" name="project"><option value="">All projects</option>
           <?php foreach ($projects as $p): ?><option value="<?= e($p['slug']) ?>"<?= $f['project'] === $p['slug'] ? ' selected' : '' ?>><?= e($p['name']) ?></option><?php endforeach; ?>
@@ -64,7 +64,7 @@ $qs = http_build_query(array_filter($f));
           <?php foreach ($projects as $p) foreach ($p['sectors'] as $sec => $bl) foreach ($bl as $b): ?><option value="<?= e($b) ?>" data-sector="<?= e($sec) ?>"<?= $f['block'] === $b ? ' selected' : '' ?>><?= e($b) ?></option><?php endforeach; ?>
         </select></div>
       <button class="btn btn-solid" type="submit"><i class="fa-solid fa-filter"></i> Apply</button>
-      <?php if ($qs): ?><a class="btn btn-ghost" href="insights.php">Reset</a><?php endif; ?>
+      <?php if ($qs): ?><a class="btn btn-ghost" href="insights">Reset</a><?php endif; ?>
     </form>
   </div>
 </section>
@@ -117,7 +117,7 @@ $qs = http_build_query(array_filter($f));
     <div class="sec-head">
       <div><span class="kicker"><?= e($lmLabel) ?></span><h2>Last month’s plots sold, resold &amp; transferred</h2>
         <p><?= count($lastMonth) ?> transactions · <?= (int)$lmCounts['sale'] ?> new sales · <?= (int)$lmCounts['resale'] ?> resales · <?= (int)$lmCounts['transfer'] ?> transfers · <?= (int)$lmCounts['rent'] ?> rental agreements</p></div>
-      <a class="btn btn-ghost btn-sm" href="insights.php?<?= e($qs ? $qs . '&' : '') ?>export=csv"><i class="fa-solid fa-download"></i> Download CSV</a>
+      <a class="btn btn-ghost btn-sm" href="insights?<?= e($qs ? $qs . '&' : '') ?>export=csv"><i class="fa-solid fa-download"></i> Download CSV</a>
     </div>
     <div class="table-wrap tall rv">
       <table class="tbl">

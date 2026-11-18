@@ -12,6 +12,6 @@
       <?php foreach ($featured as $i => $l) echo render_card($l, ($i % 4) * 80); ?>
     </div>
     <?php if(!$featured): ?><p class="empty-note">No approved listings are currently available.</p><?php endif ?>
-    <div class="public-purpose"><a href="buy.php" class="link-more">Properties For Sale <i class="fa-solid fa-arrow-right-long"></i></a><a href="rent.php" class="link-more">Properties For Rent <i class="fa-solid fa-arrow-right-long"></i></a></div>
+    <div class="public-purpose"><a href="buy" class="link-more">Properties For Sale <i class="fa-solid fa-arrow-right-long"></i></a><a href="rent" class="link-more">Properties For Rent <i class="fa-solid fa-arrow-right-long"></i></a></div>
   </div>
 </section>

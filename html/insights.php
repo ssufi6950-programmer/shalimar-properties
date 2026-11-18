@@ -49,7 +49,7 @@ $scope = 'All Shalimar projects';
 <main id="main">
 <section class="page-hero">
   <div class="wrap">
-    <div class="crumbs"><a href="index.php">Home</a><span>/</span><span>Market insights</span></div>
+    <div class="crumbs"><a href="home">Home</a><span>/</span><span>Market insights</span></div>
     <div class="page-hero-row">
       <div>
         <h1>Market insights for investors</h1>

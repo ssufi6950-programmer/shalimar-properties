@@ -25,10 +25,10 @@ final class PublicWebsiteUrl
         return rtrim($base,'/').'/'.$path.($query?'?'.http_build_query($query,'','&',PHP_QUERY_RFC3986):'');
     }
 
-    /** Build only the supported public project/listing SEO aliases. */
+    /** Build only allowlisted public website routes. */
     public static function route(string $path):string
     {
-        if (!preg_match('~\A(?:project/[a-z0-9-]+|property/SP-[0-9]+(?:-[a-z0-9-]+)?)\z~iD', $path)) {
+        if (!preg_match('~\A(?:(?:home|buy|rent|projects|insights|agencies)|project/[a-z0-9-]+|property/SP-[0-9]+(?:-[a-z0-9-]+)?)\z~iD', $path)) {
             throw new \InvalidArgumentException('Public website route is invalid.');
         }
         $base = self::make('index.php');

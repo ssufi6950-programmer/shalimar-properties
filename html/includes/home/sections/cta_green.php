@@ -9,7 +9,7 @@
       </div>
       <div class="cta-actions">
         <a href="post-property.php" class="btn btn-gold"><i class="fa-solid fa-plus"></i> Post a property</a>
-        <a href="agencies.php" class="btn btn-glass"><i class="fa-solid fa-briefcase"></i> Authorized agencies</a>
+        <a href="agencies" class="btn btn-glass"><i class="fa-solid fa-briefcase"></i> Authorized agencies</a>
       </div>
     </div>
   </div>
