@@ -1,6 +1,6 @@
 # Company Properties single-table layout and shared Property Listings
 
-Prepared locally on 18 November 2026. Not uploaded live for this follow-up.
+Prepared locally on 18 November 2026. Uploaded live; see deployment verification below.
 
 ## What changed
 
@@ -32,3 +32,6 @@ No SQL, migrations, .env edits or ERP API changes are required. No live data or 
 Eight changed PHP files passed lint. Both inline JavaScript blocks passed node --check. Twenty focused validation/permission/publication checks passed; six fixture render checks covered creation/edit/read-only forms, removed fields, a single inventory table, unlisted status and mixed company/customer listing routes. No authenticated browser or real database integration was performed for this follow-up.
 
 The previous company-listing feature is already installed live; this is an incremental Portal-only update. Root report (documentation only; no FTP upload required): `D:/xampp/htdocs/shalimar-properties/COMPANY-PROPERTY-LISTINGS.md`.
+
+
+Live upload completed on 18 November 2026 with explicit user authorization. Eight Portal files were backed up, compared, server PHP linted, uploaded and SHA-256 verified. Backup: `D:/xampp/htdocs/shalimar-properties/.qa/live-backups/company-listings-summary-cleanup-20261118-071237/`. Manifest: `.qa/company-listings-summary-cleanup-live-deployment.json`. Required schema/storage preflight passed. Live read-only public-listing, combined company/customer-listing and per-inventory listing-status SQL checks passed. Unauthenticated Company Properties and Property Listings URLs redirected to Admin login. No ERP files, SQL/migrations, listing records or notifications were changed/created by deployment. Authenticated visual/create/edit interactions remain unverified.
