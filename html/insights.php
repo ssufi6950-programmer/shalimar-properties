@@ -6,6 +6,7 @@ $f = [];
 // Market Insights is intentionally shown as an all-project report; filter controls are hidden.
 $market = market_snapshot($f);
 $projects = $market['projects'];
+$projectLogoList = projects();
 $marketProjectName = static fn(string $slug): string => (string)($projects[$slug]['name'] ?? $slug);
 $daily = $market['daily'];
 $categories = $market['categories']??[];
@@ -39,6 +40,15 @@ $scope = 'All Shalimar projects';
       <div>
         <h1>Market insights for investors</h1>
         <p class="lede">Sales, resales and property check-ins across Shalimar communities. Portal listings and asking prices are not used.</p>
+        <?php if ($projectLogoList): ?>
+          <nav class="proj-tabs chips-scroll insights-project-logos" aria-label="Shalimar projects" style="margin-top:14px">
+            <?php foreach ($projectLogoList as $projectCard): ?>
+              <a class="proj-tab" href="project.php?project=<?= e(rawurlencode((string) $projectCard['slug'])) ?>" aria-label="Explore <?= e($projectCard['name']) ?>">
+                <?= project_logo_html($projectCard, 'plogo') ?><span><?= e($projectCard['name']) ?></span>
+              </a>
+            <?php endforeach; ?>
+          </nav>
+        <?php endif; ?>
       </div>
 
     </div>
