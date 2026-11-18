@@ -15,8 +15,16 @@ $prices = $market['price_groups'];
 $lastMonth = market_sale_rent_rows($market['last_month_rows']);
 $lmLabel = $market['last_month_label'];
 $marketStatusMessage = str_replace(
-    'Combined SGC + Zalmi deal data is temporarily unavailable.',
-    'Market deal data is temporarily unavailable.',
+    [
+        'Combined SGC + Zalmi deal data is temporarily unavailable.',
+        'Complete SGC + Zalmi report.',
+        'Showing the last complete SGC + Zalmi report. One or more sources could not be refreshed.',
+    ],
+    [
+        'Market deal data is temporarily unavailable.',
+        'Market report is up to date.',
+        'Showing the last complete market report. One or more data sources could not be refreshed.',
+    ],
     (string) $market['message']
 );
 // CSV contains grouped public aggregates, never individual listing or owner records.
