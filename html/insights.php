@@ -14,6 +14,11 @@ unset($categories['']);
 $prices = $market['price_groups'];
 $lastMonth = market_sale_rent_rows($market['last_month_rows']);
 $lmLabel = $market['last_month_label'];
+$marketStatusMessage = str_replace(
+    'Combined SGC + Zalmi deal data is temporarily unavailable.',
+    'Market deal data is temporarily unavailable.',
+    (string) $market['message']
+);
 // CSV contains grouped public aggregates, never individual listing or owner records.
 if (get_str('export') === 'csv') {
     if (!$market['available']) { http_response_code(503); header('Content-Type: text/plain; charset=utf-8'); exit('Deal data is temporarily unavailable.'); }
@@ -61,7 +66,7 @@ $scope = 'All Shalimar projects';
 <section class="sec-tight" style="padding-top:8px">
   <div class="wrap">
     <p class="muted" style="margin:0 0 10px;font-size:13px">Showing: <b style="color:var(--ink)"><?= e($scope) ?></b><?php if($market['last_updated']): ?> Â· Last updated <?= e((new DateTimeImmutable($market['last_updated']))->format('d M Y, h:i A')) ?> PKT<?php endif; ?></p>
-    <p class="muted" role="status"><?= e($market['message']) ?><?= $market['stale']?' Last complete cached report; totals are not partial.':'' ?></p>
+    <p class="muted" role="status"><?= e($marketStatusMessage) ?><?= $market['stale']?' Last complete cached report; totals are not partial.':'' ?></p>
     <div class="kpis kpis-deals">
       <div class="kpi rv"><small>Deals Today</small><b data-market="today"><?= market_count($market['today']) ?></b><span>Deals, PKT</span></div>
       <div class="kpi rv" style="--d:60ms"><small>Last Month</small><b data-market="last_month"><?= market_count($market['last_month']) ?></b><span><?= e($lmLabel) ?></span></div>
