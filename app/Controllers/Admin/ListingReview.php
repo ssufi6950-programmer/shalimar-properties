@@ -88,6 +88,15 @@ final class ListingReview extends \App\Controllers\BaseController
             return $this->json(['message'=>'Agent SMS delivery status updated. The listing approval was preserved.','assignment_sms'=>$result,'redirect'=>site_url('admin/listings/'.$id.'/review')]);
         });
     }
+    public function retryAssignmentWhatsapp(int $id)
+    {
+        return $this->action('resale_listings.approve',function()use($id){
+            $data=$this->input();$attempts=$data['attempts']??null;
+            if(($data['confirmed']??null)!==true||!is_int($attempts)||$attempts<0)throw new \InvalidArgumentException('Confirm the current WhatsApp delivery attempt before retrying.');
+            $result=$this->service()->retryAssignmentWhatsapp($id,(int)admin_user()['id'],$this->version($data),$this->fingerprint($data),$attempts);
+            return $this->json(['message'=>'Agent WhatsApp notification status updated. The listing approval was preserved.','assignment_whatsapp'=>$result,'redirect'=>site_url('admin/listings/'.$id.'/review')]);
+        });
+    }
     public function photoSet(int $id){return$this->action('resale_listings.edit',function()use($id){$data=$this->input();if(($data['confirmed']??null)!==true||!is_array($data['photos']??null))throw new \InvalidArgumentException('Confirm the final photo set.');$approvedMedia=($data['approved_media']??false)===true;$youtube=$approvedMedia?null:(array_key_exists('youtube_url',$data)?(is_string($data['youtube_url'])?$data['youtube_url']:throw new \InvalidArgumentException('Enter a YouTube link.')):null);$this->service()->photoSet($id,(int)admin_user()['id'],$this->version($data),$this->fingerprint($data),$data['photos'],null,$youtube,$approvedMedia);return$this->json(['message'=>$approvedMedia?'Approved listing photos updated; publication was preserved.':'Listing media updated; previous files and history retained.','redirect'=>site_url('admin/listings/'.$id.'/review')]);});}
     public function photo(int $id,string $photo)
     {

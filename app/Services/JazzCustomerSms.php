@@ -43,6 +43,8 @@ class JazzCustomerSms implements CustomerSmsGateway,BusinessSmsGateway
   // No fallback to the real customer if this override is malformed.
   return \App\Libraries\CustomerIdentity::mobile($this->settings->testRecipient);
  }
+ /** Apply the same strict test-recipient override to non-OTP assignment notices. */
+ public function resolveNotificationRecipient(string $verifiedMobile):string{return $this->deliveryRecipient($verifiedMobile);}
  private function allowedTestPeer(string $remote):bool
  {
   if(in_array($remote,['127.0.0.1','::1','::ffff:127.0.0.1'],true))return true;

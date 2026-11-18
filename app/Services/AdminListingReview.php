@@ -162,7 +162,7 @@ final class AdminListingReview
                     $assignment=['portal_agent_id'=>(int)$agent['portal_agent_id'],'agent_erp_link_id'=>(int)$agent['agent_erp_link_id'],'agent_source_id'=>(int)$agent['agent_source_id'],'agent_snapshot'=>json_encode($snapshot,JSON_THROW_ON_ERROR),'agent_review_required'=>0,'agent_review_reason'=>null];
                 }
                 $values=['status'=>$status,'review_state'=>$state,'record_version'=>$version+1,'updated_at'=>$now,'payload'=>json_encode($payload,JSON_THROW_ON_ERROR)]+$assignment;$this->db->table('portal_listings')->where('id',$id)->update($values);$saved=$this->row($id);
-                $context=['reason'=>$reason,'reviewed_version'=>$version,'reviewed_fingerprint'=>$fingerprint,'approved_content_hash'=>$this->fingerprint($saved)];if($action==='approve'){$context['approval_mode']=$fresh?'erp_verified':'manual';$context['ownership_check_performed']=$fresh!==null;if($assignedAgent!==null)$context['assigned_agent_id']=$assignedAgent;}if($fresh)$context['verification']=$fresh['proof'];$this->event($event,$row,$saved,$actor,$context);if($action==='approve')($this->assignmentSms??new AgentAssignmentSms($this->db))->queue($saved);$this->commit();return $this->afterDecision($saved,$action,false);
+                $context=['reason'=>$reason,'reviewed_version'=>$version,'reviewed_fingerprint'=>$fingerprint,'approved_content_hash'=>$this->fingerprint($saved)];if($action==='approve'){$context['approval_mode']=$fresh?'erp_verified':'manual';$context['ownership_check_performed']=$fresh!==null;if($assignedAgent!==null)$context['assigned_agent_id']=$assignedAgent;}if($fresh)$context['verification']=$fresh['proof'];$this->event($event,$row,$saved,$actor,$context);if($action==='approve'&&$saved['selling_method']==='shalimar_agent'){if(config('Sms')->enabled)($this->assignmentSms??new AgentAssignmentSms($this->db))->queue($saved);(new AgentAssignmentWhatsapp($this->db))->queue($saved);}$this->commit();return $this->afterDecision($saved,$action,false);
             }catch(\Throwable$e){$this->rollback();throw$e;}
         }catch(\Throwable$e){$this->failure($id,$actor,$e);throw$e;}
     }
@@ -172,6 +172,8 @@ final class AdminListingReview
         if($action==='approve'&&$listing['selling_method']==='shalimar_agent'){
             try{$result['assignment_sms']=($this->assignmentSms??new AgentAssignmentSms($this->db))->dispatch($listing);}
             catch(\Throwable $e){log_message('error','Approved listing SMS status unavailable: listing={id} type={type}.',['id'=>$listing['id'],'type'=>get_class($e)]);$result['assignment_sms']=['status'=>'unavailable'];}
+            try{$result['assignment_whatsapp']=(new AgentAssignmentWhatsapp($this->db))->dispatch($listing);}
+            catch(\Throwable $e){log_message('error','Approved listing WhatsApp status unavailable: listing={id} type={type}.',['id'=>$listing['id'],'type'=>get_class($e)]);$result['assignment_whatsapp']=['status'=>'unavailable'];}
         }
         return $result;
     }
@@ -181,6 +183,13 @@ final class AdminListingReview
         if(!ListingPolicy::active($row)||$row['selling_method']!=='shalimar_agent')throw new CustomerFlowException(409,'Only an approved, active Shalimar Agent assignment can be notified.');
         (new AdminAuditService($this->db))->record('listing.agent_assignment_sms_retry_requested','resale_listings',$actor,'portal_listing',$id,null,['version'=>$version,'record_count'=>$attempts]);
         return ($this->assignmentSms??new AgentAssignmentSms($this->db))->dispatch($row,true,$attempts);
+    }
+    public function retryAssignmentWhatsapp(int $id,int $actor,int $version,string $fingerprint,int $attempts):?array
+    {
+        $this->requirePermission($actor,'resale_listings.approve');$row=$this->row($id);$this->expected($row,$version,$fingerprint);
+        if(!ListingPolicy::active($row)||$row['selling_method']!=='shalimar_agent')throw new CustomerFlowException(409,'Only an approved, active Shalimar Agent assignment can be notified.');
+        (new AdminAuditService($this->db))->record('listing.agent_assignment_whatsapp_retry_requested','resale_listings',$actor,'portal_listing',$id,null,['version'=>$version,'record_count'=>$attempts]);
+        return (new AgentAssignmentWhatsapp($this->db))->dispatch($row,true,$attempts);
     }
     public function photoSet(int $id,int $actor,int $version,string $fingerprint,array $ids,array|string|null $newPhotos=null,?string $youtubeUrl=null,bool $approvedMedia=false):void
     {

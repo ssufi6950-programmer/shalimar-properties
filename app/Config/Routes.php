@@ -51,6 +51,7 @@ $routes->group('admin', ['namespace'=>'App\Controllers\Admin'], static function 
     $routes->post('listings/(:num)/photos','ListingReview::upload/$1');
     $routes->post('listings/(:num)/photo-set','ListingReview::photoSet/$1');
     $routes->post('listings/(:num)/assignment-sms/retry','ListingReview::retryAssignmentSms/$1');
+    $routes->post('listings/(:num)/assignment-whatsapp/retry','ListingReview::retryAssignmentWhatsapp/$1');
     $routes->get('resale','PortalRecords::listings');
     $routes->get('resale/(:num)','PortalRecords::listing/$1');
     $routes->post('resale/(:num)/unpublish','PortalRecords::unpublish/$1');
