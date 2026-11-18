@@ -56,7 +56,7 @@ $images = listing_gallery($l);
 $back = ['rent' => 'rent', 'project' => 'projects'][$l['purpose']] ?? 'buy';
 $waIntent = $l['purpose'] === 'rent' ? 'renting' : 'buying';
 $waText = 'Assalam o Alaikum, I am interested in ' . $waIntent . ' this property listed on Shalimar Properties: '
-    . $displayTitle . ' (Ref ' . $l['ref'] . '). Is it still available?';
+    . $displayTitle . ' (Ref ' . $l['ref'] . ').';
 $publicContact = \App\Libraries\PortalCatalogStore::connect()->publicContact((int)$l['id']);
 $showRoomFacts = $propertyCategory !== 'Commercial'
   && \App\Libraries\PortalCatalogStore::connect()->publicListingConstructed((int)$l['id']);
