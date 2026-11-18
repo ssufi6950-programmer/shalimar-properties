@@ -57,7 +57,11 @@ $scope = 'All Shalimar projects';
         <?php if ($projectLogoList): ?>
           <div class="proj-tabs chips-scroll insights-project-logos" role="list" aria-label="Shalimar projects" style="margin-top:14px">
             <?php foreach ($projectLogoList as $projectCard): ?>
+<<<<<<< HEAD
               <span class="proj-tab" role="listitem">
+=======
+              <span class="proj-tab" aria-label="<?= e($projectCard['name']) ?>">
+>>>>>>> d8422675da843140a5acf61b29eafe1705afc796
                 <?= project_logo_html($projectCard, 'plogo') ?><span><?= e($projectCard['name']) ?></span>
               </span>
             <?php endforeach; ?>

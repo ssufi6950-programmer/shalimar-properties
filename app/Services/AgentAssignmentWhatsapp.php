@@ -33,8 +33,9 @@ final class AgentAssignmentWhatsapp
         }
         $payload = json_decode((string) $listing['payload'], true, 128, JSON_THROW_ON_ERROR);
         $plot = self::clean($payload['plot_no'] ?? '', 100) ?: 'Property '.(string) $listing['erp_property_id'];
-        $category = self::clean($payload['category'] ?? '', 100);
-        $property = $category === '' ? $plot : $plot.' - '.$category;
+        $type = self::clean(ErpPropertyClassification::listingType($payload), 100);
+        $reference = self::clean(ListingReference::display($listing), 100);
+        $property = trim($plot.' '.$type).($reference !== '' ? ' ('.$reference.')' : '');
         $snapshot = is_array($payload['agent_snapshot'] ?? null) ? $payload['agent_snapshot'] : [];
         $agentName = self::clean($snapshot['name'] ?? '', 180);
         if ($agentName === '') throw new \RuntimeException('Approved listing has no assigned agent name.');
