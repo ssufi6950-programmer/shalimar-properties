@@ -86,6 +86,7 @@ $isProjectStep = $selectedProject === null;
 $isRootView = !$isProjectStep && $activeRootKey === '' && !$activeTree;
 $rowOptions = $state['row'] ?? [];
 $treeBase = $activeTree;
+$showAllOption = $isProjectStep || ($isRootView ? !empty($state['roots']) : !empty($rowOptions));
 
 $browseType = (string)($filters['type'] ?? '');
 $browseUrl = static function (string $project = '', string $root = '', array $tree = [], int $page = 1) use ($route, $browseType): string {
@@ -171,7 +172,7 @@ require __DIR__ . '/header.php';
     .browse-all-types .explorer-note{color:#52685d}
     .browse-explorer-shell .browse-results{transition:opacity 200ms ease,transform 200ms ease}
     .browse-explorer-shell.is-loading .browse-results{opacity:.35;transform:translateY(4px)}
-    @media(max-width:767px){.browse-explorer-shell .explorer-badges{gap:5px}.browse-explorer-shell .explorer-option{min-height:32px;padding:4px 9px}.browse-explorer-shell .explorer-project-option{gap:5px;padding-left:5px}.browse-explorer-shell .explorer-project-logo{width:25px;height:22px;padding:2px 3px}.browse-explorer-shell .explorer-option small{font-size:11px}.browse-explorer-shell .explorer-field-label{font-size:11px;margin-bottom:5px}}
+    @media(max-width:767px){.browse-explorer-shell .page-hero .wrap{width:min(100% - 24px,1240px)}.browse-explorer-shell .explorer-badges{gap:4px}.browse-explorer-shell .explorer-option{min-height:29px;padding:3px 7px;line-height:1.1}.browse-explorer-shell .explorer-project-option{gap:4px;padding-left:4px}.browse-explorer-shell .explorer-project-logo{width:22px;height:19px;padding:1px 2px}.browse-explorer-shell .explorer-option small{font-size:10px}.browse-explorer-shell .explorer-field-label{font-size:10px;margin-bottom:4px}.browse-explorer-shell .explorer-breadcrumb{font-size:10px;margin-bottom:6px}}
     @media(prefers-reduced-motion:reduce){.browse-explorer-shell .browse-results,.browse-explorer-shell .explorer-option{transition:none;transform:none!important}}
 </style>
 <main id="main" class="public-discovery browse-explorer-shell<?= $isAll ? ' browse-all-types' : '' ?>" data-browse-explorer>
@@ -188,7 +189,7 @@ require __DIR__ . '/header.php';
                 <a data-explorer-link class="explorer-option" href="<?= e($browseUrl()) ?>" aria-current="true"><small>All</small></a>
                 <?php foreach ($projects as $project): ?><a data-explorer-link class="explorer-option explorer-project-option" href="<?= e($browseUrl((string) $project['slug'])) ?>"><span class="explorer-project-logo"><?= project_logo_html($project, 'plogo') ?></span><small><?= e($project['name']) ?></small></a><?php endforeach ?>
             <?php else: ?>
-                <a data-explorer-link class="explorer-option" href="<?= e($browseUrl($slug)) ?>" <?= $activeRootKey === '' ? 'aria-current="true"' : '' ?>><small>All</small></a>
+                <?php if ($showAllOption): ?><a data-explorer-link class="explorer-option" href="<?= e($browseUrl($slug)) ?>" <?= $activeRootKey === '' ? 'aria-current="true"' : '' ?>><small>All</small></a><?php endif ?>
                 <?php if ($isRootView): ?>
                     <?php foreach ($state['roots'] as $option): ?><a data-explorer-link class="explorer-option" href="<?= e($browseUrl($slug, $option['key'])) ?>"><small><?= e($option['label']) ?></small></a><?php endforeach ?>
                 <?php else: ?>
