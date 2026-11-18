@@ -1,6 +1,6 @@
 # Daily listing references ? new listings only
 
-Prepared locally on 18 November 2026. Not deployed live.
+Prepared locally on 18 November 2026. Deployed live; see verification below.
 
 ## Approved behavior
 
@@ -37,4 +37,7 @@ Back up all listed Portal files first. Upload the new ListingReference.php servi
 
 All changed PHP sources passed lint. Eleven mocked reference checks cover first serial, lock contention protocol, same-day increment, next-day reset, suffix 10, rollback behavior and legacy display preservation. Existing six view fixtures and twenty company validation/permission/publication checks passed. These do not constitute a real concurrent database integration test. No live database/reference writes, real listing creation or messages were performed.
 
-Root report (documentation only): D:/xampp/htdocs/shalimar-properties/LISTING-REFERENCES.md. No live upload performed for this task.
+Root report (documentation only): D:/xampp/htdocs/shalimar-properties/LISTING-REFERENCES.md. Live upload completed; see verification below.
+
+
+Live deployment completed on 18 November 2026 with user authorization. All 14 Portal files backed up, server PHP linted and SHA-256 verified. Backup: `D:/xampp/htdocs/shalimar-properties/.qa/live-backups/daily-listing-references-20261118-072839/`. Live public SQL, reference allocation SELECT and GET_LOCK/RELEASE_LOCK smoke checks passed. Legacy reference display remains SP-64. No listing/reference rows were written, historical references converted or notifications sent. Actual concurrent listing creation remains unverified.

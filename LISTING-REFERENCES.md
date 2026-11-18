@@ -1,6 +1,6 @@
 # Daily listing references ? new listings only
 
-Prepared locally on 18 November 2026. Not deployed live.
+Prepared locally on 18 November 2026. Deployed live; see verification below.
 
 ## Approved behavior
 
@@ -15,3 +15,6 @@ ListingReference acquires a database-scoped MariaDB/MySQL advisory lock before t
 ## Handoff and verification
 
 Deployment file mapping: deploy/daily-listing-references/README.md. Fourteen Portal PHP source files are included; no ERP or schema change is required. Eleven mocked allocator checks, six existing fixture render checks and twenty company validation/permission checks passed, along with PHP lint. Real database concurrency and authenticated end-to-end submission are unverified. No live upload, backfill, old reference update or notification was performed.
+
+
+Live deployment completed on 18 November 2026 with user authorization. All 14 Portal files backed up, server PHP linted and SHA-256 verified. Backup: `D:/xampp/htdocs/shalimar-properties/.qa/live-backups/daily-listing-references-20261118-072839/`. Live public SQL, reference allocation SELECT and GET_LOCK/RELEASE_LOCK smoke checks passed. Legacy reference display remains SP-64. No listing/reference rows were written, historical references converted or notifications sent. Actual concurrent listing creation remains unverified.
