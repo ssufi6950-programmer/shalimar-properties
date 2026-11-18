@@ -2,7 +2,8 @@
 require_once __DIR__ . '/includes/bootstrap.php';
 require_once __DIR__ . '/includes/market.php';
 
-$f = ['project'=>get_str('project'),'sector'=>get_str('sector'),'block'=>get_str('block'),'category'=>get_str('category')];
+$f = [];
+// Market Insights is intentionally shown as an all-project report; filter controls are hidden.
 $market = market_snapshot($f);
 $projects = $market['projects'];
 $marketProjectName = static fn(string $slug): string => (string)($projects[$slug]['name'] ?? $slug);
@@ -26,10 +27,9 @@ if (get_str('export') === 'csv') {
 
 $active = 'insights';
 $pageTitle = 'Market Insights â€” Shalimar Properties';
-$metaDesc = 'Sale, resale and property check-in activity reported by SGC and Zalmi.';
+$metaDesc = 'Sale, resale and property check-in activity across Shalimar communities.';
 require __DIR__ . '/includes/header.php';
-$scope = $f['block'] ?: ($f['sector'] ?: ($f['project'] ? ($projects[$f['project']]['name'] ?? 'Selected segment') : 'All SGC + Zalmi projects'));
-$qs = http_build_query(array_filter($f));
+$scope = 'All Shalimar projects';
 ?>
 <main id="main">
 <section class="page-hero">
@@ -38,22 +38,12 @@ $qs = http_build_query(array_filter($f));
     <div class="page-hero-row">
       <div>
         <h1>Market insights for investors</h1>
-        <p class="lede">Sales, resales and property check-ins from SGC and Zalmi. Portal listings and asking prices are not used.</p>
+        <p class="lede">Sales, resales and property check-ins across Shalimar communities. Portal listings and asking prices are not used.</p>
       </div>
 
     </div>
 
-    <form class="ins-filter" method="get" action="insights.php">
-      <div class="fld"><label for="fp">Project</label>
-        <select id="fp" name="project"><option value="">All projects</option>
-          <?php foreach ($projects as $p): ?><option value="<?= e($p['slug']) ?>"<?= $f['project'] === $p['slug'] ? ' selected' : '' ?>><?= e($p['name']) ?></option><?php endforeach; ?>
-        </select></div>
-      <div class="fld"><label for="fs">Sector</label><select id="fs" disabled title="Historical sector snapshots are not verified"><option>Not available historically</option></select></div>
-      <div class="fld"><label for="fb">Block</label><select id="fb" disabled title="Historical block snapshots are not verified"><option>Not available historically</option></select></div>
-      <div class="fld"><label for="fc">Property type</label><select id="fc" name="category"><option value="">All types</option><?php foreach(['plot','house','apartment','office','shop'] as $category): ?><option value="<?= e($category) ?>"<?= $f['category']===$category?' selected':'' ?>><?= e(category_label($category)) ?></option><?php endforeach; ?></select></div>
-      <button class="btn btn-solid" type="submit"><i class="fa-solid fa-filter"></i> Apply</button>
-      <?php if ($qs): ?><a class="btn btn-ghost" href="insights.php">Reset</a><?php endif; ?>
-    </form>
+
   </div>
 </section>
 
