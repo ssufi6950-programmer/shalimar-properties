@@ -55,13 +55,13 @@ $scope = 'All Shalimar projects';
         <h1>Market insights for investors</h1>
         <p class="lede">Sales, resales and property check-ins across Shalimar communities. Portal listings and asking prices are not used.</p>
         <?php if ($projectLogoList): ?>
-          <nav class="proj-tabs chips-scroll insights-project-logos" aria-label="Shalimar projects" style="margin-top:14px">
+          <div class="proj-tabs chips-scroll insights-project-logos" role="list" aria-label="Shalimar projects" style="margin-top:14px">
             <?php foreach ($projectLogoList as $projectCard): ?>
-              <a class="proj-tab" href="<?= e(project_seo_url((string) $projectCard['slug'])) ?>" aria-label="Explore <?= e($projectCard['name']) ?>">
+              <span class="proj-tab" role="listitem">
                 <?= project_logo_html($projectCard, 'plogo') ?><span><?= e($projectCard['name']) ?></span>
-              </a>
+              </span>
             <?php endforeach; ?>
-          </nav>
+          </div>
         <?php endif; ?>
       </div>
 

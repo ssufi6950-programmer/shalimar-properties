@@ -612,7 +612,7 @@ a.pill:hover{filter:brightness(.96)}
 .proj-tab{display:inline-flex;align-items:center;gap:8px;padding:6px 12px 6px 6px;border-radius:99px;background:#fff;border:1px solid var(--line-2);font-size:13px;font-weight:600;transition:border-color .2s,background .2s}
 .proj-tab img{height:24px;width:auto}
 .proj-tab .plogo-mono{width:26px;height:26px;font-size:11px;border-radius:99px}
-.proj-tab.on,.proj-tab:hover{border-color:var(--green);background:var(--green-tint)}
+.proj-tab.on,.proj-tab:hover:not(:where(.insights-project-logos *)){border-color:var(--green);background:var(--green-tint)}
 @media(max-width:860px){.project{grid-template-columns:1fr}.project .media{min-height:0;aspect-ratio:16/9}.proj-facts{grid-template-columns:1fr 1fr 1fr}}
 @media(max-width:600px){.project .info{padding:16px}.proj-facts{grid-template-columns:1fr 1fr}}
 
@@ -823,7 +823,7 @@ body.photo-hero .page-hero .find-box,body.photo-hero .page-hero .ins-filter{colo
 @media(max-width:860px){.project{grid-template-columns:1fr}.project:nth-child(even) .media{order:0}.project .media{min-height:0;aspect-ratio:16/10}.project .info{padding:18px}.project .info h3{font-size:28px}}
 /* project tabs on photo banner: glass pill, logo on white tile */
 body.photo-hero .page-hero .proj-tab{background:rgba(13,21,17,.42);border:1px solid rgba(255,255,255,.28);color:#fff;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
-body.photo-hero .page-hero .proj-tab:hover{background:rgba(22,109,71,.7)}
+body.photo-hero .page-hero .proj-tab:hover:not(:where(.insights-project-logos *)){background:rgba(22,109,71,.7)}
 .page-hero .proj-tab img{background:#fff;border-radius:8px;padding:2px 4px}
 
 /* ---- logo v2 ---- */
