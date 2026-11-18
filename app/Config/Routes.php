@@ -31,6 +31,10 @@ $routes->group('admin', ['namespace'=>'App\Controllers\Admin'], static function 
     $routes->post('customer-identity-check','CustomerIdentityCheck::check');
     $routes->get('customers/(:num)','PortalRecords::customer/$1');
     $routes->get('company-properties','CompanyProperties::index');
+    $routes->get('company-properties/listing','CompanyPropertyListings::form');
+    $routes->post('company-properties/listing','CompanyPropertyListings::save');
+    $routes->get('company-properties/listings/(:num)','CompanyPropertyListings::form/$1');
+    $routes->post('company-properties/listings/(:num)/unpublish','CompanyPropertyListings::unpublish/$1');
     $routes->get('properties','PortalRecords::properties');
     $routes->get('properties/(:num)','PortalRecords::property/$1');
     $routes->get('listings','ListingReview::index');

@@ -30,7 +30,7 @@ final class CompanyProperties extends \App\Controllers\BaseController
                 foreach($data['records'] as &$record){
                     $names=array_unique($projects[$sources[0]['id'].':'.($record['head']??'').':'.($record['sub_head']??'')]??[]);
                     $record['project_name']=count($names)===1?reset($names):($record['head_name']??'');
-                    $record['source_code']=$code;
+                    $record['source_code']=$code;$record['source_id']=(int)$sources[0]['id'];
                 }unset($record);
                 $section['rows']=$data['records'];
                 $rows=array_merge($rows,$data['records']);$section['more']=$data['has_more'];$section['next']=(string)$last;
@@ -40,6 +40,8 @@ final class CompanyProperties extends \App\Controllers\BaseController
             }
             $sections[]=$section;
         }
-        return view('admin/company_properties',['pageTitle'=>'Company Properties','tab'=>'company-properties','sections'=>$sections,'rows'=>$rows]);
+        $companyListings=[];
+        if(can('resale_listings.view'))$companyListings=$db->table('portal_listings l')->select('l.id,l.erp_source_id,l.erp_property_id,l.listing_purpose,l.record_version,l.status,l.deal,l.payload,l.asking_price,s.code AS source_code')->join('erp_sources s','s.id=l.erp_source_id')->where('l.portal_customer_id',null)->where("JSON_UNQUOTE(JSON_EXTRACT(l.payload,'$._company_inventory.origin'))",'admin_company_inventory')->orderBy('l.id','DESC')->limit(100)->get()->getResultArray();
+        return view('admin/company_properties',['pageTitle'=>'Company Properties','tab'=>'company-properties','sections'=>$sections,'rows'=>$rows,'companyListings'=>$companyListings]);
     }
 }

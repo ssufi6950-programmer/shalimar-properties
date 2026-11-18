@@ -23,7 +23,7 @@ class ExplorerErpClient extends ErpConnectionService
         return $this->request($base . '/filter-options.php?' . http_build_query($query), $host, $addresses[0], $this->authenticationHeaders($source));
     }
 
-    public function companyProperties(array $source, string $after): array
+    public function companyProperties(array $source, string $after, ?string $property=null): array
     {
         if (!preg_match('/\A(?:0|[1-9][0-9]{0,9})\z/D',$after)) throw new \InvalidArgumentException('Invalid inventory cursor.');
         if (($source['auth_type'] ?? '') !== 'bearer' || (int) ($source['is_active'] ?? 0) !== 1) throw new \App\Exceptions\ExplorerMetadataException('Enable an ERP source with server-side bearer credentials.');
@@ -34,7 +34,8 @@ class ExplorerErpClient extends ErpConnectionService
         $addresses = $this->connectionAddresses($host);
         if (!$addresses) throw new \App\Exceptions\ExplorerMetadataException('ERP hostname could not be resolved.');
         foreach ($addresses as $address) if (!self::isPublicAddress($address)) throw new \App\Exceptions\ExplorerMetadataException('Non-public ERP destination blocked.');
-        return $this->request($base.'/company-properties.php?'.http_build_query(['after_id'=>$after]),$host,$addresses[0],$this->authenticationHeaders($source));
+        if($property!==null&&!preg_match('/\A[1-9][0-9]{0,9}\z/D',$property))throw new \InvalidArgumentException('Invalid inventory identity.');
+        return $this->request($base.'/company-properties.php?'.http_build_query(['after_id'=>$after]+($property===null?[]:['property_id'=>$property])),$host,$addresses[0],$this->authenticationHeaders($source));
     }
 
     protected function request(string $url, string $host, string $address, array $headers): array

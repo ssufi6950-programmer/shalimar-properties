@@ -11,6 +11,8 @@ class AdminPermission implements FilterInterface
     {
         $path=trim($path,'/');
         if($path==='admin/company-properties'&&$method==='GET')return 'properties.view';
+        if(($path==='admin/company-properties/listing'&&in_array($method,['GET','POST'],true))||($method==='GET'&&preg_match('~^admin/company-properties/listings/[1-9][0-9]*$~D',$path)))return 'resale_listings.approve';
+        if($method==='POST'&&preg_match('~^admin/company-properties/listings/[1-9][0-9]*/unpublish$~D',$path))return 'resale_listings.deactivate';
         if($path==='admin/dealer-credential-activity'&&$method==='GET')return 'audit_logs.view';
         if($method==='GET'&&preg_match('~^admin/dealer-logins/\d+(?:/login)?$~D',$path))return 'agencies.edit';
         if($method==='POST'&&preg_match('~^admin/dealer-logins/\d+/login/(create|username|reset|enable|disable|revoke)$~D',$path,$credential))return $credential[1]==='revoke'?'agencies.deactivate':'agencies.edit';

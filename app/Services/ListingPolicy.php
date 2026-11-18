@@ -24,7 +24,9 @@ final class ListingPolicy
             $matches[]="(BINARY CAST($alias.$column AS CHAR) <=> BINARY NULLIF(JSON_UNQUOTE(JSON_EXTRACT(public_approval.next_record,'$.$column')),'null'))";
         }
         $approval="(NOT EXISTS (SELECT 1 FROM listing_events public_submission WHERE public_submission.listing_id=$alias.id AND public_submission.event IN ('customer_submitted','customer_edit_submitted','customer_resubmitted','customer_changes_resubmitted')) OR EXISTS (SELECT 1 FROM listing_events public_approval WHERE public_approval.listing_id=$alias.id AND public_approval.event IN ('admin_approved_published','admin_property_type_refreshed','admin_media_updated') AND ".implode(' AND ',$matches).'))';
-        return "BINARY $alias.review_state=BINARY 'approved' AND $alias.listing_purpose IN ('sale','rent') AND BINARY $alias.status IN ('live','approved','active') AND BINARY $alias.deal IN ('available','active') AND $approval AND ".AdminListingDeletion::retainedSql($alias);
+        $companyMatches=str_replace('public_approval.','company_approval.',implode(' AND ',$matches));
+        $company="(COALESCE(JSON_UNQUOTE(JSON_EXTRACT($alias.payload,'$._company_inventory.origin')),'')<>'admin_company_inventory' OR ($alias.portal_customer_id IS NULL AND EXISTS (SELECT 1 FROM listing_events company_approval WHERE company_approval.listing_id=$alias.id AND company_approval.event='admin_company_published' AND $companyMatches)))";
+        return "BINARY $alias.review_state=BINARY 'approved' AND $alias.listing_purpose IN ('sale','rent') AND BINARY $alias.status IN ('live','approved','active') AND BINARY $alias.deal IN ('available','active') AND $approval AND $company AND ".AdminListingDeletion::retainedSql($alias);
     }
     public static function active(array $row):bool
     {
