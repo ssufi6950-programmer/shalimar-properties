@@ -36,13 +36,13 @@ final class ListingReview extends \App\Controllers\BaseController
     }
     public function show(int $id)
     {
-        if(!can('resale_listings.view'))return admin_denied();try{return view('admin/listing_review/detail',(new AdminListingReviewReadModel(db_connect()))->detail($id,can('customers.view'))+['pageTitle'=>'Review Listing SP-'.$id,'tab'=>'resale']);}catch(CustomerFlowException$e){throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();}
+        if(!can('resale_listings.view'))return admin_denied();try{$data=(new AdminListingReviewReadModel(db_connect()))->detail($id,can('customers.view'));return view('admin/listing_review/detail',$data+['pageTitle'=>'Review Listing '.\App\Services\ListingReference::display($data['record']),'tab'=>'resale']);}catch(CustomerFlowException$e){throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();}
     }
     public function confirmDelete(int $id)
     {
         if(!can('resale_listings.view')||!can('resale_listings.edit')||!can('resale_listings.deactivate'))return admin_denied();
         try{$record=$this->service()->row($id);}catch(CustomerFlowException $e){throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();}
-        return view('admin/listing_review/delete',['record'=>$record,'payload'=>json_decode($record['payload'],true)?:[],'fingerprint'=>ListingLifecycle::fingerprint($record),'deleted'=>(new AdminListingDeletion(db_connect()))->deletion($id),'pageTitle'=>'Delete Listing SP-'.$id,'tab'=>'resale']);
+        return view('admin/listing_review/delete',['record'=>$record,'payload'=>json_decode($record['payload'],true)?:[],'fingerprint'=>ListingLifecycle::fingerprint($record),'deleted'=>(new AdminListingDeletion(db_connect()))->deletion($id),'pageTitle'=>'Delete Listing '.\App\Services\ListingReference::display($record),'tab'=>'resale']);
     }
     public function delete(int $id)
     {

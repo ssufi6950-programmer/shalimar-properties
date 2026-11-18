@@ -55,7 +55,8 @@ final class ResaleSubmission
         $input=$this->validateDraft($input);$purpose=$input['listing_purpose'];if($purpose!==($property['listing_purpose']??'sale'))throw new InvalidArgumentException('The listing purpose changed. Open a fresh verified property review.');ErpPropertyClassification::assertPurpose($property,$purpose);$price=$input['asking_price'];$method=$input['selling_method'];$remarks=$input['remarks'];
         $status='pending';$reviewState='under_review';$verification=null;$privateProof=null;$target=null;$context=null;
         $source=(int)$property['erp_source_id'];$directory=new ShalimarAgents($this->db);$now=$directory->now();
-        $this->db->transBegin();try{
+        $references=new ListingReference($this->db);$references->acquire();
+        try{if(!$this->db->transBegin())throw new \RuntimeException('Listing transaction could not start.');$now=$directory->now();
             if($existing=$this->existing($key,$customer)){$this->db->transCommit();return $existing;}
             if ($bookingProof !== null) {
                 $context = $submissionContext;
@@ -112,7 +113,7 @@ final class ResaleSubmission
             $values=['listing_purpose'=>$purpose,'review_state'=>$reviewState,'project_slug'=>$mapping['project_slug'],'mapping_id'=>$mapping['id'],'status'=>$status,'deal'=>'available','payload'=>json_encode($payload,JSON_THROW_ON_ERROR),'portal_customer_id'=>$customer,'erp_source_id'=>$source,'erp_property_id'=>$property['erp_property_id'],'portal_agency_id'=>$agency['portal_agency_id']??null,'agency_erp_link_id'=>$agency['agency_erp_link_id']??null,'selling_method'=>$method,'portal_agent_id'=>$agent['portal_agent_id']??null,'agent_erp_link_id'=>$agent['agent_erp_link_id']??null,'agent_source_id'=>$agent['agent_source_id']??null,'agent_snapshot'=>$snapshot?json_encode($snapshot,JSON_THROW_ON_ERROR):null,'asking_price'=>$price,'submission_key'=>$key,'created_at'=>$now,'updated_at'=>$now,'resale_verification_id'=>$verification['id']??null,'owner_verification'=>$privateProof?json_encode($privateProof,JSON_THROW_ON_ERROR):null];
             if($target){$id=(int)$target['id'];$values['record_version']=(int)$target['record_version']+1;foreach(['project_slug','mapping_id','portal_customer_id','erp_source_id','erp_property_id','created_at']as$column)unset($values[$column]);$this->db->table('portal_listings')->where('id',$id)->update($values);}
             else{$this->db->table('portal_listings')->insert($values);$id=(int)$this->db->insertID();}
-            $payload['id']=$id;$payload['ref']=$previousPayload['ref']??'SP-'.$id;$this->db->table('portal_listings')->where('id',$id)->update(['payload'=>json_encode($payload,JSON_THROW_ON_ERROR)]);
+            $payload['id']=$id;$payload['ref']=$target?ListingReference::display($target):$references->next($now);$this->db->table('portal_listings')->where('id',$id)->update(['payload'=>json_encode($payload,JSON_THROW_ON_ERROR)]);
             (new ResalePhotos($this->db))->attach($customer,$id,$input['photos']);
             $saved=$this->db->table('portal_listings')->where('id',$id)->get()->getRowArray();$event=$target?($target['review_state']==='needs_changes'?'customer_changes_resubmitted':($context['operation']==='edit'?'customer_edit_submitted':'customer_resubmitted')):'customer_submitted';
             (new ListingLifecycle($this->db))->record($event,$target,$saved,$customer,null,$verification['id']??null);
@@ -120,6 +121,6 @@ final class ResaleSubmission
             if($verification)$this->db->table('resale_otp_challenges')->where('id',$verification['id'])->update(['consumed_at'=>time(),'otp_hash'=>'','payload'=>'']);
             (new AdminAuditService($this->db))->record('resale.'.$event,'resale_listings',null,'portal_listing',$id,null,['portal_customer_id'=>$customer,'selling_method'=>$method,'portal_agent_id'=>$agent['portal_agent_id']??null,'agent_erp_link_id'=>$agent['agent_erp_link_id']??null,'agent_source_id'=>$agent['agent_source_id']??null,'erp_ledger_id'=>$agent['erp_ledger_id']??null,'erp_source_id'=>$source]);
             if(!$this->db->transStatus()||!$this->db->transCommit())throw new \RuntimeException('Listing could not commit.');return ['id'=>$id,'status'=>$status,'listing_purpose'=>$purpose,'review_state'=>$reviewState];
-        }catch(\Throwable $e){$this->db->transRollback();$this->db->resetTransStatus();if($existing=$this->existing($key,$customer))return $existing;if($e instanceof \App\Exceptions\CustomerFlowException)throw $e;if(!$target&&$this->db->table('portal_listings')->where('active_erp_property',ListingPolicy::key($source,$property['erp_property_id'],$purpose))->countAllResults())throw new InvalidArgumentException('This property already has an active or pending resale listing.');throw $e;}
+        }catch(\Throwable $e){$this->db->transRollback();$this->db->resetTransStatus();if($existing=$this->existing($key,$customer))return $existing;if($e instanceof \App\Exceptions\CustomerFlowException)throw $e;if(!$target&&$this->db->table('portal_listings')->where('active_erp_property',ListingPolicy::key($source,$property['erp_property_id'],$purpose))->countAllResults())throw new InvalidArgumentException('This property already has an active or pending resale listing.');throw $e;}finally{$references->release();}
     }
 }

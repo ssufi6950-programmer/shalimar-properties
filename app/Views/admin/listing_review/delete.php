@@ -1,5 +1,5 @@
 <?= $this->extend('admin/layouts/main') ?><?= $this->section('content') ?>
-<div class="page-heading"><div><a href="<?= site_url('admin/listings/'.$record['id'].'/review') ?>">&larr; Listing details</a><h1>Delete Listing SP-<?= (int)$record['id'] ?></h1></div></div>
+<div class="page-heading"><div><a href="<?= site_url('admin/listings/'.$record['id'].'/review') ?>">&larr; Listing details</a><h1>Delete Listing <?= esc(\App\Services\ListingReference::display($record)) ?></h1></div></div>
 <section class="card p-4">
     <?php if($error=session()->getFlashdata('listing_delete_error')): ?><p class="alert alert-danger" role="alert"><?= esc($error) ?></p><?php endif ?>
     <h2 class="h5"><?= esc($payload['plot_no']??'Property') ?> &middot; <?= esc(customer_listing_purpose($record)) ?></h2>
@@ -15,7 +15,7 @@
             <input type="hidden" name="fingerprint" value="<?= esc($fingerprint,'attr') ?>">
             <label class="form-label" for="listingDeleteReason">Reason (optional)</label>
             <textarea class="form-control mb-3" id="listingDeleteReason" name="reason" rows="2" maxlength="500"></textarea>
-            <div class="form-check mb-3"><input class="form-check-input" type="checkbox" id="confirmListingDelete" name="confirmed" value="1" required><label class="form-check-label" for="confirmListingDelete">Delete listing SP-<?= (int)$record['id'] ?>.</label></div>
+            <div class="form-check mb-3"><input class="form-check-input" type="checkbox" id="confirmListingDelete" name="confirmed" value="1" required><label class="form-check-label" for="confirmListingDelete">Delete listing <?= esc(\App\Services\ListingReference::display($record)) ?>.</label></div>
             <div class="d-flex flex-wrap gap-2"><button class="btn btn-danger" type="submit">Delete Listing</button><a class="btn btn-outline-secondary" href="<?= site_url('admin/listings/'.$record['id'].'/review') ?>">Cancel</a></div>
         </form>
     <?php endif ?>

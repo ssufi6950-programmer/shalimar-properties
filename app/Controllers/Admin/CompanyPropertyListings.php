@@ -37,7 +37,7 @@ final class CompanyPropertyListings extends \App\Controllers\BaseController
         $forms=session()->get('company_listing_forms')??[];
         if(!is_array($forms))$forms=[];$key=bin2hex(random_bytes(32));$forms[$key]=[(int)admin_user()['id'],$source,$property,$listing['id']??null,time()];
         session()->set('company_listing_forms',array_slice($forms,-20,null,true));
-        return view('admin/company_listing_form',['pageTitle'=>$listing?'Manage Company Listing SP-'.$listing['id']:'Create Company Listing','tab'=>'company-properties','fresh'=>$fresh,'listing'=>$listing,'input'=>$input,'error'=>$error,'key'=>$key,'current'=>$current,'mayEdit'=>$current&&$this->allowed(),'agents'=>$current&&$this->allowed()?(new \App\Services\ShalimarAgents(db_connect()))->adminAssignmentOptions($source):[]]);
+        return view('admin/company_listing_form',['pageTitle'=>$listing?'Manage Company Listing '.\App\Services\ListingReference::display($listing):'Create Company Listing','tab'=>'company-properties','fresh'=>$fresh,'listing'=>$listing,'input'=>$input,'error'=>$error,'key'=>$key,'current'=>$current,'mayEdit'=>$current&&$this->allowed(),'agents'=>$current&&$this->allowed()?(new \App\Services\ShalimarAgents(db_connect()))->adminAssignmentOptions($source):[]]);
     }
     public function save()
     {
@@ -50,8 +50,8 @@ final class CompanyPropertyListings extends \App\Controllers\BaseController
             if(!is_array($context)||$context[0]!== (int)admin_user()['id']||$context[1]!==$source||$context[2]!==$property||($context[3]===null?null:(int)$context[3])!==$id||$context[4]<time()-1800)throw new \InvalidArgumentException('This form expired or changed. Open the property again.');
             $files=$this->request->getFileMultiple('photos')??[];
             $saved=$this->service()->save((int)admin_user()['id'],$source,$property,$input,$files,$id);
-            unset($forms[$key]);session()->set('company_listing_forms',$forms);session()->setFlashdata('company_message','Company listing SP-'.$saved.' published successfully.');
-            return redirect()->to(site_url('admin/listings').'?review=approved&q=SP-'.$saved);
+            unset($forms[$key]);session()->set('company_listing_forms',$forms);$reference=\App\Services\ListingReference::display($this->service()->row($saved));session()->setFlashdata('company_message','Company listing '.$reference.' published successfully.');
+            return redirect()->to(site_url('admin/listings').'?review=approved&q='.rawurlencode($reference));
         }catch(\InvalidArgumentException $e){
             try{if(isset($source,$property))return $this->renderForm($source,$property,isset($id)&&$id?$this->service()->row($id):null,$input??[],$e->getMessage());}catch(\Throwable $ignored){}
             return $this->failed($e);
@@ -63,7 +63,7 @@ final class CompanyPropertyListings extends \App\Controllers\BaseController
         try{
             $version=$this->request->getPost('version');if(!is_string($version)||!preg_match('/\A[1-9][0-9]{0,9}\z/D',$version))throw new \InvalidArgumentException('Reload the listing.');
             $this->service()->unpublish($id,(int)admin_user()['id'],(int)$version);session()->setFlashdata('company_message','Company listing unpublished.');
-            return redirect()->to(site_url('admin/listings').'?review=&q=SP-'.$id);
+            $reference=\App\Services\ListingReference::display($this->service()->row($id));return redirect()->to(site_url('admin/listings').'?review=&q='.rawurlencode($reference));
         }catch(\Throwable $e){return $this->failed($e);}
     }
     private function failed(\Throwable $error)

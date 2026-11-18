@@ -1,7 +1,7 @@
 <?= $this->extend('customer/layouts/main') ?><?= $this->section('content') ?>
 <?php $record=$records[0];$payload=json_decode($record['payload'],true)?:[];$agent=json_decode($record['agent_snapshot']??'null',true)?:[];$photos=(new \App\Services\ResalePhotos(db_connect()))->items($record);$state=customer_listing_status($record); ?>
 <main class="portal-main portal-container" id="main-content">
-<?= view('customer/components/page_header',['title'=>$payload['title']??('Listing SP-'.$record['id']),'subtitle'=>'Listing SP-'.$record['id'].' / '.($record['source_name']??''),'backUrl'=>url_to('customer.resale'),'backLabel'=>'Back to My Listings']) ?>
+<?= view('customer/components/page_header',['title'=>$payload['title']??('Listing '.\App\Services\ListingReference::display($record)),'subtitle'=>'Listing '.\App\Services\ListingReference::display($record).' / '.($record['source_name']??''),'backUrl'=>url_to('customer.resale'),'backLabel'=>'Back to My Listings']) ?>
 <p class="form-error" data-lifecycle-error role="alert" hidden></p>
 <div class="app-detail-layout"><section class="app-detail-primary app-data-panel" data-listing-id="<?= (int)$record['id'] ?>">
     <?php if($photos): ?><div class="app-photo-gallery"><?php foreach($photos as$i=>$photo): ?><a href="<?= esc($photo['url'],'attr') ?>" target="_blank" rel="noopener"><img src="<?= esc($photo['url'],'attr') ?>" alt="Listing photo <?= $i+1 ?>" loading="<?= $i?'lazy':'eager' ?>"></a><?php endforeach ?></div><?php else: ?><div class="app-media-empty"><i class="bi bi-buildings"></i><span>No listing photos added</span></div><?php endif ?>

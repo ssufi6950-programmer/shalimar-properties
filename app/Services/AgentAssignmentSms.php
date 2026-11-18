@@ -22,7 +22,7 @@ final class AgentAssignmentSms
         $plot=self::text($payload['plot_no']??'',70)?:'reference '.(string)$listing['erp_property_id'];
         $name=self::text($project['name']??'',100)?:self::text($listing['project_slug'],100);
         $purpose=$listing['listing_purpose']==='rent'?'rent':'sale';
-        $message='Shalimar Properties: Property '.$plot.', project '.$name.', has been assigned to you. Listing SP-'.$listing['id'].' is approved for '.$purpose.'.';
+        $message='Shalimar Properties: Property '.$plot.', project '.$name.', has been assigned to you. Listing '.ListingReference::display($listing).' is approved for '.$purpose.'.';
         $now=(new ShalimarAgents($this->db))->now();
         if(!$this->db->table('listing_assignment_sms')->insert(['listing_id'=>$listing['id'],'listing_version'=>$listing['record_version'],
             'portal_agent_id'=>$listing['portal_agent_id'],'agent_erp_link_id'=>$listing['agent_erp_link_id'],'agent_source_id'=>$listing['agent_source_id'],

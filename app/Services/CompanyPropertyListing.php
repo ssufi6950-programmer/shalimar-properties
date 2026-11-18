@@ -52,8 +52,9 @@ final class CompanyPropertyListing
         $version=$input['version']??'0';if(!is_string($version)||!preg_match('/\A[0-9]{1,10}\z/D',$version))throw new \InvalidArgumentException('Reload the listing form.');
         $key=$input['submission_key']??'';if(!is_string($key)||!preg_match('/\A[a-f0-9]{64}\z/D',$key))throw new \InvalidArgumentException('Reload the listing form.');
         $newFiles=[];$committed=false;
-        $this->db->transBegin();
+        $references=new ListingReference($this->db);$references->acquire();
         try{
+            if(!$this->db->transBegin())throw new \RuntimeException('Listing transaction could not start.');
             $previous=$id?$this->row($id,true):null;
             if($previous&&((int)$previous['erp_source_id']!==$source||(string)$previous['erp_property_id']!==$property||(int)$previous['record_version']!==(int)$version||$previous['listing_purpose']!==$draft['listing_purpose']))throw new \InvalidArgumentException('Listing identity, purpose or version changed. Reload.');
             if($previous&&($previous['review_state']!=='approved'||!in_array($previous['status'],['live','approved','active'],true)||!in_array($previous['deal'],['available','active'],true)))throw new \InvalidArgumentException('This company listing is read-only. Create a fresh listing where permitted.');
@@ -82,13 +83,13 @@ final class CompanyPropertyListing
             $values=['portal_customer_id'=>null,'erp_source_id'=>$source,'erp_property_id'=>$property,'project_slug'=>$m['project_slug'],'mapping_id'=>$m['id'],'listing_purpose'=>$draft['listing_purpose'],'selling_method'=>'shalimar_agent','asking_price'=>$draft['price'],'status'=>'live','deal'=>'available','review_state'=>'approved','record_version'=>$previous?(int)$previous['record_version']+1:1,'payload'=>json_encode($payload,JSON_THROW_ON_ERROR),'portal_agent_id'=>$agent['portal_agent_id'],'agent_erp_link_id'=>$agent['agent_erp_link_id'],'agent_source_id'=>$agent['agent_source_id'],'agent_snapshot'=>json_encode($snapshot,JSON_THROW_ON_ERROR),'submission_key'=>$previous['submission_key']??$key,'updated_at'=>$now];
             if($previous){$this->db->table('portal_listings')->where('id',$id)->update($values);}else{$values['created_at']=$now;$this->db->table('portal_listings')->insert($values);$id=(int)$this->db->insertID();}
             if($id<1)throw new \RuntimeException('Listing save failed.');
-            $payload['id']=$id;$payload['ref']=$prior['ref']??'SP-'.$id;$values['payload']=json_encode($payload,JSON_THROW_ON_ERROR);$this->db->table('portal_listings')->where('id',$id)->update(['payload'=>$values['payload']]);
+            $payload['id']=$id;$payload['ref']=$previous?ListingReference::display($previous):$references->next($now);$values['payload']=json_encode($payload,JSON_THROW_ON_ERROR);$this->db->table('portal_listings')->where('id',$id)->update(['payload'=>$values['payload']]);
             $saved=$this->row($id);(new AdminListingPhotos($this->db))->requirePublishable($saved);
             (new ListingLifecycle($this->db))->record('admin_company_published',$previous,$saved,null,$actor);
             (new AdminAuditService($this->db))->record('listing.admin_company_published','resale_listings',$actor,'portal_listing',$id,null,['erp_source_id'=>$source,'status'=>'live','version'=>$saved['record_version']]);
             if(!$this->db->transStatus()||!$this->db->transCommit())throw new \RuntimeException('Listing could not commit.');$committed=true;
             return $id;
-        }catch(\Throwable $e){if(!$committed){$this->db->transRollback();$this->db->resetTransStatus();foreach($newFiles as$file)if(is_file($file))unlink($file);}throw $e;}
+        }catch(\Throwable $e){if(!$committed){$this->db->transRollback();$this->db->resetTransStatus();foreach($newFiles as$file)if(is_file($file))unlink($file);}throw $e;}finally{$references->release();}
     }
     public function unpublish(int $id,int $actor,int $version):void
     {
