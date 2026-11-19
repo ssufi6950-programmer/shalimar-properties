@@ -7,7 +7,7 @@ class ExplorerErpClient extends ErpConnectionService
 {
     public function fetchOptions(array $source, string $head, string $field, array $subheads): array
     {
-        if (!in_array($field, ['pro_inventory.sector', 'item_sublocation.id'], true) || !preg_match('/\A[0-9]{1,18}\z/D', $head)
+        if (!in_array($field, ['pro_inventory.sector', 'pro_inventory.category', 'item_sublocation.id'], true) || !preg_match('/\A[0-9]{1,18}\z/D', $head)
             || count($subheads) > 100 || ($field === 'item_sublocation.id' && !$subheads)) throw new \InvalidArgumentException('Invalid metadata scope.');
         foreach ($subheads as $id) if (!is_string($id) || !preg_match('/\A[0-9]{1,18}\z/D', $id)) throw new \InvalidArgumentException('Invalid mapped Sub Location.');
         if (($source['auth_type'] ?? '') !== 'bearer' || (int) ($source['is_active'] ?? 0) !== 1) throw new \App\Exceptions\ExplorerMetadataException('Enable an ERP source with server-side bearer credentials.');
@@ -18,8 +18,8 @@ class ExplorerErpClient extends ErpConnectionService
         $addresses = $this->connectionAddresses($host);
         if (!$addresses) throw new \App\Exceptions\ExplorerMetadataException('ERP hostname could not be resolved.');
         foreach ($addresses as $address) if (!self::isPublicAddress($address)) throw new \App\Exceptions\ExplorerMetadataException('Non-public ERP destination blocked.');
-        $query = ['head' => $head, 'kind' => $field === 'pro_inventory.sector' ? 'sector' : 'sublocation'];
-        if ($query['kind'] === 'sublocation') $query['subheads'] = implode(',', $subheads);
+        $query = ['head' => $head, 'kind' => match ($field) { 'pro_inventory.sector' => 'sector', 'pro_inventory.category' => 'category', default => 'sublocation' }];
+        if ($query['kind'] !== 'sector') $query['subheads'] = implode(',', $subheads);
         return $this->request($base . '/filter-options.php?' . http_build_query($query), $host, $addresses[0], $this->authenticationHeaders($source));
     }
 

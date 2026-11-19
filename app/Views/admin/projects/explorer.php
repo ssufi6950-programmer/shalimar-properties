@@ -18,7 +18,7 @@
         <div class="border rounded p-3 mb-3">
             <p class="mb-2"><strong><?= esc($project['name']) ?></strong> <span class="text-muted small"> &#183; <?= esc(\App\Services\ExplorerChildBuilder::fieldLabel($scope['field'])) ?> filters</span></p>
             <details class="small text-muted mb-2"><summary>Source details</summary><p><?= esc($scope['source']['name']) ?> &#183; Source #<?= esc($scope['source_id']) ?> &#183; Head #<?= esc($scope['head_id']) ?> &#183; <code><?= esc($scope['field']) ?></code>.
-                <?= $scope['field'] === 'pro_inventory.sector' ? 'All distinct valid sectors under this Head, across ALL Subheads.' : 'Only Sub Location IDs in this project?s current mappings.' ?></p>
+                <?= $scope['field'] === 'pro_inventory.sector' ? 'All distinct valid sectors under this Head, across ALL Subheads.' : ($scope['field'] === 'pro_inventory.category' ? 'Distinct exact inventory categories under this project’s mapped Sub Locations; existing project mappings are unchanged.' : 'Only Sub Location IDs in this project’s current mappings.') ?></p>
             </details>
             <form method="post" action="<?= site_url('admin/property-explorer/fetch') ?>">
                 <?= csrf_field() ?><input type="hidden" name="project" value="<?= esc($project['slug'], 'attr') ?>">

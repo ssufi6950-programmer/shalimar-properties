@@ -28,19 +28,20 @@ final class PublicExplorerFilters
         if (!$scopes) return [];
         if (count($scopes) !== 1 || $scopes[0]['code'] !== $code) throw new RuntimeException('Explorer project scope is ambiguous.');
         $scope = $scopes[0];
-        $field = $kind === 'sector' ? 'pro_inventory.sector' : 'item_sublocation.id';
+        $field = PropertyExplorer::layer2Field($slug);
+        if ($field === null) return [];
         $sql = 'SELECT f.* FROM portal_explorer_filters f WHERE f.project_slug=? AND f.erp_source_id=? AND f.erp_head_id=? AND f.source_field=? AND f.parent_filter_id IS NULL AND f.is_visible=1';
-        if ($kind === 'subhead') $sql .= ' AND EXISTS (SELECT 1 FROM erp_project_mappings mapped WHERE mapped.project_slug=f.project_slug AND mapped.erp_source_id=f.erp_source_id AND mapped.erp_head_id=f.erp_head_id AND mapped.is_active=1 AND BINARY CAST(mapped.erp_subhead_id AS CHAR)=BINARY f.source_value)';
+        if ($field === 'item_sublocation.id') $sql .= ' AND EXISTS (SELECT 1 FROM erp_project_mappings mapped WHERE mapped.project_slug=f.project_slug AND mapped.erp_source_id=f.erp_source_id AND mapped.erp_head_id=f.erp_head_id AND mapped.is_active=1 AND BINARY CAST(mapped.erp_subhead_id AS CHAR)=BINARY f.source_value)';
         $query = $this->db->prepare($sql . ' ORDER BY f.display_order,f.id');
         $query->execute([$slug, $scope['erp_source_id'], $scope['erp_head_id'], $field]);
         $out = [];
         foreach ($query->fetchAll(PDO::FETCH_ASSOC) as $row) {
             $value = PropertyExplorer::value($row['source_value']);
-            if ($value === null || ($kind === 'subhead' && !preg_match('/\A(?:0|[1-9][0-9]{0,17})\z/D', $value))) continue;
+            if ($value === null || ($field === 'item_sublocation.id' && !preg_match('/\A(?:0|[1-9][0-9]{0,17})\z/D', $value))) continue;
             $key = PropertyExplorer::key($slug, (string) $row['erp_source_id'], (string) $row['erp_head_id'], $field, $value);
             $out[$key] = ['key' => $key, 'filter_id' => (string) $row['id'], 'project' => $slug,
                 'source_id' => (string) $row['erp_source_id'], 'head_id' => (string) $row['erp_head_id'],
-                'source_field' => $field, 'kind' => $kind, 'value' => $value,
+                'source_field' => $field, 'kind' => match ($field) { 'pro_inventory.category' => 'category', 'pro_inventory.sector' => 'sector', default => 'subhead' }, 'value' => $value,
                 'label' => $row['display_name'], 'icon' => isset(PropertyExplorer::ICONS[$row['icon']]) ? $row['icon'] : 'fa-layer-group'];
         }
         return $out;
@@ -57,7 +58,7 @@ final class PublicExplorerFilters
             if ($tree !== '') throw new InvalidArgumentException('A child path requires its Layer 2 selection.');
             return ['roots'=>$roots,'row'=>$roots,'path'=>[],'root'=>null,'chosen'=>null,'tree'=>[],'unsupported'=>false];
         }
-        $root = $roots[$rootKey] ?? null;
+        $root = $roots[$rootKey] ?? $this->legacySubheadRoot($slug, $rootKey);
         if (!$root) throw new InvalidArgumentException('This filter is unavailable for the selected project.');
 
         $ids = [];
@@ -133,6 +134,23 @@ final class PublicExplorerFilters
         return $field === 'item_sublocation.id' || ExplorerListingSnapshot::supports($field);
     }
 
+    /** Keep old Gulberg Subhead URLs resolving, without showing those filters in the UI. */
+    private function legacySubheadRoot(string $slug, string $key): ?array
+    {
+        if ($slug !== 'gulberg-city') return null;
+        $query = $this->db->prepare('SELECT f.*,s.code FROM portal_explorer_filters f JOIN erp_sources s ON s.id=f.erp_source_id JOIN erp_project_mappings mapped ON mapped.project_slug=f.project_slug AND mapped.erp_source_id=f.erp_source_id AND mapped.erp_head_id=f.erp_head_id AND mapped.is_active=1 AND BINARY CAST(mapped.erp_subhead_id AS CHAR)=BINARY f.source_value WHERE f.project_slug=? AND f.source_field=? AND f.parent_filter_id IS NULL AND f.is_visible=1 ORDER BY f.id LIMIT 1000');
+        $query->execute([$slug, 'item_sublocation.id']);
+        foreach ($query->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            if ($row['code'] !== 'SGC' || !preg_match('/\A(?:0|[1-9][0-9]{0,17})\z/D', (string)$row['source_value'])) continue;
+            $candidate = PropertyExplorer::key($slug, (string)$row['erp_source_id'], (string)$row['erp_head_id'], 'item_sublocation.id', (string)$row['source_value']);
+            if (!hash_equals($candidate, $key)) continue;
+            return ['key'=>$candidate,'filter_id'=>(string)$row['id'],'project'=>$slug,'source_id'=>(string)$row['erp_source_id'],'head_id'=>(string)$row['erp_head_id'],
+                'source_field'=>'item_sublocation.id','kind'=>'subhead','value'=>(string)$row['source_value'],'label'=>(string)$row['display_name'],
+                'icon'=>isset(PropertyExplorer::ICONS[$row['icon']])?$row['icon']:'fa-layer-group'];
+        }
+        return null;
+    }
+
     private static function childOption(array $row): array
     {
         return [
@@ -173,8 +191,9 @@ final class PublicExplorerFilters
             }
             $field = $node['source_field'];
             $value = $node['source_value'];
-            $expectedField = $index === 0 ? ($mode[0] === 'sector' ? 'pro_inventory.sector' : 'item_sublocation.id') : null;
-            if (($index === 0 && $field !== $expectedField) || ($index > 0 && !self::matchable($field))) {
+            $expectedField = $index === 0 ? PropertyExplorer::layer2Field($explorer['project']) : null;
+            $legacyGulbergRoot = $index === 0 && $explorer['project'] === 'gulberg-city' && $field === 'item_sublocation.id';
+            if (($index === 0 && $field !== $expectedField && !$legacyGulbergRoot) || ($index > 0 && !self::matchable($field))) {
                 throw new InvalidArgumentException('Unsupported public filter field.');
             }
             if (isset($conditions[$field]) && $conditions[$field] !== $value) {
@@ -217,8 +236,9 @@ final class PublicExplorerFilters
     {
         $mode = is_string($option['project'] ?? null) ? PropertyExplorer::mode($option['project']) : null;
         if ($mode === null) throw new InvalidArgumentException('Invalid Explorer project.');
-        $field = $mode[0] === 'sector' ? 'pro_inventory.sector' : 'item_sublocation.id';
-        if (($option['source_field'] ?? null) !== $field) throw new InvalidArgumentException('Invalid Explorer source field.');
+        $legacyGulbergRoot = $option['project'] === 'gulberg-city' && ($option['source_field'] ?? null) === 'item_sublocation.id';
+        $field = $legacyGulbergRoot ? 'item_sublocation.id' : PropertyExplorer::layer2Field($option['project']);
+        if ($field === null || ($option['source_field'] ?? null) !== $field) throw new InvalidArgumentException('Invalid Explorer source field.');
         foreach (['filter_id', 'source_id', 'head_id'] as $id) {
             if (!is_string($option[$id] ?? null) || !preg_match('/\A[0-9]{1,18}\z/D', $option[$id])) throw new InvalidArgumentException('Invalid Explorer identity.');
         }
@@ -227,12 +247,19 @@ final class PublicExplorerFilters
         $sql = ' AND m.erp_source_id=? AND m.erp_head_id=? AND BINARY s.code=BINARY ?'
             . ' AND EXISTS (SELECT 1 FROM portal_explorer_filters selected WHERE selected.id=? AND selected.project_slug=l.project_slug AND selected.erp_source_id=m.erp_source_id AND selected.erp_head_id=m.erp_head_id AND selected.parent_filter_id IS NULL AND selected.is_visible=1 AND selected.source_field=? AND BINARY selected.source_value=BINARY ?)';
         $parameters = [$option['source_id'], $option['head_id'], $mode[1], $option['filter_id'], $field, $value];
-        if ($mode[0] === 'sector') {
-            // Only locally captured, source-bound inventory sector metadata; no display-label inference.
-            $sql .= " AND l.erp_source_id=m.erp_source_id AND l.erp_property_id IS NOT NULL AND JSON_TYPE(JSON_EXTRACT(l.payload,'$.sector')) IN ('STRING','INTEGER') AND BINARY JSON_UNQUOTE(JSON_EXTRACT(l.payload,'$.sector'))=BINARY ?";
-        } else {
+        if ($field === 'item_sublocation.id') {
             if (!preg_match('/\A(?:0|[1-9][0-9]{0,17})\z/D', $value)) throw new InvalidArgumentException('Invalid Explorer Sub Location.');
             $sql .= ' AND BINARY CAST(m.erp_subhead_id AS CHAR)=BINARY ?';
+        } else {
+            $snapshotPath = '$._explorer_snapshot.fields."' . $field . '"';
+            $sql .= " AND l.erp_source_id=m.erp_source_id AND l.erp_property_id IS NOT NULL AND JSON_UNQUOTE(JSON_EXTRACT(l.payload,'$._explorer_snapshot.version'))='1'"
+                . " AND BINARY JSON_UNQUOTE(JSON_EXTRACT(l.payload,'$._explorer_snapshot.source_id'))=BINARY CAST(m.erp_source_id AS CHAR)"
+                . " AND BINARY JSON_UNQUOTE(JSON_EXTRACT(l.payload,'$._explorer_snapshot.property_id'))=BINARY l.erp_property_id"
+                . " AND BINARY JSON_UNQUOTE(JSON_EXTRACT(l.payload,'$._explorer_snapshot.head_id'))=BINARY CAST(m.erp_head_id AS CHAR)"
+                . " AND BINARY JSON_UNQUOTE(JSON_EXTRACT(l.payload,'$._explorer_snapshot.subhead_id'))=BINARY CAST(m.erp_subhead_id AS CHAR)"
+                . " AND JSON_TYPE(JSON_EXTRACT(l.payload,?))='STRING' AND BINARY JSON_UNQUOTE(JSON_EXTRACT(l.payload,?))=BINARY ?";
+            array_push($parameters, $snapshotPath, $snapshotPath, $value);
+            return [$sql, $parameters];
         }
         $parameters[] = $value;
         return [$sql, $parameters];

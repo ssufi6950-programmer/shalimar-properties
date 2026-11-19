@@ -38,6 +38,17 @@ final class PropertyExplorer
         };
     }
 
+    /** Root filter source. Gulberg now uses its verified inventory category. */
+    public static function layer2Field(string $slug): ?string
+    {
+        return match ($slug) {
+            'gulberg-city' => 'pro_inventory.category',
+            'shalimar-smart-city' => 'pro_inventory.sector',
+            'zalmi-x' => 'item_sublocation.id',
+            default => null,
+        };
+    }
+
     public static function value(mixed $value): ?string
     {
         if (!is_string($value) && !is_int($value)) return null;

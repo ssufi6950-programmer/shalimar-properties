@@ -28,7 +28,7 @@ final class ExplorerFilterBuilder
         sort($subheads, SORT_STRING);
         $source = $this->db->table('erp_sources')->where('id', $scope['erp_source_id'])->get()->getRowArray();
         return ['project' => $slug, 'source_id' => (string) $scope['erp_source_id'], 'head_id' => (string) $scope['erp_head_id'],
-            'field' => $mode[0] === 'sector' ? 'pro_inventory.sector' : 'item_sublocation.id',
+            'field' => PropertyExplorer::layer2Field($slug) ?? throw new InvalidArgumentException('This project has no verified Layer 2 source field.'),
             'subheads' => array_values(array_unique($subheads)), 'source' => $source];
     }
 
