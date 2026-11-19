@@ -1,3 +1,12 @@
+<?php
+$listingCounts = [];
+foreach ($live as $listing) {
+  $projectSlug = $listing['project'] ?? null;
+  if (!is_string($projectSlug) || $projectSlug === '') continue;
+  $purpose = $listing['_listing_purpose'];
+  $listingCounts[$projectSlug][$purpose] = ($listingCounts[$projectSlug][$purpose] ?? 0) + 1;
+}
+?>
 <section class="sec-tight" id="projects">
   <div class="wrap">
     <div class="sec-head rv">
@@ -32,8 +41,8 @@
               <?php foreach ($explorerFilters as $filter): ?><a class="subp-cat" href="<?= e($filter['url']) ?>"><i class="fa-solid fa-layer-group" aria-hidden="true"></i><?= e($filter['label']) ?><em><?= (int)$filter['count'] ?></em></a><?php endforeach; ?>
             </div><?php else: ?><?= subprojects_html($p, 'mini') ?><?php endif; ?>
             <div class="sp-facts">
-              <div><b><?= (int)($liveByProject[$p['slug']] ?? 0) ?></b><span>Live listings</span></div>
-              <div><b><?= market_count($market['available'] ? (int)($byProject[$p['slug']] ?? 0) : null) ?></b><span>Deals this month</span></div>
+              <div><b><?= $listingCounts[$p['slug']]['sale'] ?? 0 ?></b><span>Sale Listings</span></div>
+              <div><b><?= $listingCounts[$p['slug']]['rent'] ?? 0 ?></b><span>Rent Listings</span></div>
               <div><b><?= e(preg_replace('/\s*\(.*$/', '', (string)$p['price_from'])) ?></b><span>Starting from</span></div>
             </div>
             <a class="btn btn-solid btn-sm" href="projects#<?= e($p['slug']) ?>">Explore <?= e($p['name']) ?> <i class="fa-solid fa-arrow-right-long"></i></a>
