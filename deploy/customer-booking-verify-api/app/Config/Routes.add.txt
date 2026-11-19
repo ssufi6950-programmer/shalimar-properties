@@ -1,0 +1,2 @@
+// Customer booking verification API (server-to-server, bearer-token authenticated)
+$routes->post('api/v1/customer-booking/verify', '\App\Controllers\CustomerBookingVerificationApi::verify');
