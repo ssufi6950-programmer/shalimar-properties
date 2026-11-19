@@ -182,8 +182,7 @@ final class ExplorerChildBuilder
                 if($saved){
                     if(!$this->db->table('portal_explorer_filters')->where('id',$saved['id'])->where('record_version',(int)$version)->update($values)||$this->db->affectedRows()!==1)throw new RuntimeException('Child save conflict.');$id=$saved['id'];
                 }else{
-                    $values+=['project_slug'=>$slug,'erp_source_id'=>$context['source_id'],'erp_head_id'=>$context['head_id'],'parent_filter_id'=>$parent,'source_field'=>$field,'source_value'=>$value];
-                    if(!$this->db->table('portal_explorer_filters')->insert($values))throw new RuntimeException('Duplicate child or storage failure.');$id=$this->db->insertID();
+                    throw new InvalidArgumentException('New filter types can only be added at Layer 1. Existing child filters may still be edited.');
                 }
                 $audit=static fn($r)=>array_intersect_key($r,array_flip(['project_slug','erp_source_id','erp_head_id','parent_filter_id','source_field','source_value','display_name','icon','is_visible','display_order','record_version']));
                 (new AdminAuditService($this->db))->record('explorer.child_saved','projects',$actor,'portal_explorer_filter',$id,$saved?$audit($saved):null,$audit($values+($saved??[])));

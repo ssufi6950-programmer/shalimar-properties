@@ -55,7 +55,7 @@
                                     </div>
                                 <?php else: ?><span class="text-muted">No child filters configured.</span><?php endif ?>
                             </div>
-                            <a class="btn btn-sm btn-outline-primary mt-2" href="<?= esc(site_url('admin/property-explorer') . '?' . http_build_query(['project'=>$project['slug'],'parent'=>(string)$row['id'],'discover'=>can('projects.edit')?'1':'0']), 'attr') ?>"><?= can('projects.edit') ? ($summary['count']?'Manage children':'Add child filters') : 'View children' ?></a>
+                            <?php if($summary['count']): ?><a class="btn btn-sm btn-outline-primary mt-2" href="<?= esc(site_url('admin/property-explorer') . '?' . http_build_query(['project'=>$project['slug'],'parent'=>(string)$row['id']]), 'attr') ?>"><?= can('projects.edit') ? 'Manage existing children' : 'View children' ?></a><?php else: ?><p class="small text-muted mt-2 mb-0">New filter types can only be added at Layer 1.</p><?php endif ?>
                         <?php endif ?>
                         <details class="small text-muted mt-2"><summary>Original value &amp; details</summary>Exact source value: <code><?= esc(json_encode($row['value'], JSON_UNESCAPED_UNICODE)) ?></code> &#183; <?= $row['saved']?'Saved #'.(int)$row['id']:'Not saved' ?><?= !$row['editable']?' &#183; Outside current mapping; editing unavailable':'' ?><?= !$row['available']&&$row['saved']?' &#183; Retained saved option; not confirmed by the latest fetch':'' ?></details>
                     </div>
