@@ -12,8 +12,8 @@ final class AdminListingReview
     public static function requiresOwnershipVerification():bool{return config('AdminReview')->requireOwnershipVerification;}
     public function row(int $id,bool $lock=false):array
     {
-        $sql=$this->db->table('portal_listings')->where('id',$id)->where('portal_customer_id IS NOT NULL',null,false)->where('erp_source_id IS NOT NULL',null,false)->where('erp_property_id IS NOT NULL',null,false)->getCompiledSelect();
-        $row=$this->db->query($sql.($lock?' FOR UPDATE':''))->getRowArray();if(!$row)throw new CustomerFlowException(404,'Customer listing not found.');return$row;
+        $sql="SELECT l.* FROM portal_listings l WHERE l.id=? AND (l.portal_customer_id IS NOT NULL OR JSON_UNQUOTE(JSON_EXTRACT(l.payload,'$._company_inventory.origin'))='admin_company_inventory') AND l.erp_source_id IS NOT NULL AND l.erp_property_id IS NOT NULL";
+        $row=$this->db->query($sql.($lock?' FOR UPDATE':''),[$id])->getRowArray();if(!$row)throw new CustomerFlowException(404,'Listing not found.');return$row;
     }
     public function fingerprint(array $row):string
     {
@@ -37,6 +37,7 @@ final class AdminListingReview
     }
     private function validateSubmission(array $row):array
     {
+        if(CompanyPropertyListing::owned($row))return $this->validateContent($row);
         $challenge=$row['resale_verification_id']?$this->db->table('resale_otp_challenges')->where('id',$row['resale_verification_id'])->get()->getRowArray():null;
         $proofRow=$row;
         if($challenge)$proofRow+=['otp_customer_id'=>$challenge['portal_customer_id'],'otp_submission_key'=>$challenge['submission_key'],'otp_delivery_state'=>$challenge['delivery_state'],'otp_verified_at'=>$challenge['verified_at'],'otp_consumed_at'=>$challenge['consumed_at']];
@@ -109,12 +110,14 @@ final class AdminListingReview
     private function manualApprovalLocks(array $row):void
     {
         $this->validateContent($row);
-        if(!$this->db->query("SELECT id FROM portal_customers WHERE id=? AND status='active' FOR UPDATE",[$row['portal_customer_id']])->getRowArray())throw new CustomerFlowException(409,'The submitting customer account is unavailable.');
+        $company=CompanyPropertyListing::owned($row);
+        if(!$company&&!$this->db->query("SELECT id FROM portal_customers WHERE id=? AND status='active' FOR UPDATE",[$row['portal_customer_id']])->getRowArray())throw new CustomerFlowException(409,'The submitting customer account is unavailable.');
         $mapping=$this->db->query('SELECT m.id FROM erp_project_mappings m'.ErpVisibility::joins().' WHERE m.id=? AND m.project_slug=? AND m.erp_source_id=? AND '.ErpVisibility::mappingSql().' FOR UPDATE',[$row['mapping_id'],$row['project_slug'],$row['erp_source_id']])->getRowArray();
         if(!$mapping)throw new CustomerFlowException(409,'The selected project/source mapping is unavailable for publication.');
         (new ListingLifecycle($this->db))->assertNoAdminRestriction((int)$row['erp_source_id'],(string)$row['erp_property_id'],$row['listing_purpose']);
         if($this->db->query('SELECT id FROM portal_listings WHERE active_erp_property=? AND id<>? FOR UPDATE',[ListingPolicy::key((int)$row['erp_source_id'],(string)$row['erp_property_id'],$row['listing_purpose']),$row['id']])->getRowArray())throw new CustomerFlowException(409,'Another current listing occupies this property and purpose.');
         $this->representative($row,true);$this->photos->requirePublishable($row);
+        if($company){$valid=array_filter($this->photos->manifest($row),static fn($photo)=>$photo['valid']);if(!$valid)throw new \InvalidArgumentException('Add at least one valid property photo before approving this company listing.');}
     }
     private function event(string $event,array $before,array $after,int $actor,array $context):void
     {
@@ -135,6 +138,7 @@ final class AdminListingReview
     public function verify(int $id,int $actor,int $version,string $fingerprint):array
     {
         $this->requirePermission($actor,'resale_listings.approve');
+        if(CompanyPropertyListing::owned($this->row($id)))throw new \InvalidArgumentException('Company inventory listings do not use customer ownership verification.');
         if(!self::requiresOwnershipVerification())throw new CustomerFlowException(409,'Ownership verification is disabled for the current admin review workflow.','ownership_check_disabled');
         $this->requirePermission($actor,'resale_listings.approve');try{$row=$this->row($id);$this->expected($row,$version,$fingerprint);$this->pending($row);$fresh=$this->fresh($row);$this->db->transBegin();try{$current=$this->row($id,true);$this->expected($current,$version,$fingerprint);$this->localLocks($current,$fresh);$this->expected($current,$version,$fingerprint);$this->requirePermission($actor,'resale_listings.approve');$this->event('admin_ownership_verified',$current,$current,$actor,['verification'=>$fresh['proof']]);$this->commit();}catch(\Throwable$e){$this->rollback();throw$e;}return$fresh['proof'];}catch(\Throwable$e){$this->failure($id,$actor,$e);throw$e;}
     }
@@ -145,15 +149,17 @@ final class AdminListingReview
         $event=['approve'=>'admin_approved_published','reject'=>'admin_rejected','changes'=>'admin_changes_requested'][$action];
         try{
             $row=$this->row($id);
+            $company=CompanyPropertyListing::owned($row);if($action==='approve'&&$company)$event='admin_company_published';
             if($action==='approve'&&$row['selling_method']==='shalimar_agent'&&(!$assignedAgent||$assignedAgent<1))throw new \InvalidArgumentException('Select a Shalimar Agent before approval.');
             if($assignedAgent!==null&&($action!=='approve'||$row['selling_method']!=='shalimar_agent'))throw new \InvalidArgumentException('Agent assignment is only available when approving a Shalimar Agent listing.');
             if($this->repeat($row,$event,$actor,$version,$fingerprint,$reason)){if($assignedAgent!==null&&(int)$row['portal_agent_id']!==$assignedAgent)throw new CustomerFlowException(409,'This approval already assigned a different agent. Reload the current record.');return $this->afterDecision($row,$action,true);}
-            $this->expected($row,$version,$fingerprint);$this->pending($row,$action==='reject');$fresh=$action==='approve'&&self::requiresOwnershipVerification()?$this->fresh($row):null;
+            $this->expected($row,$version,$fingerprint);$this->pending($row,$action==='reject');$fresh=$action==='approve'&&!$company&&self::requiresOwnershipVerification()?$this->fresh($row):null;$companyInventory=null;
+            if($action==='approve'&&$company){$companyInventory=(new CompanyPropertyListing($this->db))->property((int)$row['erp_source_id'],(string)$row['erp_property_id']);ErpPropertyClassification::assertPurpose($companyInventory['classification'],$row['listing_purpose']);if((int)$companyInventory['mapping']['id']!==(int)$row['mapping_id']||$companyInventory['mapping']['project_slug']!==$row['project_slug'])throw new CustomerFlowException(409,'The current ERP inventory no longer matches this company listing mapping. Refresh the property and submit it again.','company_inventory_changed');}
             $this->db->transBegin();try{
-                $row=$this->row($id,true);if($this->repeat($row,$event,$actor,$version,$fingerprint,$reason)){if($assignedAgent!==null&&(int)$row['portal_agent_id']!==$assignedAgent)throw new CustomerFlowException(409,'This approval already assigned a different agent.');$this->commit();return $this->afterDecision($row,$action,true);}
-                $this->expected($row,$version,$fingerprint);$this->pending($row,$action==='reject');$this->requirePermission($actor,$permission);if($fresh){$this->localLocks($row,$fresh);$this->expected($row,$version,$fingerprint);}elseif($action==='approve'){$this->manualApprovalLocks($row);$this->expected($row,$version,$fingerprint);}
+                $row=$this->row($id,true);$company=CompanyPropertyListing::owned($row);if($action==='approve'&&$company)$event='admin_company_published';if($this->repeat($row,$event,$actor,$version,$fingerprint,$reason)){if($assignedAgent!==null&&(int)$row['portal_agent_id']!==$assignedAgent)throw new CustomerFlowException(409,'This approval already assigned a different agent.');$this->commit();return $this->afterDecision($row,$action,true);}
+                $this->expected($row,$version,$fingerprint);$this->pending($row,$action==='reject');$this->requirePermission($actor,$permission);if($companyInventory&&microtime(true)-$companyInventory['fetched_at']>15)throw new CustomerFlowException(503,'The ERP inventory check expired. Reload the review and approve again.','company_inventory_stale');if($fresh){$this->localLocks($row,$fresh);$this->expected($row,$version,$fingerprint);}elseif($action==='approve'){$this->manualApprovalLocks($row);$this->expected($row,$version,$fingerprint);}
                 $payload=json_decode($row['payload'],true,128,JSON_THROW_ON_ERROR);$now=(new ShalimarAgents($this->db))->now();$state=['approve'=>'approved','reject'=>'rejected','changes'=>'needs_changes'][$action];$status=$action==='approve'?'live':($action==='reject'?'rejected':'pending');
-                $payload['status']=$status;$payload['review_note']=$action==='approve'?'':$reason;if($action==='approve'){$payload['published_at']=$payload['published_at']??$now;$payload['approved_at']=$now;$payload['images_status']='approved';$payload['approval_mode']=$fresh?'erp_verified':'manual';}
+                $payload['status']=$status;$payload['review_note']=$action==='approve'?'':$reason;if($action==='approve'){$payload['published_at']=$payload['published_at']??$now;$payload['approved_at']=$now;$payload['images_status']='approved';$payload['approval_mode']=$fresh?'erp_verified':'manual';if($companyInventory){$payload['_company_inventory']['inventory_status']=$companyInventory['inventory']['status']??null;$payload['_company_inventory']['maintenance_status']=$companyInventory['classification']['maintenance_status'];$payload['_company_inventory']['classification_status']=$companyInventory['classification']['classification_status'];$payload['_company_inventory']['checked_at']=$now;}}
                 $assignment=[];
                 if($action==='approve'&&$row['selling_method']==='shalimar_agent'){
                     $agent=(new ShalimarAgents($this->db))->requireAdminAssignable((int)$row['erp_source_id'],$assignedAgent,true);
@@ -203,8 +209,30 @@ final class AdminListingReview
         }catch(\Throwable$e){$this->rollback();throw$e;}
     }
     private function uploadKey(array $row,int $actor):string{return hash('sha256','admin-review:'.$actor.':'.$row['id'].':'.$row['record_version']);}
+    private function uploadCompanyPhotos(int $id,int $actor,int $version,string $fingerprint,array $files):void
+    {
+        $written=[];$this->db->transBegin();
+        try{
+            $row=$this->row($id,true);$this->pending($row);$this->expected($row,$version,$fingerprint);
+            if(!CompanyPropertyListing::owned($row))throw new \InvalidArgumentException('This is not a company inventory listing.');
+            $payload=json_decode($row['payload'],true,128,JSON_THROW_ON_ERROR);
+            $images=CompanyPropertyImages::save($files,$payload['images']??[],[],$written);
+            if(!$images)throw new \InvalidArgumentException('Add at least one valid property photo.');
+            $payload['images']=$images;$payload['images_status']='pending';$now=(new ShalimarAgents($this->db))->now();
+            $this->db->table('portal_listings')->where('id',$id)->update(['payload'=>json_encode($payload,JSON_THROW_ON_ERROR),'record_version'=>$version+1,'updated_at'=>$now]);
+            $saved=$this->row($id);$this->event('admin_photo_added',$row,$saved,$actor,['reason'=>'Company inventory photos added to the review listing.','reviewed_version'=>$version,'reviewed_fingerprint'=>$fingerprint,'before_photos'=>array_column($this->photos->manifest($row),'id'),'after_photos'=>array_column($this->photos->manifest($saved),'id')]);
+            $this->commit();
+        }catch(\Throwable $e){$this->rollback();foreach($written as$file)if(is_file($file))@unlink($file);throw $e;}
+    }
     public function upload(int $id,int $actor,int $version,string $fingerprint,array $files,bool $approvedMedia=false):void
     {
+        $candidate=$this->row($id);
+        if(CompanyPropertyListing::owned($candidate)){
+            if($approvedMedia)throw new \InvalidArgumentException('Use the company listing review flow to update pending photos.');
+            $this->requirePermission($actor,'resale_listings.edit');$items=$this->photos->items($candidate);$remaining=config('CustomerPortal')->adminPhotoMaximumCount-count($items);
+            if(!$files||count($files)>$remaining)throw new \InvalidArgumentException('Choose no more photos than the remaining listing photo slots.');
+            $this->uploadCompanyPhotos($id,$actor,$version,$fingerprint,$files);return;
+        }
         $this->requirePermission($actor,'resale_listings.edit');$row=$this->row($id);if($approvedMedia){if(!ListingPolicy::active($row))throw new CustomerFlowException(409,'Only a currently approved, active listing can have its public photos changed.');}else $this->pending($row);$this->expected($row,$version,$fingerprint);$items=$this->photos->items($row);$remaining=config('CustomerPortal')->adminPhotoMaximumCount-count($items);if(!$files||count($files)>$remaining)throw new \InvalidArgumentException('Choose no more photos than the remaining listing photo slots.');
         $key=$this->uploadKey($row,$actor);$photos=new ResalePhotos($this->db);$newPhotoIds=[];foreach($files as$file){if(!$file||!$file->isValid())throw new \InvalidArgumentException('One of the selected photos is invalid.');$photo=$photos->upload($file,(int)$row['portal_customer_id'],$key,'admin-review:'.$actor.':'.$id);$newPhotoIds[]=$photo['id'];}
         // The ordered photo set is committed once; incomplete batches stay private and expire through the existing pruner.

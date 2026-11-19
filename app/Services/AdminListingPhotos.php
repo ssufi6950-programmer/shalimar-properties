@@ -54,8 +54,10 @@ final class AdminListingPhotos
     }
     public function references(array $listing,array $ids):array
     {
-        ResalePhotos::ids($ids,config('CustomerPortal')->adminPhotoMaximumCount);$allowed=[];foreach($this->manifest($listing)as$photo)if($photo['id'])$allowed[$photo['id']]=$photo['reference'];$out=[];
-        foreach($ids as$id){if(!isset($allowed[$id]))throw new \InvalidArgumentException('A selected photo does not belong to this reviewed listing.');$out[]=$allowed[$id];}return$out;
+        if(!is_array($ids)||!array_is_list($ids)||count($ids)>config('CustomerPortal')->adminPhotoMaximumCount)throw new \InvalidArgumentException('The selected photo set is invalid.');
+        $company=CompanyPropertyListing::owned($listing);if(!$company)ResalePhotos::ids($ids,config('CustomerPortal')->adminPhotoMaximumCount);
+        $allowed=[];foreach($this->manifest($listing)as$photo)if($photo['id'])$allowed[$photo['id']]=$photo['reference'];$out=[];$seen=[];
+        foreach($ids as$id){if(!is_string($id)||!isset($allowed[$id])||isset($seen[$id]))throw new \InvalidArgumentException('A selected photo does not belong to this reviewed listing.');$seen[$id]=true;$out[]=$allowed[$id];}return$out;
     }
     public static function placeholder(array $payload):array
     {

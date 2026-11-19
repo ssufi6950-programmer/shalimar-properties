@@ -50,8 +50,9 @@ final class CompanyPropertyListings extends \App\Controllers\BaseController
             if(!is_array($context)||$context[0]!== (int)admin_user()['id']||$context[1]!==$source||$context[2]!==$property||($context[3]===null?null:(int)$context[3])!==$id||$context[4]<time()-1800)throw new \InvalidArgumentException('This form expired or changed. Open the property again.');
             $files=$this->request->getFileMultiple('photos')??[];
             $saved=$this->service()->save((int)admin_user()['id'],$source,$property,$input,$files,$id);
-            unset($forms[$key]);session()->set('company_listing_forms',$forms);$reference=\App\Services\ListingReference::display($this->service()->row($saved));session()->setFlashdata('company_message','Company listing '.$reference.' published successfully.');
-            return redirect()->to(site_url('admin/listings').'?review=approved&q='.rawurlencode($reference));
+            unset($forms[$key]);session()->set('company_listing_forms',$forms);$savedRow=$this->service()->row($saved);$reference=\App\Services\ListingReference::display($savedRow);
+            $underReview=$savedRow['review_state']==='under_review';session()->setFlashdata('company_message',$underReview?'Company listing '.$reference.' sent to resale review. Add photos and assign a Shalimar Agent before approval.':'Company listing '.$reference.' published successfully.');
+            return redirect()->to(site_url('admin/listings').'?review='.($underReview?'under_review':'approved').'&q='.rawurlencode($reference));
         }catch(\InvalidArgumentException $e){
             try{if(isset($source,$property))return $this->renderForm($source,$property,isset($id)&&$id?$this->service()->row($id):null,$input??[],$e->getMessage());}catch(\Throwable $ignored){}
             return $this->failed($e);
