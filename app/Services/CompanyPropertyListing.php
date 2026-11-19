@@ -99,7 +99,18 @@ final class CompanyPropertyListing
             $event=$underReview?'admin_company_submitted':'admin_company_published';
             (new ListingLifecycle($this->db))->record($event,$previous,$saved,null,$actor);
             (new AdminAuditService($this->db))->record('listing.'.$event,'resale_listings',$actor,'portal_listing',$id,null,['erp_source_id'=>$source,'status'=>$status,'version'=>$saved['record_version']]);
+            // Direct "Publish now" listings are already approved, so notify the
+            // selected agent here just like the admin review approval flow.
+            $notifyAgent=!$underReview&&!$previous&&$saved['selling_method']==='shalimar_agent';
+            if($notifyAgent){
+                if(config('Sms')->enabled)(new AgentAssignmentSms($this->db))->queue($saved);
+                (new AgentAssignmentWhatsapp($this->db))->queue($saved);
+            }
             if(!$this->db->transStatus()||!$this->db->transCommit())throw new \RuntimeException('Listing could not commit.');$committed=true;
+            if($notifyAgent){
+                try{(new AgentAssignmentSms($this->db))->dispatch($saved);}catch(\Throwable $ignored){log_message('error','Company listing agent SMS status unavailable: listing={id} type={type}.',['id'=>$saved['id'],'type'=>get_class($ignored)]);}
+                try{(new AgentAssignmentWhatsapp($this->db))->dispatch($saved);}catch(\Throwable $ignored){log_message('error','Company listing agent WhatsApp status unavailable: listing={id} type={type}.',['id'=>$saved['id'],'type'=>get_class($ignored)]);}
+            }
             return $id;
         }catch(\Throwable $e){if(!$committed){$this->db->transRollback();$this->db->resetTransStatus();foreach($newFiles as$file)if(is_file($file))unlink($file);}throw $e;}finally{$references->release();}
     }

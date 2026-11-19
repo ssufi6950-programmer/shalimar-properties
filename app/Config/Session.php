@@ -8,6 +8,17 @@ use CodeIgniter\Session\Handlers\FileHandler;
 
 class Session extends BaseConfig
 {
+    public function __construct()
+    {
+        parent::__construct();
+
+        // Older CI4 deployments commonly set this as `file` in .env. CI4 4.7
+        // now validates the configured value as a handler class name.
+        if ($this->driver === 'file') {
+            $this->driver = FileHandler::class;
+        }
+    }
+
     /**
      * --------------------------------------------------------------------------
      * Session Driver
