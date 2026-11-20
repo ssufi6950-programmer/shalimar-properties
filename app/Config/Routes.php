@@ -10,6 +10,7 @@ $routes->post('webhooks/whatsapp', '\App\Controllers\WhatsappWebhook::receive');
 $routes->get('media/resale/([a-f0-9]{64})','\App\Controllers\ResaleMedia::show/$1');
 $routes->get('api/projects', 'ProjectPagesApi::index');
 $routes->post('api/v1/customer-booking/verify', 'CustomerBookingVerificationApi::verify');
+$routes->post('api/v1/customer-booking/resale-completed', 'CustomerResaleCompletionApi::complete');
 $routes->options('api/projects', 'ProjectPagesApi::options');
 $routes->get('api/projects/images/([a-f0-9]{64})', 'ProjectPagesApi::image/$1');
 $routes->options('api/projects/images/([a-f0-9]{64})', 'ProjectPagesApi::options');
