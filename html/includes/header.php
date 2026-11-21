@@ -5,7 +5,7 @@ require_once dirname(__DIR__, 2) . '/app/Libraries/PortalLinks.php';
 if (!isset($active)) $active = '';
 if (!isset($pageTitle)) $pageTitle = 'Shalimar Properties';
 $__requestPath = parse_url((string) ($_SERVER['REQUEST_URI'] ?? ''), PHP_URL_PATH) ?: '';
-if (preg_match('~/(?:home|buy|rent|projects|insights|agencies)/?$~i', $__requestPath)) $prettyRoute = true;
+if (preg_match('~/(?:home|buy|rent|projects|insights|agencies|agency-performance)/?$~i', $__requestPath)) $prettyRoute = true;
 if (!isset($metaDesc)) $metaDesc = 'Shalimar Properties — verified plots, homes, rentals and project units in Shalimar Smart City, Gulberg City and Zalmi X.';
 $nav = [
   'home'     => ['Home', 'home', 'fa-house'],
@@ -40,7 +40,7 @@ if (!empty($prettyRoute)) {
   $__base = rtrim(str_replace('\\', '/', dirname($publicBase)), '/') . '/';
 }
 $bodyStyle = $heroPhoto !== '' ? ' style="--hero-img:url(\'' . e($__base . photo($heroPhoto, true)) . '\')"' : '';
-if(!isset($canonical)&&in_array($active,['home','buy','rent','projects','insights','agencies'],true))$canonical=\App\Libraries\PublicWebsiteUrl::route($active);
+if(!isset($canonical)&&in_array($active,['home','buy','rent','projects','insights','agencies','agency-performance'],true))$canonical=\App\Libraries\PublicWebsiteUrl::route($active);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -84,7 +84,17 @@ if(!isset($canonical)&&in_array($active,['home','buy','rent','projects','insight
 
     <nav class="nav" aria-label="Main">
       <?php foreach ($nav as $key => $item): ?>
-        <a href="<?= $item[1] ?>" class="<?= $active === $key ? 'active' : '' ?>"<?= $active === $key ? ' aria-current="page"' : '' ?>><?= e($item[0]) ?><?= $key === 'insights' ? ' <span class="new">NEW</span>' : '' ?></a>
+        <?php if ($key === 'agencies'): ?>
+          <div class="nav-more<?= in_array($active, ['agencies', 'agency-performance'], true) ? ' active' : '' ?>">
+            <button type="button" aria-haspopup="true" aria-expanded="false">Agencies <i class="fa-solid fa-chevron-down"></i></button>
+            <div class="nav-drop">
+              <a href="agencies" class="<?= $active === 'agencies' ? 'active' : '' ?>"><i class="fa-solid fa-briefcase"></i>Authorized Agencies</a>
+              <a href="agency-performance" class="<?= $active === 'agency-performance' ? 'active' : '' ?>"><i class="fa-solid fa-chart-column"></i>Agency Performance</a>
+            </div>
+          </div>
+        <?php else: ?>
+          <a href="<?= $item[1] ?>" class="<?= $active === $key ? 'active' : '' ?>"<?= $active === $key ? ' aria-current="page"' : '' ?>><?= e($item[0]) ?><?= $key === 'insights' ? ' <span class="new">NEW</span>' : '' ?></a>
+        <?php endif; ?>
       <?php endforeach; ?>
       <div class="nav-more<?= $moreActive ? ' active' : '' ?>">
         <button type="button" aria-haspopup="true">More <i class="fa-solid fa-chevron-down"></i></button>
@@ -120,7 +130,7 @@ if(!isset($canonical)&&in_array($active,['home','buy','rent','projects','insight
   </nav>
   <p class="drawer-label">Explore</p>
   <nav class="drawer-nav">
-    <?php foreach (array_merge($nav, $more) as $key => $item): ?>
+      <?php foreach (array_merge($nav, ['agency-performance' => ['Agency Performance', 'agency-performance', 'fa-chart-column']], $more) as $key => $item): ?>
       <a href="<?= $item[1] ?>" class="<?= $active === $key ? 'active' : '' ?>">
         <span class="d-ico"><i class="fa-solid <?= $item[2] ?>"></i></span><span><?= e($item[0]) ?></span>
       </a>

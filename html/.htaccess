@@ -3,7 +3,7 @@
 
     # Clean aliases use existing PHP pages; legacy .php URLs remain supported.
     RewriteRule ^home/?$ index.php [QSA,L,NC]
-    RewriteRule ^(buy|rent|projects|insights|agencies)/?$ $1.php [QSA,L,NC]
+    RewriteRule ^(buy|rent|projects|insights|agencies|agency-performance)/?$ $1.php [QSA,L,NC]
 
     # SEO aliases use existing PHP pages; old query-string URLs remain supported.
     RewriteRule ^property/(SP-[0-9]{1,20})(?:-[a-z0-9-]+)?/?$ listing.php?ref=$1 [QSA,L,NC]

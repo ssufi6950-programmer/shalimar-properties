@@ -150,6 +150,36 @@ final class PortalCatalogStore
     {
         return (new \App\Services\PublicAgencyDirectory($this->pdo))->agencies();
     }
+    /** ERP mappings for a selected public external agency; credentials remain server-side. */
+    public function publicAgencyPerformanceSources(int $portalAgencyId):array
+    {
+        $query=$this->pdo->prepare("SELECT a.id AS portal_agency_id,a.agency_name,s.id AS source_id,s.name AS source_name,s.code,s.base_url,s.auth_type,s.credential_ref,s.is_active,l.erp_agency_id
+            FROM authorized_agencies a
+            JOIN agency_erp_links l ON l.portal_agency_id=a.id AND l.mapping_status='mapped' AND l.present=1 AND BINARY l.erp_authorize=BINARY 'yes'
+            JOIN erp_sources s ON s.id=l.erp_source_id AND s.code IN ('SGC','ZALMI') AND s.is_active=1
+            LEFT JOIN shalimar_agent_source_settings sc ON sc.settings_id=1 AND sc.erp_source_id=l.erp_source_id AND sc.erp_agency_id=l.erp_agency_id
+            WHERE a.id=? AND a.portal_active=1 AND a.agency_type='external' AND a.is_shalimar_agency=0
+              AND LOWER(TRIM(a.agency_name))<>'shalimar properties'
+              AND (sc.erp_agency_id IS NULL OR sc.erp_source_id<>l.erp_source_id OR sc.erp_agency_id<>l.erp_agency_id)
+            ORDER BY s.code,l.erp_agency_id");
+        $query->execute([$portalAgencyId]);
+        return $query->fetchAll(PDO::FETCH_ASSOC);
+    }
+    /** All confirmed external agency mappings for the public performance dashboard. */
+    public function publicAgencyPerformanceDirectory():array
+    {
+        $sql="SELECT a.id AS portal_agency_id,a.agency_name,s.id AS source_id,s.name AS source_name,s.code,s.base_url,s.auth_type,s.credential_ref,s.is_active,l.erp_agency_id
+            FROM authorized_agencies a
+            JOIN agency_erp_links l ON l.portal_agency_id=a.id AND l.mapping_status='mapped' AND l.present=1 AND BINARY l.erp_authorize=BINARY 'yes'
+            JOIN erp_sources s ON s.id=l.erp_source_id AND s.code IN ('SGC','ZALMI') AND s.is_active=1
+            LEFT JOIN shalimar_agent_source_settings sc ON sc.settings_id=1 AND sc.erp_source_id=l.erp_source_id AND sc.erp_agency_id=l.erp_agency_id
+            WHERE a.portal_active=1 AND a.agency_type='external' AND a.is_shalimar_agency=0
+              AND LOWER(TRIM(a.agency_name))<>'shalimar properties'
+              AND LOWER(TRIM(l.erp_agency_name))<>'shalimar properties'
+              AND (sc.erp_agency_id IS NULL OR sc.erp_source_id<>l.erp_source_id OR sc.erp_agency_id<>l.erp_agency_id)
+            ORDER BY a.agency_name,s.code,l.erp_agency_id";
+        return $this->pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+    }
     /** Local PDO supplies ERP connection/mapping metadata only; metrics come from authenticated ERP APIs. */
     public function marketSnapshot(array $filters=[]): array
     {

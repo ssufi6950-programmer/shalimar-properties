@@ -14,7 +14,20 @@ final class ListingReview extends \App\Controllers\BaseController
     private function action(string $permission,callable $fn)
     {
         if(!can('resale_listings.view')||!can($permission))return admin_denied();
-        try{return$fn();}catch(CustomerFlowException$e){return$this->json(['message'=>$e->getMessage(),'code'=>$e->reason],$e->httpStatus);}catch(\InvalidArgumentException$e){return$this->json(['message'=>$e->getMessage()],422);}catch(\Throwable$e){log_message('error','Admin listing review unavailable ({type}) at {origin}:{line}.',['type'=>get_class($e),'origin'=>basename($e->getFile()),'line'=>$e->getLine()]);return$this->json(['message'=>'The audited review could not be completed. Nothing was published; reload and try again.'],503);}
+        try{return$fn();}
+        catch(CustomerFlowException$e){return$this->json(['message'=>$e->getMessage(),'code'=>$e->reason],$e->httpStatus);}
+        catch(\InvalidArgumentException$e){return$this->json(['message'=>$e->getMessage()],422);}
+        catch(\Throwable$e){
+            $origin=basename($e->getFile());$type=get_class($e);$line=$e->getLine();
+            log_message('error','Admin listing review unavailable ({type}) at {origin}:{line}.',['type'=>$type,'origin'=>$origin,'line'=>$line]);
+            if($origin==='CompanyPropertyImages.php'){
+                $message=preg_replace('/[\x00-\x1F\x7F]+/',' ',trim($e->getMessage()))??'';
+                $message=preg_replace('~(?:[A-Za-z]:[\\\\/]|/(?:home|tmp|var)/)[^\s]+~','[server path]',$message)??'';
+                if($message==='')$message='The image processor failed without an error description.';
+                return$this->json(['message'=>'Company image upload failed: '.mb_substr($message,0,240),'code'=>'company_image_upload_failed','diagnostic'=>['type'=>$type,'component'=>$origin,'line'=>$line]],422);
+            }
+            return$this->json(['message'=>'The audited review could not be completed. Nothing was published; reload and try again.'],503);
+        }
     }
     private function input():array
     {

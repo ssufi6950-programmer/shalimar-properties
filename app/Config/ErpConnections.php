@@ -19,13 +19,15 @@ class ErpConnections extends BaseConfig
     public array $dealerPaths = ['SGC'=>'/dealers.php','ZALMI'=>'/dealers.php'];
     /** External agency dealer directory; separate from the internal staff-agent endpoint. */
     public array $agencyDealerPaths = ['SGC'=>'/agency-dealers.php','ZALMI'=>'/agency-dealers.php'];
+    /** Read-only agency performance endpoint on each ERP. */
+    public array $agencyPerformancePaths = ['SGC'=>'/agency-performance.php','ZALMI'=>'/agency-performance.php'];
     public int $connectTimeout = 3;
     public int $requestTimeout = 8;
 
     public function __construct()
     {
         parent::__construct();
-        foreach (['allowedHosts','healthPaths','credentialRefs','publicAddressOverrides','agencyPaths','dealerPaths','agencyDealerPaths'] as $property) {
+        foreach (['allowedHosts','healthPaths','credentialRefs','publicAddressOverrides','agencyPaths','dealerPaths','agencyDealerPaths','agencyPerformancePaths'] as $property) {
             $value = env('erp.'.$property);
             if ($value !== null) {
                 $decoded = json_decode((string)$value, true);

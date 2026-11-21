@@ -28,7 +28,7 @@ final class PublicWebsiteUrl
     /** Build only allowlisted public website routes. */
     public static function route(string $path):string
     {
-        if (!preg_match('~\A(?:(?:home|buy|rent|projects|insights|agencies)|project/[a-z0-9-]+|property/SP-[0-9]+(?:-[a-z0-9-]+)?)\z~iD', $path)) {
+        if (!preg_match('~\A(?:(?:home|buy|rent|projects|insights|agencies|agency-performance)|project/[a-z0-9-]+|property/SP-[0-9]+(?:-[a-z0-9-]+)?)\z~iD', $path)) {
             throw new \InvalidArgumentException('Public website route is invalid.');
         }
         $base = self::make('index.php');
