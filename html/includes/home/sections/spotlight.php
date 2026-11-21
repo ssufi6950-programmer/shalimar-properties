@@ -38,7 +38,7 @@ foreach ($live as $listing) {
             <?php if ($m['features']): ?><ul class="sp-feats"><?php foreach (array_slice($m['features'], 0, 4) as $f): ?><li><?= e($f) ?></li><?php endforeach; ?></ul><?php endif; ?>
             <?php $explorerFilters = $explorerFiltersByProject[$p['slug']] ?? []; ?>
             <?php if ($explorerFilters): ?><div class="subp subp-mini spot-explorer-filters" aria-label="<?= e($p['name']) ?> Layer <?= $p['slug'] === 'zalmi-x' ? '3' : '2' ?> property filters">
-              <?php foreach ($explorerFilters as $filter): ?><a class="subp-cat" href="<?= e($filter['url']) ?>"><i class="fa-solid fa-layer-group" aria-hidden="true"></i><?= e($filter['label']) ?><em><?= (int)$filter['count'] ?></em></a><?php endforeach; ?>
+              <?php foreach ($explorerFilters as $filter): ?><a class="subp-cat" href="<?= e($filter['url']) ?>"><?= ($filter['logo'] ?? '') !== '' ? '<img src="'.e($filter['logo']).'" alt="" loading="lazy">' : '<i class="fa-solid fa-layer-group" aria-hidden="true"></i>' ?><?= e($filter['label']) ?><em><?= (int)$filter['count'] ?></em></a><?php endforeach; ?>
             </div><?php else: ?><?= subprojects_html($p, 'mini') ?><?php endif; ?>
             <div class="sp-facts">
               <div><b><?= $listingCounts[$p['slug']]['sale'] ?? 0 ?></b><span>Sale Listings</span></div>

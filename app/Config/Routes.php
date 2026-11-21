@@ -14,6 +14,7 @@ $routes->post('api/v1/customer-booking/resale-completed', 'CustomerResaleComplet
 $routes->options('api/projects', 'ProjectPagesApi::options');
 $routes->get('api/projects/images/([a-f0-9]{64})', 'ProjectPagesApi::image/$1');
 $routes->options('api/projects/images/([a-f0-9]{64})', 'ProjectPagesApi::options');
+$routes->get('api/property-explorer/images/([a-f0-9]{64})', 'Admin\\PropertyExplorer::image/$1');
 $routes->get('api/projects/(:segment)', 'ProjectPagesApi::index/$1');
 $routes->options('api/projects/(:segment)', 'ProjectPagesApi::options');
 $routes->get('admin/login', '\App\Controllers\Admin\Auth::login', ['as'=>'admin.login']);

@@ -30,7 +30,7 @@
     <h2 class="h6 mt-3"><?= $isChild ? 'Options inside this parent' : 'Project filters' ?> <span class="text-muted">(<?= count($rows) ?>)</span></h2>
     <?php if (isset($draft['fetched_at'])): ?><p class="small text-muted">New options are unchecked. Select and save to keep them.</p><?php endif ?>
     <noscript><div class="alert alert-info">Enable JavaScript to submit selected filters. Fetch and saved-filter viewing remain available.</div></noscript>
-    <form method="post" action="<?= site_url('admin/property-explorer') ?>" id="filterBuilderSave">
+    <form method="post" action="<?= site_url('admin/property-explorer') ?>" id="filterBuilderSave" enctype="multipart/form-data">
         <?= csrf_field() ?>
         <input type="hidden" name="project" value="<?= esc($project['slug'], 'attr') ?>">
         <?php if ($isChild && $scope): ?><input type="hidden" name="parent" value="<?= esc($scope['parent_id'], 'attr') ?>"><?php endif ?>
@@ -38,7 +38,7 @@
         <input type="hidden" name="selection" value="[]">
         <?php if (!$rows): ?><p class="text-muted" role="status">No saved or fetched options. Fetch from ERP to discover real source values.</p><?php endif ?>
         <?php foreach ($rows as $key => $row): ?>
-            <fieldset class="border-top py-3" data-filter-key="<?= esc($key, 'attr') ?>" data-version="<?= (int) $row['record_version'] ?>" <?= !can('projects.edit') || !$row['editable'] ? 'disabled' : '' ?>>
+            <fieldset class="border-top py-3" data-filter-key="<?= esc($key, 'attr') ?>" data-version="<?= (int) $row['record_version'] ?>">
                 <div class="d-flex gap-2 align-items-start mb-2">
                     <input class="form-check-input" type="checkbox" id="select-<?= $key ?>" data-select <?= $row['saved'] || ($row['copy_selected']??false) ? 'checked' : '' ?>>
                     <div class="flex-grow-1" style="min-width:0">
@@ -65,6 +65,7 @@
                     <div class="col-6 col-lg-2"><label class="form-label" for="icon-<?= $key ?>">Icon</label><select class="form-select" data-field="icon" id="icon-<?= $key ?>"><?php foreach ($icons as $icon => $name): ?><option value="<?= esc($icon, 'attr') ?>" <?= $row['icon'] === $icon ? 'selected' : '' ?>><?= esc($name) ?></option><?php endforeach ?></select></div>
                     <div class="col-6 col-lg-2"><label class="form-label" for="show-<?= $key ?>">Visibility</label><select class="form-select" data-field="visible" id="show-<?= $key ?>"><option value="0" <?= !(int) $row['is_visible'] ? 'selected' : '' ?>>Hide</option><option value="1" <?= (int) $row['is_visible'] ? 'selected' : '' ?>>Show</option></select></div>
                     <div class="col-6 col-lg-2"><label class="form-label" for="order-<?= $key ?>">Display Order</label><input class="form-control" data-field="order" type="number" id="order-<?= $key ?>" min="0" max="99999" value="<?= (int) $row['display_order'] ?>"></div>
+                    <div class="col-12 col-lg-4"><label class="form-label" for="logo-<?= $key ?>">Logo (optional)</label><input class="form-control" data-logo-file id="logo-<?= $key ?>" name="logos[<?= esc($key, 'attr') ?>]" type="file" accept="image/jpeg,image/png,image/webp"><div class="d-flex align-items-center gap-2 mt-2"><span class="small text-muted"><?= !empty($row['logo_reference']) ? 'Logo saved' : 'No logo; existing display stays unchanged' ?></span><?php if (!empty($row['logo_reference'])): ?><label class="small"><input type="checkbox" data-logo-remove name="logo_remove[<?= esc($key, 'attr') ?>]" value="1"> Remove</label><?php endif ?></div></div>
                 </div>
             </fieldset>
         <?php endforeach ?>

@@ -158,7 +158,7 @@ final class ExplorerChildBuilder
         uasort($out,static fn($a,$b)=>[(int)$a['display_order'],$a['display_name'],$a['key']]<=>[(int)$b['display_order'],$b['display_name'],$b['key']]);return$out;
     }
 
-    public function save(string $slug,string $parent,array $input,array $draft,int $actor): int
+    public function save(string $slug,string $parent,array $input,array $draft,int $actor,array $files=[]): int
     {
         if(!array_is_list($input)||!$input||count($input)>128)throw new InvalidArgumentException('Select between 1 and 128 children.');
         if(!$this->db->transBegin())throw new RuntimeException('Settings transaction unavailable.');
@@ -169,6 +169,7 @@ final class ExplorerChildBuilder
             $field=self::field($draft['field']??null);
             if($context['child_field']!==null&&$context['child_field']!==$field)throw new InvalidArgumentException('All siblings must keep the same field.');
             $existing=[];foreach($context['children']as$row)$existing[self::key($context,$row['source_field'],$row['source_value'])]=$row;
+            $logoFiles=is_array($files['logos']??null)?$files['logos']:[];$logoRemovals=is_array($files['logo_remove']??null)?$files['logo_remove']:[];$uploaded=[];$oldLogosToDelete=[];
             $seen=[];
             foreach($input as$item){
                 if(!is_array($item))throw new InvalidArgumentException('Invalid child selection.');
@@ -178,16 +179,22 @@ final class ExplorerChildBuilder
                 if(!is_string($version=$item['version']??null)||!ctype_digit($version)||(int)$version!==(int)($saved['record_version']??0))throw new InvalidArgumentException('Child version changed. Reload before saving.');
                 $validated=PropertyExplorer::patch([],['key'=>$key],['version'=>'0','label'=>$item['label']??null,'icon'=>$item['icon']??null,'visible'=>$item['visible']??null,'order'=>$item['order']??null]);$v=$validated['_property_explorer']['options'][$key];
                 $values=['display_name'=>$v['label'],'icon'=>$v['icon'],'is_visible'=>$v['visible']?1:0,'display_order'=>$v['order'],'record_version'=>(int)$version+1];
+                $oldLogo=is_string($saved['logo_reference']??null)?$saved['logo_reference']:null;$file=$logoFiles[$key]??null;
+                if($file instanceof \CodeIgniter\HTTP\Files\UploadedFile&&$file->getError()!==UPLOAD_ERR_NO_FILE){$newLogo=\App\Services\ExplorerLogoStorage::save($file);$uploaded[]=$newLogo;}
+                elseif(($logoRemovals[$key]??null)==='1')$newLogo=null;else$newLogo=$oldLogo;
+                $values['logo_reference']=$newLogo;if($oldLogo!==null&&$oldLogo!==$newLogo)$oldLogosToDelete[]=$oldLogo;
                 if($fetched){if($fetched['value']!==$value)throw new RuntimeException('Exact child identity mismatch.');$values['source_label']=$fetched['source_label'];$values['last_seen_at']=$draft['fetched_at'];}
                 if($saved){
                     if(!$this->db->table('portal_explorer_filters')->where('id',$saved['id'])->where('record_version',(int)$version)->update($values)||$this->db->affectedRows()!==1)throw new RuntimeException('Child save conflict.');$id=$saved['id'];
                 }else{
                     throw new InvalidArgumentException('New filter types can only be added at Layer 1. Existing child filters may still be edited.');
                 }
-                $audit=static fn($r)=>array_intersect_key($r,array_flip(['project_slug','erp_source_id','erp_head_id','parent_filter_id','source_field','source_value','display_name','icon','is_visible','display_order','record_version']));
+                $audit=static fn($r)=>array_intersect_key($r,array_flip(['project_slug','erp_source_id','erp_head_id','parent_filter_id','source_field','source_value','display_name','icon','logo_reference','is_visible','display_order','record_version']));
                 (new AdminAuditService($this->db))->record('explorer.child_saved','projects',$actor,'portal_explorer_filter',$id,$saved?$audit($saved):null,$audit($values+($saved??[])));
             }
-            if(!$this->db->transStatus()||!$this->db->transCommit())throw new RuntimeException('Child/audit transaction failed.');return count($input);
-        }catch(\Throwable$error){$this->db->transRollback();throw$error;}
+            if(!$this->db->transStatus()||!$this->db->transCommit())throw new RuntimeException('Child/audit transaction failed.');
+            foreach($oldLogosToDelete as $reference)\App\Services\ExplorerLogoStorage::delete($reference);
+            return count($input);
+        }catch(\Throwable$error){$this->db->transRollback();foreach($uploaded??[]as$reference)\App\Services\ExplorerLogoStorage::delete($reference);throw$error;}
     }
 }

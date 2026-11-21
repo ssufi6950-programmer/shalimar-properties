@@ -109,13 +109,22 @@ final class PropertyExplorer extends \App\Controllers\BaseController
             try { $selection = json_decode($raw, true, 16, JSON_THROW_ON_ERROR); }
             catch (\JsonException $exception) { throw new InvalidArgumentException('Invalid filter selection.'); }
             if (!is_array($selection)) throw new InvalidArgumentException('Invalid filter selection.');
-            $count = (new ExplorerFilterBuilder(db_connect()))->save($project['slug'], $selection, $draft, (int) admin_user()['id']);
+            $count = (new ExplorerFilterBuilder(db_connect()))->save($project['slug'], $selection, $draft, (int) admin_user()['id'], $this->request->getFiles());
             session()->setFlashdata('success', $count . ' selected filters saved. Unselected saved filters were preserved.');
         } catch (\Throwable $exception) {
             log_message('error', 'Explorer save failed: type={type}.', ['type' => get_class($exception)]);
             session()->setFlashdata('error', $exception instanceof InvalidArgumentException ? $exception->getMessage() : 'No settings were committed. Check filter storage/audit and retry.');
         }
         return redirect()->to(site_url('admin/property-explorer') . '?project=' . rawurlencode($project['slug']));
+    }
+
+    public function image(string $id)
+    {
+        $path = \App\Services\ExplorerLogoStorage::serve($id);
+        if ($path === null) throw PageNotFoundException::forPageNotFound();
+        return $this->response->setHeader('Cache-Control', 'public, max-age=86400')
+            ->setHeader('X-Content-Type-Options', 'nosniff')->setContentType($path['mime'])
+            ->setBody((string) file_get_contents($path['path']));
     }
 
     private function childUrl(string $slug,string $parent): string
@@ -187,7 +196,7 @@ final class PropertyExplorer extends \App\Controllers\BaseController
             if(!is_string($raw)||strlen($raw)>1048576)throw new InvalidArgumentException('Invalid child selection.');
             $selection=json_decode($raw,true,8,JSON_THROW_ON_ERROR);
             if(!is_array($selection))throw new InvalidArgumentException('Invalid child selection.');
-            $count=$builder->save($project['slug'],$parent,$selection,$draft,(int)admin_user()['id']);
+            $count=$builder->save($project['slug'],$parent,$selection,$draft,(int)admin_user()['id'],$this->request->getFiles());
             session()->remove('explorer_children_draft');session()->setFlashdata('success',$count.' child filters saved. Unselected saved children were preserved. Public child navigation remains disabled in C1.');
         }catch(\Throwable$exception){
             log_message('error','Explorer child save failed: type={type}.',['type'=>get_class($exception)]);

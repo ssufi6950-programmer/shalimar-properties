@@ -34,15 +34,25 @@ final class PublicExplorerFilters
         if ($field === 'item_sublocation.id') $sql .= ' AND EXISTS (SELECT 1 FROM erp_project_mappings mapped WHERE mapped.project_slug=f.project_slug AND mapped.erp_source_id=f.erp_source_id AND mapped.erp_head_id=f.erp_head_id AND mapped.is_active=1 AND BINARY CAST(mapped.erp_subhead_id AS CHAR)=BINARY f.source_value)';
         $query = $this->db->prepare($sql . ' ORDER BY f.display_order,f.id');
         $query->execute([$slug, $scope['erp_source_id'], $scope['erp_head_id'], $field]);
+        $rows = $query->fetchAll(PDO::FETCH_ASSOC);
+        // Existing Gulberg installations may still have their verified
+        // Sub Location roots while newer data uses category roots. Keep the
+        // established public filters visible until the root set is migrated.
+        if (!$rows && $slug === 'gulberg-city' && $field === 'pro_inventory.category') {
+            $legacy = $this->db->prepare('SELECT f.* FROM portal_explorer_filters f JOIN erp_project_mappings mapped ON mapped.project_slug=f.project_slug AND mapped.erp_source_id=f.erp_source_id AND mapped.erp_head_id=f.erp_head_id AND mapped.is_active=1 AND BINARY CAST(mapped.erp_subhead_id AS CHAR)=BINARY f.source_value WHERE f.project_slug=? AND f.erp_source_id=? AND f.erp_head_id=? AND f.source_field=? AND f.parent_filter_id IS NULL AND f.is_visible=1 ORDER BY f.display_order,f.id');
+            $legacy->execute([$slug, $scope['erp_source_id'], $scope['erp_head_id'], 'item_sublocation.id']);
+            $rows = $legacy->fetchAll(PDO::FETCH_ASSOC);
+            $field = 'item_sublocation.id';
+        }
         $out = [];
-        foreach ($query->fetchAll(PDO::FETCH_ASSOC) as $row) {
+        foreach ($rows as $row) {
             $value = PropertyExplorer::value($row['source_value']);
             if ($value === null || ($field === 'item_sublocation.id' && !preg_match('/\A(?:0|[1-9][0-9]{0,17})\z/D', $value))) continue;
             $key = PropertyExplorer::key($slug, (string) $row['erp_source_id'], (string) $row['erp_head_id'], $field, $value);
             $out[$key] = ['key' => $key, 'filter_id' => (string) $row['id'], 'project' => $slug,
                 'source_id' => (string) $row['erp_source_id'], 'head_id' => (string) $row['erp_head_id'],
                 'source_field' => $field, 'kind' => match ($field) { 'pro_inventory.category' => 'category', 'pro_inventory.sector' => 'sector', default => 'subhead' }, 'value' => $value,
-                'label' => $row['display_name'], 'icon' => isset(PropertyExplorer::ICONS[$row['icon']]) ? $row['icon'] : 'fa-layer-group'];
+                'label' => $row['display_name'], 'icon' => isset(PropertyExplorer::ICONS[$row['icon']]) ? $row['icon'] : 'fa-layer-group', 'logo' => \App\Services\ExplorerLogoStorage::url($row['logo_reference'] ?? null)];
         }
         return $out;
     }
@@ -76,11 +86,11 @@ final class PublicExplorerFilters
             'id'=>$root['filter_id'], 'parent_filter_id'=>null,
             'project_slug'=>$slug, 'erp_source_id'=>$root['source_id'], 'erp_head_id'=>$root['head_id'],
             'source_field'=>$root['source_field'], 'source_value'=>$root['value'],
-            'display_name'=>$root['label'], 'icon'=>$root['icon'],
+            'display_name'=>$root['label'], 'icon'=>$root['icon'], 'logo'=>$root['logo'] ?? '',
         ]];
         if ($ids) {
             $placeholders = implode(',', array_fill(0, count($ids), '?'));
-            $query = $this->db->prepare('SELECT id,project_slug,erp_source_id,erp_head_id,parent_filter_id,source_field,source_value,display_name,icon,is_visible,display_order FROM portal_explorer_filters WHERE project_slug=? AND erp_source_id=? AND erp_head_id=? AND id IN (' . $placeholders . ')');
+            $query = $this->db->prepare('SELECT id,project_slug,erp_source_id,erp_head_id,parent_filter_id,source_field,source_value,display_name,icon,logo_reference,is_visible,display_order FROM portal_explorer_filters WHERE project_slug=? AND erp_source_id=? AND erp_head_id=? AND id IN (' . $placeholders . ')');
             $query->execute([$slug, $root['source_id'], $root['head_id'], ...array_values($ids)]);
             $found = [];
             foreach ($query->fetchAll(PDO::FETCH_ASSOC) as $row) $found[(string)$row['id']] = $row;
@@ -100,7 +110,7 @@ final class PublicExplorerFilters
         }
 
         $chosenRow = $path[array_key_last($path)];
-        $childrenQuery = $this->db->prepare('SELECT id,project_slug,erp_source_id,erp_head_id,parent_filter_id,source_field,source_value,display_name,icon,is_visible,display_order FROM portal_explorer_filters WHERE project_slug=? AND erp_source_id=? AND erp_head_id=? AND parent_filter_id=? AND is_visible=1 ORDER BY display_order,id');
+        $childrenQuery = $this->db->prepare('SELECT id,project_slug,erp_source_id,erp_head_id,parent_filter_id,source_field,source_value,display_name,icon,logo_reference,is_visible,display_order FROM portal_explorer_filters WHERE project_slug=? AND erp_source_id=? AND erp_head_id=? AND parent_filter_id=? AND is_visible=1 ORDER BY display_order,id');
         $childrenQuery->execute([$slug, $root['source_id'], $root['head_id'], $chosenRow['id']]);
         $children = [];
         $hasUnsupported = false;
@@ -122,7 +132,7 @@ final class PublicExplorerFilters
                 'label'=>(string)$chosen['display_name'],
                 'icon'=>(string)$chosen['icon'],
                 'source_field'=>(string)$chosen['source_field'],
-                'value'=>(string)$chosen['source_value'],
+                'value'=>(string)$chosen['source_value'], 'logo'=>ExplorerLogoStorage::url($chosen['logo_reference'] ?? ($chosen['logo'] ?? null)),
             ],
             'tree'=>array_values($ids),
             'unsupported'=>$hasUnsupported,
@@ -158,6 +168,7 @@ final class PublicExplorerFilters
             'parent_id'=>(string)$row['parent_filter_id'],
             'label'=>(string)$row['display_name'],
             'icon'=>isset(PropertyExplorer::ICONS[$row['icon']]) ? $row['icon'] : 'fa-layer-group',
+            'logo'=>ExplorerLogoStorage::url($row['logo_reference'] ?? null),
             'source_field'=>(string)$row['source_field'],
             'value'=>(string)$row['source_value'],
         ];

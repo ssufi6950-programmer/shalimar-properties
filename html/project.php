@@ -132,6 +132,7 @@ require __DIR__ . '/includes/header.php';
     .project-explorer-shell .explorer-badges { display: flex; flex-wrap: wrap; gap: 7px; }
     .project-explorer-shell .explorer-option { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 36px; max-width: 100%; padding: 7px 13px; border: 1px solid rgba(255,255,255,.75); border-radius: 999px; color: white; background: transparent; text-align: center; text-decoration: none; overflow-wrap: anywhere; transition: background-color 200ms ease, border-color 200ms ease; }
     .project-explorer-shell .explorer-option small { font-size: 12px; line-height: 1.35; font-weight: 600; }
+    .project-explorer-shell .explorer-logo{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;margin-right:5px;border-radius:5px;background:#fff;overflow:hidden;flex:0 0 auto}.project-explorer-shell .explorer-logo img{display:block;width:100%;height:100%;object-fit:contain}
     .project-explorer-shell .explorer-option[aria-current="true"] { background: var(--green); border-color: var(--gold); }
     .project-explorer-shell .explorer-option:hover { background: rgba(255,255,255,.16); border-color: var(--gold); }
     .project-explorer-shell .explorer-option:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
@@ -144,9 +145,10 @@ require __DIR__ . '/includes/header.php';
     .project-explorer-shell .explorer-status { font-size: 12px; color: var(--muted); margin: 0 0 12px; }
     @keyframes explorerEnter { from { opacity: .35; transform: translateY(5px); } to { opacity: 1; transform: none; } }
     @media (max-width: 767px) {
-        .project-explorer-shell .explorer-badges { gap: 5px; }
-        .project-explorer-shell .explorer-option { min-width: 34px; min-height: 32px; padding: 4px 9px; }
-        .project-explorer-shell .explorer-option small { font-size: 11px; line-height: 1.25; }
+        .project-explorer-shell .explorer-badges { gap: 3px; }
+        .project-explorer-shell .explorer-option { min-width: 30px; min-height: 26px; padding: 2px 6px; }
+        .project-explorer-shell .explorer-option small { font-size: 9px; line-height: 1.1; }
+        .project-explorer-shell .explorer-logo { width: 18px; height: 18px; margin-right: 3px; }
         .project-explorer-shell .explorer-top { margin-bottom: 8px; }
         .project-explorer-shell .explorer-purpose a { min-height: 32px; padding: 5px 12px; font-size: 12px; }
         .project-explorer-shell .explorer-breadcrumb { margin-bottom: 8px; }
@@ -171,10 +173,10 @@ require __DIR__ . '/includes/header.php';
             <nav class="explorer-badges" aria-label="<?= e($filterRowLabel) ?>">
                 <a data-explorer-link class="explorer-option" href="<?= e($explorerUrl()) ?>" <?= $activeRootKey === '' && $selectionError === '' ? 'aria-current="true"' : '' ?>><small>All</small></a>
                 <?php if ($isRootView): ?>
-                    <?php foreach ($state['roots'] as $option): ?><a data-explorer-link class="explorer-option" href="<?= e($explorerUrl($option['key'])) ?>"><small><?= e($option['label']) ?></small></a><?php endforeach ?>
+                    <?php foreach ($state['roots'] as $option): ?><a data-explorer-link class="explorer-option" href="<?= e($explorerUrl($option['key'])) ?>"><?= explorer_logo_html($option) ?><small><?= e($option['label']) ?></small></a><?php endforeach ?>
                     <a class="explorer-option explorer-back" href="home#hero" aria-label="Back to projects"><small>Projects</small></a>
                 <?php else: ?>
-                    <?php foreach ($rowOptions as $option): $nextTree = $treeBase; $nextTree[] = $option['id']; ?><a data-explorer-link class="explorer-option" href="<?= e($explorerUrl($activeRootKey, $nextTree)) ?>"><small><?= e($option['label']) ?></small></a><?php endforeach ?>
+                    <?php foreach ($rowOptions as $option): $nextTree = $treeBase; $nextTree[] = $option['id']; ?><a data-explorer-link class="explorer-option" href="<?= e($explorerUrl($activeRootKey, $nextTree)) ?>"><?= explorer_logo_html($option) ?><small><?= e($option['label']) ?></small></a><?php endforeach ?>
                     <?php if ($backUrl !== ''): ?><a data-explorer-link class="explorer-option explorer-back" href="<?= e($backUrl) ?>" aria-label="Back to previous filter"><small>Back</small></a><?php endif ?>
                 <?php endif ?>
             </nav>

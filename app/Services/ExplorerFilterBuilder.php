@@ -84,13 +84,16 @@ final class ExplorerFilterBuilder
             $key = self::key($identity, $row['source_value']);
             $editable = $scope && $identity['source_id'] === $scope['source_id'] && $identity['head_id'] === $scope['head_id'] && $identity['field'] === $scope['field']
                 && ($scope['field'] !== 'item_sublocation.id' || in_array($row['source_value'], $scope['subheads'], true));
+            if ($slug === 'gulberg-city' && $identity['field'] === 'item_sublocation.id' && $identity['source_id'] === $scope['source_id'] && $identity['head_id'] === $scope['head_id']) {
+                $editable = in_array($row['source_value'], $scope['subheads'], true);
+            }
             $rows[$key] = $row + ['key' => $key, 'value' => $row['source_value'], 'saved' => true, 'available' => isset($fetched[$key]), 'editable' => (bool) $editable];
         }
         uasort($rows, static fn($a, $b) => [(int) $a['display_order'], $a['display_name'], $a['key']] <=> [(int) $b['display_order'], $b['display_name'], $b['key']]);
         return $rows;
     }
 
-    public function save(string $slug, array $input, array $draft, int $actor): int
+    public function save(string $slug, array $input, array $draft, int $actor, array $files = []): int
     {
         if (!array_is_list($input) || count($input) > 1000 || !$input) throw new InvalidArgumentException('Select at least one option (up to 1000).');
         if (!$this->db->transBegin()) throw new RuntimeException('Settings transaction unavailable.');
@@ -101,24 +104,47 @@ final class ExplorerFilterBuilder
             $fetched = is_array($draft['options'] ?? null) ? $draft['options'] : [];
             $existing = [];
             foreach ($this->saved($slug) as $candidate) {
-                if ((string) $candidate['erp_source_id'] === $scope['source_id'] && (string) $candidate['erp_head_id'] === $scope['head_id'] && $candidate['source_field'] === $scope['field']) {
-                    $existing[self::key($scope, $candidate['source_value'])] = $candidate;
+                $legacyGulberg = $slug === 'gulberg-city' && $candidate['source_field'] === 'item_sublocation.id';
+                if ((string) $candidate['erp_source_id'] === $scope['source_id'] && (string) $candidate['erp_head_id'] === $scope['head_id'] && ($candidate['source_field'] === $scope['field'] || $legacyGulberg)) {
+                    $candidateScope = $scope;
+                    $candidateScope['field'] = $candidate['source_field'];
+                    $existing[self::key($candidateScope, $candidate['source_value'])] = $candidate;
                 }
             }
             $seen = [];
+            $uploaded = [];
+            $oldLogosToDelete = [];
+            $logoFiles = is_array($files['logos'] ?? null) ? $files['logos'] : [];
+            $logoRemovals = is_array($files['logo_remove'] ?? null) ? $files['logo_remove'] : [];
             foreach ($input as $item) {
                 if (!is_array($item) || !is_string($key = $item['key'] ?? null) || !preg_match('/\A[a-f0-9]{64}\z/D', $key) || isset($seen[$key])) throw new InvalidArgumentException('Invalid or duplicate selected option.');
                 $seen[$key] = true;
                 $saved = $existing[$key] ?? null;
                 $value = $saved['source_value'] ?? $fetched[$key]['value'] ?? null;
-                if (!is_string($value) || PropertyExplorer::value($value) === null || self::key($scope, $value) !== $key
-                    || ($scope['field'] === 'item_sublocation.id' && !in_array($value, $scope['subheads'], true))) throw new InvalidArgumentException('Option is not verified for this project. Fetch again.');
+                $sourceField = is_array($saved) ? (string) $saved['source_field'] : $scope['field'];
+                $identityScope = $scope;
+                $identityScope['field'] = $sourceField;
+                if (!is_string($value) || PropertyExplorer::value($value) === null || self::key($identityScope, $value) !== $key
+                    || ($sourceField === 'item_sublocation.id' && !in_array($value, $scope['subheads'], true))) throw new InvalidArgumentException('Option is not verified for this project. Fetch again.');
                 $version = $item['version'] ?? null;
                 if (!is_string($version) || !ctype_digit($version) || (int) $version !== (int) ($saved['record_version'] ?? 0)) throw new InvalidArgumentException('A selected filter changed in another tab. Reload before saving.');
                 // Reuse safe existing display validation; do not persist its JSON output.
                 $validated = PropertyExplorer::patch([], ['key' => $key], ['version' => '0', 'label' => $item['label'] ?? null, 'icon' => $item['icon'] ?? null, 'visible' => $item['visible'] ?? null, 'order' => $item['order'] ?? null]);
                 $fields = $validated['_property_explorer']['options'][$key];
                 $values = ['display_name' => $fields['label'], 'icon' => $fields['icon'], 'is_visible' => $fields['visible'] ? 1 : 0, 'display_order' => $fields['order'], 'record_version' => (int) $version + 1];
+                $oldLogo = is_string($saved['logo_reference'] ?? null) ? $saved['logo_reference'] : null;
+                $newLogo = null;
+                $file = $logoFiles[$key] ?? null;
+                if ($file instanceof \CodeIgniter\HTTP\Files\UploadedFile && $file->getError() !== UPLOAD_ERR_NO_FILE) {
+                    $newLogo = \App\Services\ExplorerLogoStorage::save($file);
+                    $uploaded[] = $newLogo;
+                } elseif (($logoRemovals[$key] ?? null) === '1') {
+                    $newLogo = null;
+                } else {
+                    $newLogo = $oldLogo;
+                }
+                $values['logo_reference'] = $newLogo;
+                if ($oldLogo !== null && $oldLogo !== $newLogo) $oldLogosToDelete[] = $oldLogo;
                 if (isset($fetched[$key])) {
                     if ($fetched[$key]['value'] !== $value) throw new RuntimeException('Source identity conflict.');
                     $values['source_label'] = $fetched[$key]['source_label'];
@@ -138,15 +164,17 @@ final class ExplorerFilterBuilder
                     $saved ? self::audit($saved) : null, self::audit($values + ($saved ?? [])));
             }
             if (!$this->db->transStatus() || !$this->db->transCommit()) throw new RuntimeException('Filter/audit transaction failed.');
+            foreach ($oldLogosToDelete as $reference) \App\Services\ExplorerLogoStorage::delete($reference);
             return count($input);
         } catch (\Throwable $error) {
             $this->db->transRollback();
+            foreach ($uploaded ?? [] as $reference) \App\Services\ExplorerLogoStorage::delete($reference);
             throw $error;
         }
     }
 
     private static function audit(array $row): array
     {
-        return array_intersect_key($row, array_flip(['project_slug','erp_source_id','erp_head_id','parent_filter_id','source_field','source_value','display_name','icon','is_visible','display_order','record_version']));
+        return array_intersect_key($row, array_flip(['project_slug','erp_source_id','erp_head_id','parent_filter_id','source_field','source_value','display_name','icon','logo_reference','is_visible','display_order','record_version']));
     }
 }

@@ -155,6 +155,7 @@ require __DIR__ . '/header.php';
     .browse-explorer-shell .explorer-badges{display:flex;flex-wrap:wrap;gap:7px}
     .browse-explorer-shell .explorer-option{display:inline-flex;align-items:center;justify-content:center;min-height:36px;max-width:100%;padding:7px 13px;border:1px solid rgba(255,255,255,.75);border-radius:999px;color:#fff;background:transparent;text-align:center;text-decoration:none;overflow-wrap:anywhere;transition:background-color 200ms ease,border-color 200ms ease}
     .browse-explorer-shell .explorer-option small{font-size:12px;line-height:1.35;font-weight:600}
+    .browse-explorer-shell .explorer-logo{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;margin-right:5px;border-radius:5px;background:#fff;overflow:hidden;flex:0 0 auto}.browse-explorer-shell .explorer-logo img{display:block;width:100%;height:100%;object-fit:contain}
     .browse-explorer-shell .explorer-project-option{gap:7px;padding-left:7px}
     .browse-explorer-shell .explorer-project-logo{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;width:28px;height:24px;padding:2px 4px;border-radius:7px;background:rgba(255,255,255,.96);overflow:hidden}
     .browse-explorer-shell .explorer-project-logo .plogo{display:block;width:100%;height:100%;object-fit:contain}
@@ -172,7 +173,7 @@ require __DIR__ . '/header.php';
     .browse-all-types .explorer-note{color:#52685d}
     .browse-explorer-shell .browse-results{transition:opacity 200ms ease,transform 200ms ease}
     .browse-explorer-shell.is-loading .browse-results{opacity:.35;transform:translateY(4px)}
-    @media(max-width:767px){.browse-explorer-shell .page-hero .wrap{width:min(100% - 24px,1240px)}.browse-explorer-shell .explorer-badges{gap:4px}.browse-explorer-shell .explorer-option{min-height:29px;padding:3px 7px;line-height:1.1}.browse-explorer-shell .explorer-project-option{gap:4px;padding-left:4px}.browse-explorer-shell .explorer-project-logo{width:22px;height:19px;padding:1px 2px}.browse-explorer-shell .explorer-option small{font-size:10px}.browse-explorer-shell .explorer-field-label{font-size:10px;margin-bottom:4px}.browse-explorer-shell .explorer-breadcrumb{font-size:10px;margin-bottom:6px}}
+    @media(max-width:767px){.browse-explorer-shell .page-hero .wrap{width:min(100% - 24px,1240px)}.browse-explorer-shell .explorer-badges{gap:3px}.browse-explorer-shell .explorer-option{min-height:26px;padding:2px 6px;line-height:1.05}.browse-explorer-shell .explorer-option small{font-size:9px}.browse-explorer-shell .explorer-logo{width:18px;height:18px;margin-right:3px}.browse-explorer-shell .explorer-project-option{gap:3px;padding-left:3px}.browse-explorer-shell .explorer-project-logo{width:20px;height:18px;padding:1px 2px}.browse-explorer-shell .explorer-field-label{font-size:10px;margin-bottom:4px}.browse-explorer-shell .explorer-breadcrumb{font-size:10px;margin-bottom:6px}}
     @media(prefers-reduced-motion:reduce){.browse-explorer-shell .browse-results,.browse-explorer-shell .explorer-option{transition:none;transform:none!important}}
 </style>
 <main id="main" class="public-discovery browse-explorer-shell<?= $isAll ? ' browse-all-types' : '' ?>" data-browse-explorer>
@@ -191,9 +192,9 @@ require __DIR__ . '/header.php';
             <?php else: ?>
                 <?php if ($showAllOption): ?><a data-explorer-link class="explorer-option" href="<?= e($browseUrl($slug)) ?>" <?= $activeRootKey === '' ? 'aria-current="true"' : '' ?>><small>All</small></a><?php endif ?>
                 <?php if ($isRootView): ?>
-                    <?php foreach ($state['roots'] as $option): ?><a data-explorer-link class="explorer-option" href="<?= e($browseUrl($slug, $option['key'])) ?>"><small><?= e($option['label']) ?></small></a><?php endforeach ?>
+                    <?php foreach ($state['roots'] as $option): ?><a data-explorer-link class="explorer-option" href="<?= e($browseUrl($slug, $option['key'])) ?>"><?= explorer_logo_html($option) ?><small><?= e($option['label']) ?></small></a><?php endforeach ?>
                 <?php else: ?>
-                    <?php foreach ($rowOptions as $option): $nextTree = $treeBase; $nextTree[] = $option['id']; ?><a data-explorer-link class="explorer-option" href="<?= e($browseUrl($slug, $activeRootKey, $nextTree)) ?>"><small><?= e($option['label']) ?></small></a><?php endforeach ?>
+                    <?php foreach ($rowOptions as $option): $nextTree = $treeBase; $nextTree[] = $option['id']; ?><a data-explorer-link class="explorer-option" href="<?= e($browseUrl($slug, $activeRootKey, $nextTree)) ?>"><?= explorer_logo_html($option) ?><small><?= e($option['label']) ?></small></a><?php endforeach ?>
                 <?php endif ?>
                 <a data-explorer-link class="explorer-option explorer-back" href="<?= e($backUrl) ?>"><small>Back</small></a>
             <?php endif ?>

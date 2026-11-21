@@ -37,6 +37,7 @@ CREATE TABLE IF NOT EXISTS portal_explorer_filters (
     source_label VARCHAR(255) NOT NULL,
     display_name VARCHAR(120) NOT NULL,
     icon VARCHAR(64) NOT NULL DEFAULT 'fa-layer-group',
+    logo_reference VARCHAR(80) NULL DEFAULT NULL,
     is_visible TINYINT UNSIGNED NOT NULL DEFAULT 0,
     display_order INT UNSIGNED NOT NULL DEFAULT 0,
     record_version INT UNSIGNED NOT NULL DEFAULT 1,

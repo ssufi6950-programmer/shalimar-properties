@@ -462,6 +462,12 @@ function project_logo_html(array $p, string $cls = 'plogo'): string
     return '<span class="' . e($cls) . ' plogo-mono" aria-hidden="true">' . e(project_initials($p['name'])) . '</span>';
 }
 
+function explorer_logo_html(array $option, string $cls = 'explorer-logo'): string
+{
+    $logo = is_string($option['logo'] ?? null) ? $option['logo'] : '';
+    return $logo !== '' ? '<span class="' . e($cls) . '"><img src="' . e($logo) . '" alt="" loading="lazy"></span>' : '';
+}
+
 /* ----------------------------------------------------------- roles/parties */
 
 function roles(): array

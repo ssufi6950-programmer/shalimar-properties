@@ -35,6 +35,7 @@ try {
           $count = $explorerStore->publicSearch($search, [], false, $filter)['total'];
           $items[] = [
             'label' => (string)$child['label'],
+            'logo' => (string)($child['logo'] ?? ''),
             'count' => (int)$count,
             'url' => 'project.php?'.http_build_query(['project' => $slug, 'layer2' => (string)$root['key'], 'tree' => (string)$child['id']], '', '&', PHP_QUERY_RFC3986),
           ];
@@ -50,7 +51,7 @@ try {
       ];
       $search = \App\Services\PublicListingSearch::filters(['project' => $slug, 'page' => '1', 'per_page' => '12'], 'sale');
       $count = $explorerStore->publicSearch($search, [], false, $filter)['total'];
-      $items[] = ['label' => (string)$root['label'], 'count' => (int)$count, 'url' => 'project.php?'.http_build_query(['project'=>$slug,'layer2'=>$root['key']],'','&',PHP_QUERY_RFC3986)];
+      $items[] = ['label' => (string)$root['label'], 'logo' => (string)($root['logo'] ?? ''), 'count' => (int)$count, 'url' => 'project.php?'.http_build_query(['project'=>$slug,'layer2'=>$root['key']],'','&',PHP_QUERY_RFC3986)];
     }
     $explorerFiltersByProject[$slug] = $items;
   }
