@@ -12,6 +12,8 @@ class Whatsapp extends \CodeIgniter\Config\BaseConfig
     /** Separate template configuration for approved Shalimar Agent assignments. */
     public string $agentAssignmentTemplateName = 'shalimar_p_dealer_message';
     public string $agentAssignmentLanguageCode = 'en';
+    public string $agencyStatusTemplateName = 'agency_property_status_update';
+    public string $agencyStatusLanguageCode = 'en_US';
     public string $secondBodyText = 'share this code with';
     public bool $logResponses = false;
     /** Meta webhook verification token; configure privately in .env. */
@@ -24,5 +26,7 @@ class Whatsapp extends \CodeIgniter\Config\BaseConfig
         parent::__construct();
         $this->agentAssignmentTemplateName = (string) env('whatsapp.agentAssignmentTemplateName', $this->agentAssignmentTemplateName);
         $this->agentAssignmentLanguageCode = (string) env('whatsapp.agentAssignmentLanguageCode', $this->agentAssignmentLanguageCode);
+        $this->agencyStatusTemplateName = (string) env('whatsapp.agencyStatusTemplateName', $this->agencyStatusTemplateName);
+        $this->agencyStatusLanguageCode = (string) env('whatsapp.agencyStatusLanguageCode', $this->agencyStatusLanguageCode);
     }
 }

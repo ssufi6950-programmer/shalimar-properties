@@ -19,6 +19,25 @@ if ($floorLabel !== '') {
 <div class="listing-review-shell" data-listing-review data-approved-media="<?= !$reviewable&&\App\Services\ListingPolicy::active($record)?'1':'0' ?>" data-ownership-required="<?= $requiresOwnership?'1':'0' ?>" data-listing-id="<?= $id ?>" data-version="<?= (int)$record['record_version'] ?>" data-fingerprint="<?= esc($fingerprint,'attr') ?>" data-prefix="<?= esc($prefix,'attr') ?>" data-csrf-name="<?= csrf_token() ?>" data-csrf-hash="<?= csrf_hash() ?>">
 <p class="alert alert-info" role="status" data-review-message hidden></p>
 <?php if($deleted): ?><p class="alert alert-info">Deleted <?= esc(customer_date($deleted['created_at'])) ?>. This listing is hidden and its history is read-only.</p><?php elseif(!$isCompany): ?><?= $this->include('admin/listing_review/assignment_sms') ?><?php endif ?>
+<?php if(!empty($agencyWhatsapp)): ?>
+<section class="card review-panel">
+    <h2>Agency approval WhatsApp</h2>
+    <p role="status"><?= esc([
+        'pending'=>'Notification queued.',
+        'sending'=>'WhatsApp request is in progress.',
+        'accepted'=>'Meta accepted the message. Delivery is pending confirmation.',
+        'failed'=>'WhatsApp request failed.',
+        'uncertain'=>'Delivery could not be confirmed.',
+        'skipped'=>'Notification skipped after the listing changed.',
+    ][$agencyWhatsapp['status']] ?? 'Status unavailable.') ?></p>
+    <?php if(($agencyWhatsapp['last_error'] ?? '')==='no_agency_phone_number'): ?>
+        <p>The agency does not have an eligible public business mobile.</p>
+    <?php endif ?>
+    <?php if(!empty($agencyWhatsapp['recipient_mask'])): ?>
+        <p><?= (int)$agencyWhatsapp['test_mode'] ? 'Test recipient' : 'Agency recipient' ?>: <?= esc($agencyWhatsapp['recipient_mask']) ?></p>
+    <?php endif ?>
+</section>
+<?php endif ?>
 <div class="review-detail-grid"><div>
 <section class="card review-panel"><h2>Property information</h2><dl class="review-facts"><?php foreach(['Property'=>$propertyTitle,'ERP Source'=>$public['source_name']??'','ERP Property ID'=>$record['erp_property_id'],'Submitted booking'=>json_decode($record['owner_verification']??'{}',true)['current_booking_ref']??'','Project'=>$public['project_name']??'','Head'=>$mapping['head_name']??'','Subhead'=>$mapping['subhead_name']??'','Mapping ID'=>$record['mapping_id'],'Head eligibility'=>$mapping['head_flag']??'Not confirmed','Subhead eligibility'=>$mapping['subhead_flag']??'Not confirmed','Type'=>\App\Services\ErpPropertyClassification::listingType($payload, $public['source_code']??null),'Size'=>$payload['size_label']??'','Floor'=>$payload['floor']??'','Location'=>$payload['location']??'']as$label=>$value): ?><div><dt><?= esc($label) ?></dt><dd><?= esc($value!==''&&$value!==null?$value:'Not recorded') ?></dd></div><?php endforeach ?></dl><p>Property type and listing purpose are separate. <?= $requiresOwnership?'Current ownership must be checked with the originating ERP before approval.':'Review the property details and final photo set before approval.' ?></p></section>
 <?php if(!$deleted&&can('resale_listings.edit')&&\App\Services\ListingPolicy::active($record)&&strtoupper((string)($public['source_code']??''))==='SGC'&&strtolower(trim((string)($payload['category']??'')))==='plot'): ?><section class="card review-panel"><h2>Property type correction</h2><p>Check the current SGC inventory and maintenance status. If SGC confirms this is a Plot with Constructed status, you can update the saved listing type to House.</p><button type="button" class="btn btn-outline-primary" data-refresh-property-type>Check current SGC type</button><small class="d-block mt-2">This action changes only the listing’s saved type and keeps its current approval.</small></section><?php endif ?>
