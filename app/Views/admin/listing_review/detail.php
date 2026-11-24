@@ -21,7 +21,7 @@ if ($floorLabel !== '') {
 <?php if($deleted): ?><p class="alert alert-info">Deleted <?= esc(customer_date($deleted['created_at'])) ?>. This listing is hidden and its history is read-only.</p><?php elseif(!$isCompany): ?><?= $this->include('admin/listing_review/assignment_sms') ?><?php endif ?>
 <?php if(!empty($agencyWhatsapp)): ?>
 <section class="card review-panel">
-    <h2>Agency approval WhatsApp</h2>
+    <h2>Agency submission WhatsApp</h2>
     <p role="status"><?= esc([
         'pending'=>'Notification queued.',
         'sending'=>'WhatsApp request is in progress.',

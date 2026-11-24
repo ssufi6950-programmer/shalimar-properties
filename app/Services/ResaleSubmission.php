@@ -120,7 +120,12 @@ final class ResaleSubmission
             $selected=$property;unset($selected['id']);$this->db->query('INSERT INTO portal_owned_properties(erp_source_id,erp_property_id,erp_head_id,erp_subhead_id,owner_reference,payload,portal_customer_id) VALUES(?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE erp_head_id=VALUES(erp_head_id),erp_subhead_id=VALUES(erp_subhead_id),owner_reference=VALUES(owner_reference),payload=VALUES(payload),portal_customer_id=VALUES(portal_customer_id)',[$source,$property['erp_property_id'],$property['erp_head_id'],$property['erp_subhead_id'],$property['erp_customer_id'],json_encode($selected,JSON_THROW_ON_ERROR),$customer]);
             if($verification)$this->db->table('resale_otp_challenges')->where('id',$verification['id'])->update(['consumed_at'=>time(),'otp_hash'=>'','payload'=>'']);
             (new AdminAuditService($this->db))->record('resale.'.$event,'resale_listings',null,'portal_listing',$id,null,['portal_customer_id'=>$customer,'selling_method'=>$method,'portal_agent_id'=>$agent['portal_agent_id']??null,'agent_erp_link_id'=>$agent['agent_erp_link_id']??null,'agent_source_id'=>$agent['agent_source_id']??null,'erp_ledger_id'=>$agent['erp_ledger_id']??null,'erp_source_id'=>$source]);
-            if(!$this->db->transStatus()||!$this->db->transCommit())throw new \RuntimeException('Listing could not commit.');return ['id'=>$id,'status'=>$status,'listing_purpose'=>$purpose,'review_state'=>$reviewState];
+            if(!$this->db->transStatus()||!$this->db->transCommit())throw new \RuntimeException('Listing could not commit.');
+            if($method==='authorized_agency'){
+                try{$agencyNotification=new AgencyListingApprovalWhatsapp($this->db);$agencyNotification->queue($saved);$agencyNotification->dispatch($saved);}
+                catch(\Throwable $notificationError){log_message('error','Customer-submitted agency WhatsApp unavailable: listing={id} type={type}.',['id'=>$id,'type'=>get_class($notificationError)]);}
+            }
+            return ['id'=>$id,'status'=>$status,'listing_purpose'=>$purpose,'review_state'=>$reviewState];
         }catch(\Throwable $e){$this->db->transRollback();$this->db->resetTransStatus();if($existing=$this->existing($key,$customer))return $existing;if($e instanceof \App\Exceptions\CustomerFlowException)throw $e;if(!$target&&$this->db->table('portal_listings')->where('active_erp_property',ListingPolicy::key($source,$property['erp_property_id'],$purpose))->countAllResults())throw new InvalidArgumentException('This property already has an active or pending resale listing.');throw $e;}finally{$references->release();}
     }
 }

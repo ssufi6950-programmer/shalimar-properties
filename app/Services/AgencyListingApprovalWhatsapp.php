@@ -9,7 +9,7 @@ use Config\Whatsapp;
 
 final class AgencyListingApprovalWhatsappUncertainException extends \RuntimeException {}
 
-/** Persistent WhatsApp template notification for approved Authorized Agency listings. */
+/** Persistent WhatsApp template notification when a customer submits an Authorized Agency listing. */
 final class AgencyListingApprovalWhatsapp
 {
     public function __construct(private BaseConnection $db, private ?Whatsapp $settings = null, private ?\Config\Sms $smsSettings = null)
@@ -36,12 +36,12 @@ final class AgencyListingApprovalWhatsapp
         }
     }
 
-    /** Queue with approval in the local portal transaction; never sends here. */
+    /** Queue after the customer's Authorized Agency listing has been saved for review. */
     public function queue(array $listing): void
     {
         if (($listing['selling_method'] ?? '') !== 'authorized_agency') return;
-        if (($listing['status'] ?? '') !== 'live' || ($listing['review_state'] ?? '') !== 'approved') {
-            throw new \LogicException('Only approved listings can queue an agency WhatsApp notification.');
+        if (($listing['status'] ?? '') !== 'pending' || ($listing['review_state'] ?? '') !== 'under_review') {
+            throw new \LogicException('Only newly submitted Authorized Agency listings can queue an agency WhatsApp notification.');
         }
 
         $payload = json_decode((string) ($listing['payload'] ?? '{}'), true, 128, JSON_THROW_ON_ERROR);
@@ -83,11 +83,11 @@ final class AgencyListingApprovalWhatsapp
         if (!$this->db->tableExists('listing_agency_whatsapp')) return null;
         return $this->db->table('listing_agency_whatsapp')
             ->select('id,listing_version,status,attempts,test_mode,recipient_mask,last_error,attempted_at,accepted_at,wamid')
-            ->where('listing_id', $listing['id'])->where('listing_version', $listing['record_version'])
+            ->where('listing_id', $listing['id'])->orderBy('id', 'DESC')
             ->get()->getRowArray();
     }
 
-    /** Sends once after approval; only known failures can be explicitly retried. */
+    /** Sends once after customer submission; only known failures can be explicitly retried. */
     public function dispatch(array $listing, bool $retry = false, ?int $expectedAttempts = null): ?array
     {
         $job = $this->statusFor($listing);
@@ -102,7 +102,8 @@ final class AgencyListingApprovalWhatsapp
             }
 
             $current = $this->db->table('portal_listings')->where('id', $job['listing_id'])->get()->getRowArray();
-            if (!$current || !ListingPolicy::active($current) || $current['selling_method'] !== 'authorized_agency'
+            $awaitingReview=$current&&($current['status']??'')==='pending'&&($current['review_state']??'')==='under_review';
+            if (!$current || (!$awaitingReview&&!ListingPolicy::active($current)) || $current['selling_method'] !== 'authorized_agency'
                 || (int) $current['record_version'] !== (int) $job['listing_version']) {
                 $this->db->table('listing_agency_whatsapp')->where('id', $job['id'])->update([
                     'status' => 'skipped',

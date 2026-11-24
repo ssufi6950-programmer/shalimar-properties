@@ -169,9 +169,6 @@ final class AdminListingReview
                 }
                 $values=['status'=>$status,'review_state'=>$state,'record_version'=>$version+1,'updated_at'=>$now,'payload'=>json_encode($payload,JSON_THROW_ON_ERROR)]+$assignment;$this->db->table('portal_listings')->where('id',$id)->update($values);$saved=$this->row($id);
                 $context=['reason'=>$reason,'reviewed_version'=>$version,'reviewed_fingerprint'=>$fingerprint,'approved_content_hash'=>$this->fingerprint($saved)];if($action==='approve'){$context['approval_mode']=$fresh?'erp_verified':'manual';$context['ownership_check_performed']=$fresh!==null;if($assignedAgent!==null)$context['assigned_agent_id']=$assignedAgent;}if($fresh)$context['verification']=$fresh['proof'];$this->event($event,$row,$saved,$actor,$context);if($action==='approve'&&$saved['selling_method']==='shalimar_agent'){if(config('Sms')->enabled)($this->assignmentSms??new AgentAssignmentSms($this->db))->queue($saved);(new AgentAssignmentWhatsapp($this->db))->queue($saved);}
-                if($action==='approve'&&$saved['selling_method']==='authorized_agency'){
-                    (new AgencyListingApprovalWhatsapp($this->db))->queue($saved);
-                }
                 $this->commit();return $this->afterDecision($saved,$action,false);
             }catch(\Throwable$e){$this->rollback();throw$e;}
         }catch(\Throwable$e){$this->failure($id,$actor,$e);throw$e;}
@@ -184,13 +181,6 @@ final class AdminListingReview
             catch(\Throwable $e){log_message('error','Approved listing SMS status unavailable: listing={id} type={type}.',['id'=>$listing['id'],'type'=>get_class($e)]);$result['assignment_sms']=['status'=>'unavailable'];}
             try{$result['assignment_whatsapp']=(new AgentAssignmentWhatsapp($this->db))->dispatch($listing);}
             catch(\Throwable $e){log_message('error','Approved listing WhatsApp status unavailable: listing={id} type={type}.',['id'=>$listing['id'],'type'=>get_class($e)]);$result['assignment_whatsapp']=['status'=>'unavailable'];}
-        }
-        if($action==='approve'&&$listing['selling_method']==='authorized_agency'){
-            try{$result['agency_whatsapp']=(new AgencyListingApprovalWhatsapp($this->db))->dispatch($listing);}
-            catch(\Throwable $e){
-                log_message('error','Approved agency WhatsApp status unavailable: listing={id} type={type}.',['id'=>$listing['id'],'type'=>get_class($e)]);
-                $result['agency_whatsapp']=['status'=>'unavailable'];
-            }
         }
         return $result;
     }
