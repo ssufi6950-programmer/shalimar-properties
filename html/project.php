@@ -13,12 +13,13 @@ if ($selectedProject === null) {
 }
 
 $heading = $selectedProject['name'] ?? 'Project not found';
-$purpose = $_GET['purpose'] ?? 'sale';
-if (!is_string($purpose) || !in_array($purpose, ['sale', 'rent'], true)) {
+$purpose = $_GET['purpose'] ?? '';
+if (!is_string($purpose) || !in_array($purpose, ['', 'sale', 'rent'], true)) {
     http_response_code(400);
-    $purpose = 'sale';
-    $purposeError = 'Choose Buy or Rent.';
+    $purpose = '';
+    $purposeError = 'Choose All, Buy or Rent.';
 }
+$purposeTab = $purpose === '' ? 'all' : $purpose;
 $optionKey = $_GET['layer2'] ?? '';
 $treeInput = $_GET['tree'] ?? '';
 $state = ['roots'=>[],'row'=>[],'path'=>[],'root'=>null,'chosen'=>null,'tree'=>[],'unsupported'=>false];
@@ -76,7 +77,9 @@ if ($selectedProject !== null) {
 $activeRootKey = $selectionError === '' && is_string($optionKey) ? $optionKey : '';
 $activeTree = $selectionError === '' ? ($state['tree'] ?? []) : [];
 $explorerUrl = static function (string $root = '', array $tree = [], int $page = 1, ?string $forPurpose = null) use ($slug, $purpose): string {
-    $query = ['project' => $slug, 'purpose' => $forPurpose ?? $purpose];
+    $selectedPurpose = $forPurpose ?? $purpose;
+    $query = ['project' => $slug];
+    if ($selectedPurpose !== '') $query['purpose'] = $selectedPurpose;
     if ($root !== '') $query['layer2'] = $root;
     if ($tree) $query['tree'] = implode('.', $tree);
     if ($page > 1) $query['page'] = $page;
@@ -133,6 +136,7 @@ require __DIR__ . '/includes/header.php';
     .project-explorer-shell .explorer-option { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 36px; max-width: 100%; padding: 7px 13px; border: 1px solid rgba(255,255,255,.75); border-radius: 999px; color: white; background: transparent; text-align: center; text-decoration: none; overflow-wrap: anywhere; transition: background-color 200ms ease, border-color 200ms ease; }
     .project-explorer-shell .explorer-option small { font-size: 12px; line-height: 1.35; font-weight: 600; }
     .project-explorer-shell .explorer-logo{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;margin-right:5px;border-radius:5px;background:#fff;overflow:hidden;flex:0 0 auto}.project-explorer-shell .explorer-logo img{display:block;width:100%;height:100%;object-fit:contain}
+    .project-explorer-shell .explorer-logo-organic{width:34px;height:34px;padding:2px}
     .project-explorer-shell .explorer-option[aria-current="true"] { background: var(--green); border-color: var(--gold); }
     .project-explorer-shell .explorer-option:hover { background: rgba(255,255,255,.16); border-color: var(--gold); }
     .project-explorer-shell .explorer-option:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
@@ -149,6 +153,7 @@ require __DIR__ . '/includes/header.php';
         .project-explorer-shell .explorer-option { min-width: 30px; min-height: 26px; padding: 2px 6px; }
         .project-explorer-shell .explorer-option small { font-size: 9px; line-height: 1.1; }
         .project-explorer-shell .explorer-logo { width: 18px; height: 18px; margin-right: 3px; }
+        .project-explorer-shell .explorer-logo-organic { width: 27px; height: 27px; }
         .project-explorer-shell .explorer-top { margin-bottom: 8px; }
         .project-explorer-shell .explorer-purpose a { min-height: 32px; padding: 5px 12px; font-size: 12px; }
         .project-explorer-shell .explorer-breadcrumb { margin-bottom: 8px; }
@@ -165,7 +170,7 @@ require __DIR__ . '/includes/header.php';
         <div class="explorer-controls">
             <div class="explorer-top">
                 <div class="explorer-purpose" aria-label="Listing purpose">
-                    <?php foreach (['sale' => 'Buy', 'rent' => 'Rent'] as $key => $label): ?><a data-explorer-link class="btn btn-sm <?= $purpose === $key ? 'btn-solid' : 'btn-ghost' ?>" href="<?= e($explorerUrl('', [], 1, $key)) ?>" <?= $purpose === $key ? 'aria-current="true"' : '' ?>><?= $label ?></a><?php endforeach ?>
+                    <?php foreach (['all' => 'All', 'sale' => 'Buy', 'rent' => 'Rent'] as $key => $label): $purposeValue = $key === 'all' ? '' : $key; ?><a data-explorer-link class="btn btn-sm <?= $purposeTab === $key ? 'btn-solid' : 'btn-ghost' ?>" href="<?= e($explorerUrl($activeRootKey, $activeTree, 1, $purposeValue)) ?>" <?= $purposeTab === $key ? 'aria-current="true"' : '' ?>><?= $label ?></a><?php endforeach ?>
                 </div>
             </div>
             <p class="explorer-breadcrumb" aria-label="Filter path"><?= e(implode(' › ', $breadcrumb)) ?><?= $chosen === null ? ' › All' : '' ?></p>
@@ -173,10 +178,10 @@ require __DIR__ . '/includes/header.php';
             <nav class="explorer-badges" aria-label="<?= e($filterRowLabel) ?>">
                 <a data-explorer-link class="explorer-option" href="<?= e($explorerUrl()) ?>" <?= $activeRootKey === '' && $selectionError === '' ? 'aria-current="true"' : '' ?>><small>All</small></a>
                 <?php if ($isRootView): ?>
-                    <?php foreach ($state['roots'] as $option): ?><a data-explorer-link class="explorer-option" href="<?= e($explorerUrl($option['key'])) ?>"><?= explorer_logo_html($option) ?><small><?= e($option['label']) ?></small></a><?php endforeach ?>
+                    <?php foreach ($state['roots'] as $option): $organicLogo = stripos((string)($option['label'] ?? ''), 'organic market') !== false; ?><a data-explorer-link class="explorer-option" href="<?= e($explorerUrl($option['key'])) ?>"><?= explorer_logo_html($option, 'explorer-logo'.($organicLogo ? ' explorer-logo-organic' : '')) ?><small><?= e($option['label']) ?></small></a><?php endforeach ?>
                     <a class="explorer-option explorer-back" href="home#hero" aria-label="Back to projects"><small>Projects</small></a>
                 <?php else: ?>
-                    <?php foreach ($rowOptions as $option): $nextTree = $treeBase; $nextTree[] = $option['id']; ?><a data-explorer-link class="explorer-option" href="<?= e($explorerUrl($activeRootKey, $nextTree)) ?>"><?= explorer_logo_html($option) ?><small><?= e($option['label']) ?></small></a><?php endforeach ?>
+                    <?php foreach ($rowOptions as $option): $nextTree = $treeBase; $nextTree[] = $option['id']; $organicLogo = stripos((string)($option['label'] ?? ''), 'organic market') !== false; ?><a data-explorer-link class="explorer-option" href="<?= e($explorerUrl($activeRootKey, $nextTree)) ?>"><?= explorer_logo_html($option, 'explorer-logo'.($organicLogo ? ' explorer-logo-organic' : '')) ?><small><?= e($option['label']) ?></small></a><?php endforeach ?>
                     <?php if ($backUrl !== ''): ?><a data-explorer-link class="explorer-option explorer-back" href="<?= e($backUrl) ?>" aria-label="Back to previous filter"><small>Back</small></a><?php endif ?>
                 <?php endif ?>
             </nav>
@@ -190,9 +195,9 @@ require __DIR__ . '/includes/header.php';
         <?php if ($metadataError !== ''): ?><p class="explorer-status" role="status"><?= e($metadataError) ?></p><?php endif ?>
         <?php if ($selectionError !== ''): ?><p role="alert"><?= e($selectionError) ?></p><?php endif ?>
         <div class="explorer-results">
-            <p class="explorer-status" role="status"><?= number_format($result['total']) ?> <?= $purpose === 'rent' ? 'rental listings' : 'sale listings' ?><?= $chosen !== null ? ' · ' . e($chosen['label']) : '' ?></p>
+            <p class="explorer-status" role="status"><?= number_format($result['total']) ?> <?= $purpose === 'rent' ? 'rental listings' : ($purpose === 'sale' ? 'sale listings' : 'properties') ?><?= $chosen !== null ? ' · ' . e($chosen['label']) : '' ?></p>
             <?php if ($result['rows']): ?><div class="listing-grid"><?php foreach ($result['rows'] as $listing) echo render_card($listing); ?></div>
-            <?php else: ?><div class="empty-note" role="status">No approved public <?= $purpose === 'rent' ? 'rental' : 'sale' ?> listings match this selection. <a data-explorer-link href="<?= e($explorerUrl()) ?>">Browse All</a>.</div><?php endif ?>
+            <?php else: ?><div class="empty-note" role="status">No approved public <?= $purpose === 'rent' ? 'rental' : ($purpose === 'sale' ? 'sale' : '') ?> listings match this selection. <a data-explorer-link href="<?= e($explorerUrl()) ?>">Browse All</a>.</div><?php endif ?>
             <?php if ($result['pages'] > 1): ?><nav class="public-pagination" aria-label="Project listing pages">
                 <?php if ($result['page'] > 1): ?><a data-explorer-link class="btn btn-ghost" href="<?= e($explorerUrl($activeRootKey, $activeTree, $result['page'] - 1)) ?>">Previous</a><?php endif ?>
                 <span>Page <?= (int) $result['page'] ?> of <?= (int) $result['pages'] ?></span>

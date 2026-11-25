@@ -7,15 +7,8 @@ $mappings=$store->publicAgencyPerformanceDirectory();
 $agencyOptions=[];
 foreach($mappings as$row){$id=(int)$row['portal_agency_id'];$agencyOptions[$id]=['id'=>$id,'name'=>(string)$row['agency_name']];}
 uasort($agencyOptions,static fn($a,$b)=>strnatcasecmp($a['name'],$b['name']));
-$allAgencyIds=array_map('intval',array_keys($agencyOptions));
-$hasCompanyFilter=isset($_GET['company_filter']);
-$requestedCompanies=$_GET['companies']??null;
-$selectedAgencyIds=$hasCompanyFilter&&is_array($requestedCompanies)?array_values(array_unique(array_filter(array_map(static fn($id)=>is_string($id)&&preg_match('/\A[1-9][0-9]{0,17}\z/D',$id)?(int)$id:0,$requestedCompanies),static fn($id)=>isset($agencyOptions[$id])))):$allAgencyIds;
-$selectedSet=array_fill_keys($selectedAgencyIds,true);
-$purpose=$_GET['purpose']??'all';if(!is_string($purpose)||!in_array($purpose,['all','sale','rent'],true))$purpose='all';
-$top=$_GET['top']??'10';
-if(!is_string($top)||!in_array($top,['5','10','15'],true))$top='10';
-$top=(int)$top;
+$top=$_GET['top']??'5';
+if(!is_string($top)||!in_array($top,['all','5','10','15'],true))$top='5';
 $pkt=new DateTimeZone('Asia/Karachi');
 $today=new DateTimeImmutable('today',$pkt);
 $thisMonthFrom=$today->modify('first day of this month');
@@ -37,17 +30,16 @@ elseif($range==='custom'){
 }
 $dateFromValue=$dateFrom->format('Y-m-d');$dateToValue=$dateTo->format('Y-m-d');
 $periodDisplay=$dateFrom->format('d M Y').' – '.$dateTo->format('d M Y');
-$totalsByAgency=[];foreach($selectedAgencyIds as$id)$totalsByAgency[$id]=['id'=>$id,'name'=>$agencyOptions[$id]['name'],'sales'=>0,'sale_parties'=>0,'rentals'=>0];
+$totalsByAgency=[];foreach($agencyOptions as$id=>$row)$totalsByAgency[$id]=['name'=>$row['name'],'sales'=>0,'rentals'=>0];
 $sourceGroups=[];
-foreach($mappings as$row){$id=(int)$row['portal_agency_id'];if(isset($selectedSet[$id]))$sourceGroups[$row['code']][]=$row;}
+foreach($mappings as$row)$sourceGroups[$row['code']][]=$row;
 $failedSources=[];$succeededSources=[];
 foreach($sourceGroups as$code=>$rows){
     $source=$rows[0];$erpIds=array_values(array_unique(array_map(static fn($row)=>(string)$row['erp_agency_id'],$rows)));
     try{
-        $summary=(new \App\Services\ErpAgencyPerformanceApi())->summaries($source,$erpIds,$purpose,$dateFromValue,$dateToValue);$succeededSources[]=$code;
+        $summary=(new \App\Services\ErpAgencyPerformanceApi())->summaries($source,$erpIds,'all',$dateFromValue,$dateToValue);$succeededSources[]=$code;
         foreach($rows as$row){$portalId=(int)$row['portal_agency_id'];$erpId=(string)$row['erp_agency_id'];if(!isset($totalsByAgency[$portalId],$summary[$erpId]))throw new \RuntimeException('ERP performance response omitted a mapped agency.');
             if($summary[$erpId]['sales_bookings']!==null)$totalsByAgency[$portalId]['sales']+=$summary[$erpId]['sales_bookings'];
-            if($summary[$erpId]['sale_party_entries']!==null)$totalsByAgency[$portalId]['sale_parties']+=$summary[$erpId]['sale_party_entries'];
             if($summary[$erpId]['rentals']!==null)$totalsByAgency[$portalId]['rentals']+=$summary[$erpId]['rentals'];
         }
     }catch(\Throwable$error){
@@ -57,132 +49,534 @@ foreach($sourceGroups as$code=>$rows){
 }
 $ranking=array_values($totalsByAgency);
 usort($ranking,static fn($a,$b)=>($b['sales']+$b['rentals'])<=>($a['sales']+$a['rentals'])?:strnatcasecmp($a['name'],$b['name']));
-$topRows=array_slice($ranking,0,$top);
+$topRows=$top==='all'?$ranking:array_slice($ranking,0,(int)$top);
 $grandSales=array_sum(array_column($ranking,'sales'));$grandRentals=array_sum(array_column($ranking,'rentals'));
 $grandActivities=$grandSales+$grandRentals;
-$previewMode=$failedSources!==[];
-$chartData=['labels'=>array_column($topRows,'name'),'sales'=>array_column($topRows,'sales'),'rentals'=>array_column($topRows,'rentals'),'total'=>array_map(static fn($row)=>$row['sales']+$row['rentals'],$topRows)];
-$chartJson=json_encode($chartData,JSON_HEX_TAG|JSON_HEX_AMP|JSON_HEX_APOS|JSON_HEX_QUOT|JSON_THROW_ON_ERROR);
+$chartMax=$topRows ? max(1, $topRows[0]['sales']+$topRows[0]['rentals']) : 1;
+$saleShare=$grandActivities ? 100 * $grandSales / $grandActivities : 0;
 
+$fragment = ($_GET['_report'] ?? '') === '1';
+$reportData = [
+    'range'=>$range, 'top'=>$top, 'dateFrom'=>$dateFromValue, 'dateTo'=>$dateToValue,
+    'periodLabel'=>$periodLabel, 'periodDisplay'=>$periodDisplay,
+    'available'=>!empty($succeededSources),
+    'chart'=>$topRows,
+];
+if ($fragment) {
+    header('Content-Type: text/html; charset=UTF-8');
+    header('Cache-Control: no-store');
+}
+if (!$fragment):
 $active='agency-performance';$pageTitle='Agency Performance - Shalimar Properties';
+$heroPhoto='ssc-business-bay';
 $metaDesc='Compare verified sales and rental activity for authorized Shalimar Properties agencies.';
 require __DIR__.'/includes/header.php';
 ?>
 <style>
-.agency-performance-page{--ap-green:#155f43;--ap-deep:#0c3828;--ap-gold:#c6a15e;--ap-line:#e2e9e3;--ap-muted:#68766e}
-.agency-performance-hero{padding:calc(var(--hdr,80px) + 20px) 0 38px;background:radial-gradient(ellipse at 82% 0%,rgba(198,161,94,.2),transparent 38%),linear-gradient(125deg,#0c3828,#155f43 58%,#1b7050);color:#fff;overflow:hidden;position:relative}.agency-performance-hero:after{content:"";position:absolute;inset:0;background-image:linear-gradient(30deg,transparent 49%,rgba(255,255,255,.035) 50%,transparent 51%);background-size:42px 42px;pointer-events:none}.agency-performance-hero .wrap{position:relative;z-index:1}.agency-performance-hero .crumbs{color:rgba(255,255,255,.68)}.agency-performance-hero .crumbs a{color:#fff}.agency-performance-hero .kicker{display:inline-flex;color:#e5c987;margin-top:20px}.agency-performance-hero h1{max-width:760px;color:#fff;font-size:clamp(32px,5vw,54px);line-height:1.08;margin:12px 0 14px;letter-spacing:-.035em}.agency-performance-hero .lede{max-width:700px;color:rgba(255,255,255,.8);font-size:16px;line-height:1.7;margin:0}
-.ap-content{padding:30px 0 64px}.ap-filter{display:grid;grid-template-columns:minmax(300px,1.55fr) minmax(190px,.8fr) auto;gap:16px;align-items:end;padding:22px;background:#fff;border:1px solid var(--ap-line);border-radius:18px;box-shadow:0 12px 36px rgba(23,54,37,.06)}.ap-field{min-width:0}.ap-field label{display:block;font-size:12px;font-weight:700;color:#526159;margin:0 0 7px}.ap-field select,.ap-multi-trigger{width:100%;height:48px;border:1px solid #dce5dd;border-radius:11px;background:#fff;padding:0 13px;color:#1b3428;font:500 14px Inter,system-ui,sans-serif}.ap-filter>.btn{min-height:48px;padding-inline:22px;white-space:nowrap}.ap-multiselect{position:relative}.ap-multi-trigger{display:flex;justify-content:space-between;align-items:center;text-align:left;cursor:pointer}.ap-multi-trigger:hover,.ap-field select:focus,.ap-multi-trigger:focus{border-color:#75a28b;outline:3px solid rgba(21,95,67,.1)}.ap-multi-menu{--ap-green:#155f43;--ap-line:#e2e9e3;position:fixed;z-index:10000;top:12px;left:12px;width:min(440px,calc(100vw - 24px));max-height:calc(100vh - 24px);overflow:hidden;padding:13px;background:#fff;border:1px solid var(--ap-line);border-radius:15px;box-shadow:0 18px 45px rgba(16,46,31,.24)}.ap-multi-menu[hidden]{display:none}.ap-search{width:100%;height:40px;border:1px solid #dce5dd;border-radius:9px;padding:0 11px;font:14px Inter,system-ui,sans-serif}.ap-multi-actions{display:flex;justify-content:space-between;gap:8px;padding:10px 1px;font-size:12px}.ap-multi-actions button{border:0;background:none;color:var(--ap-green);font:600 12px Inter,system-ui,sans-serif;cursor:pointer;padding:4px}.ap-company-list{max-height:min(270px,42vh);overflow:auto;border-top:1px solid #edf1ed;padding-top:5px}.ap-company-option{display:flex;align-items:center;gap:9px;padding:8px 5px;border-radius:7px;color:#34463c;font-size:13px;cursor:pointer}.ap-company-option:hover{background:#f4f7f4}.ap-company-option input{width:16px;height:16px;accent-color:var(--ap-green)}
-.ap-table-wrap{overflow:auto;background:#fff;border:1px solid var(--ap-line);border-radius:16px;box-shadow:0 7px 22px rgba(23,54,37,.04)}.ap-rank-table{border-collapse:collapse;width:100%;min-width:560px}.ap-rank-table th,.ap-rank-table td{padding:13px 16px;border-bottom:1px solid #edf1ed;text-align:left;font-size:13px}.ap-rank-table th{background:#f6f8f5;color:#68766e;font-size:10px;letter-spacing:.07em;text-transform:uppercase}.ap-rank-table tbody tr:last-child td{border-bottom:0}.ap-rank-table tbody tr:hover{background:#fbfcfa}.ap-rank-table td:first-child{color:#879189;width:55px}.ap-rank-table td:nth-child(2){font-weight:650;color:#1d3e2e}.ap-rank-table .num{text-align:right;font-variant-numeric:tabular-nums}.ap-rank-table tfoot td{font-weight:700;background:#f8faf7;color:#173a2b}.ap-source-tag.pending{color:#805a16;background:#fff2d8}
-.ap-empty,.ap-alert{display:flex;align-items:flex-start;gap:12px;border-radius:14px;padding:16px 18px;font-size:13px;line-height:1.6;margin-top:16px}.ap-empty{border:1px dashed #cbd8ce;color:#66756c;background:#fff}.ap-alert{border:1px solid #ecd8b7;color:#644b2a;background:linear-gradient(110deg,#fffaf0,#fff);box-shadow:0 7px 20px rgba(91,69,25,.05)}.ap-alert:before{content:"!";flex:none;display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:#f3e5c8;color:#805a16;font-size:13px;font-weight:800}
-.ap-rank-choice{grid-column:1/-1;display:flex;align-items:center;gap:12px;padding-top:2px}.ap-rank-choice>span{font-size:12px;font-weight:700;color:#526159;white-space:nowrap}.ap-rank-options{display:inline-flex;padding:4px;background:#f1f5f1;border:1px solid #e0e8e1;border-radius:12px}.ap-rank-options label{position:relative;cursor:pointer}.ap-rank-options input{position:absolute;opacity:0;pointer-events:none}.ap-rank-options span{display:block;min-width:70px;padding:8px 13px;border-radius:8px;text-align:center;color:#617068;font-size:12px;font-weight:700;transition:background .18s,color .18s,box-shadow .18s}.ap-rank-options input:checked+span{background:#155f43;color:#fff;box-shadow:0 4px 12px rgba(21,95,67,.2)}.ap-rank-options input:focus-visible+span{outline:3px solid rgba(21,95,67,.2);outline-offset:2px}.ap-rank-options label:hover span{color:#155f43}.ap-rank-options label:hover input:checked+span{color:#fff}
-.ap-filter{grid-template-columns:minmax(260px,1.35fr) minmax(170px,.65fr) minmax(230px,.85fr) auto;border-radius:12px;box-shadow:0 8px 24px rgba(23,54,37,.055)}.ap-date-picker{position:relative}.ap-date-trigger{width:100%;height:48px;display:flex;align-items:center;gap:11px;text-align:left;padding:0 13px;border:1px solid #dce5dd;border-radius:9px;background:#fff;color:#1b3428;cursor:pointer}.ap-date-trigger>i:first-child{color:#155f43}.ap-date-trigger>i:last-child{margin-left:auto;color:#758178;font-size:11px}.ap-date-trigger span{min-width:0}.ap-date-trigger b,.ap-date-trigger small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ap-date-trigger b{font:650 13px Inter,system-ui,sans-serif}.ap-date-trigger small{margin-top:2px;color:#758178;font:11px Inter,system-ui,sans-serif}.ap-date-trigger:hover,.ap-date-trigger:focus{border-color:#75a28b;outline:3px solid rgba(21,95,67,.1)}.ap-date-menu{--ap-green:#155f43;--ap-line:#dfe7e0;position:fixed;z-index:10001;width:min(540px,calc(100vw - 24px));padding:0;background:#fff;border:1px solid var(--ap-line);border-radius:10px;box-shadow:0 22px 55px rgba(16,46,31,.24);overflow:hidden}.ap-date-menu[hidden]{display:none}.ap-date-head{display:flex;align-items:center;justify-content:space-between;padding:15px 17px;border-bottom:1px solid #e7ece8}.ap-date-head strong{font-size:14px;color:#173a2b}.ap-date-head span{font-size:11px;color:#7b877f}.ap-date-body{display:grid;grid-template-columns:170px 1fr}.ap-date-presets{padding:10px;border-right:1px solid #e7ece8;background:#f7f9f6}.ap-date-preset{display:block;width:100%;padding:10px 11px;border:0;border-radius:7px;background:transparent;color:#45564c;text-align:left;font:600 12px Inter,system-ui,sans-serif;cursor:pointer}.ap-date-preset:hover,.ap-date-preset.active{background:#e7f1eb;color:#155f43}.ap-date-custom{padding:17px}.ap-date-custom>span{display:block;margin-bottom:11px;color:#405147;font-size:12px;font-weight:700}.ap-date-inputs{display:grid;grid-template-columns:1fr 1fr;gap:10px}.ap-date-inputs label{font-size:10px;font-weight:700;color:#77837b;text-transform:uppercase;letter-spacing:.05em}.ap-date-inputs input{display:block;width:100%;height:42px;margin-top:6px;padding:0 9px;border:1px solid #d9e2da;border-radius:7px;color:#233d30;font:13px Inter,system-ui,sans-serif}.ap-date-apply{width:100%;height:40px;margin-top:14px;border:0;border-radius:7px;background:#155f43;color:#fff;font:700 12px Inter,system-ui,sans-serif;cursor:pointer}.ap-report-head{display:flex;justify-content:space-between;align-items:end;gap:18px;padding:27px 2px 14px}.ap-report-head span{display:block;color:#8a7042;font-size:10px;font-weight:800;letter-spacing:.13em;text-transform:uppercase}.ap-report-head h2{margin:6px 0 0;color:#173a2b;font-size:23px}.ap-period-chip{display:inline-flex!important;align-items:center;gap:7px;padding:8px 11px;border:1px solid #dce5dd;border-radius:8px;background:#fff!important;color:#526159!important;font-size:11px!important;letter-spacing:0!important;text-transform:none!important}.ap-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:0 0 14px}.ap-kpi{padding:18px 19px;background:#fff;border:1px solid #dfe7e0;border-radius:10px;box-shadow:0 4px 14px rgba(23,54,37,.035)}.ap-kpi span{display:block;color:#718078;font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}.ap-kpi b{display:block;margin-top:8px;color:#155f43;font-size:30px;line-height:1.1;font-variant-numeric:tabular-nums}.ap-kpi small{display:block;margin-top:7px;color:#829087;font-size:11px}.ap-chart-grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:12px}.ap-chart-card{min-width:0;padding:18px;background:#fff;border:1px solid #dfe7e0;border-radius:10px;box-shadow:0 4px 14px rgba(23,54,37,.035)}.ap-chart-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding-bottom:13px;border-bottom:1px solid #edf1ed;margin-bottom:13px}.ap-chart-head h2{margin:0;color:#173a2b;font-size:16px}.ap-chart-head p{margin:4px 0 0;color:#7b877f;font-size:11px}.ap-chart-box{height:290px;position:relative}.ap-summary-row{display:flex;justify-content:space-between;align-items:end;gap:16px;margin:28px 0 12px}.ap-summary-row h2{margin:0;color:#173a2b;font-size:20px}.ap-summary-row p{margin:5px 0 0;color:#748078;font-size:12px}.ap-source-tags{display:flex;gap:7px;flex-wrap:wrap}.ap-source-tag{padding:6px 9px;border-radius:7px;background:#eaf3ed;color:#155f43;font-size:10px;font-weight:800}.ap-footnote{margin:15px 2px 0;color:#748078;font-size:11px;line-height:1.6}
-@media(max-width:1050px){.ap-filter{grid-template-columns:1fr 1fr}.ap-filter>.btn{justify-self:end}.ap-rank-choice{grid-column:1/-1}.ap-chart-grid{grid-template-columns:1fr}.ap-chart-box{height:270px}}
-@media(max-width:900px){.ap-filter>.btn{grid-column:1/-1}.ap-report-head{align-items:flex-start}.ap-chart-grid{grid-template-columns:1fr}.ap-chart-box{height:270px}}
-@media(max-width:600px){.agency-performance-hero{padding:calc(var(--hdr,72px) + 20px) 0 27px}.agency-performance-hero h1{font-size:32px}.agency-performance-hero .lede{font-size:14px}.ap-content{padding:18px 0 40px}.ap-filter{grid-template-columns:1fr;gap:13px;padding:15px;border-radius:10px}.ap-filter>.btn{grid-column:auto;justify-self:stretch;width:100%}.ap-field label{font-size:11px}.ap-field select,.ap-multi-trigger{height:46px;font-size:14px}.ap-rank-choice{display:block}.ap-rank-choice>span{display:block;margin-bottom:7px}.ap-rank-options{display:grid;grid-template-columns:repeat(3,1fr);width:100%}.ap-rank-options span{min-width:0;padding-inline:8px}.ap-date-body{grid-template-columns:1fr}.ap-date-presets{display:grid;grid-template-columns:1fr 1fr;border-right:0;border-bottom:1px solid #e7ece8}.ap-date-custom{padding:14px}.ap-report-head{display:block;padding-top:22px}.ap-period-chip{margin-top:10px}.ap-kpis{gap:8px}.ap-kpi{padding:13px 11px}.ap-kpi span{font-size:9px;letter-spacing:.03em}.ap-kpi b{font-size:23px}.ap-kpi small{font-size:10px}.ap-chart-grid{gap:10px}.ap-chart-card{padding:14px 12px}.ap-chart-head h2{font-size:15px}.ap-chart-head p{font-size:10px}.ap-chart-box{height:240px}.ap-summary-row{display:block;margin:23px 0 12px}.ap-summary-row h2{font-size:18px}.ap-source-tags{margin-top:9px}}
-@media(max-width:360px){.ap-kpi{padding:11px 8px}.ap-kpi b{font-size:20px}.ap-chart-box{height:220px}}
+.agency-performance-page {
+  --ap-ink:#132b22;
+  --ap-muted:#50655b;
+  --ap-green:#176449;
+  --ap-gold:#bc812c;
+  --ap-line:#dde8e0;
+  --ap-surface:#f2f6f2;
+  color:var(--ap-ink);
+  background:var(--ap-surface);
+}
+.ap-hero {
+  position:relative;
+  overflow:hidden;
+  padding:calc(var(--hdr,80px) + 44px) 0 78px;
+  color:#fff;
+  background:var(--hero-img) center/cover no-repeat,#0c3025;
+}
+.ap-hero::after {
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:
+    linear-gradient(100deg,rgba(7,13,10,.88) 0%,rgba(14,75,49,.66) 55%,rgba(7,13,10,.4) 100%),
+    repeating-linear-gradient(110deg,transparent 0 42px,#b9d9bd1e 43px,transparent 44px 85px);
+}
+.ap-hero-inner {position:relative;z-index:1;display:flex;align-items:flex-end;justify-content:space-between;gap:28px}
+.ap-hero h1 {margin:10px 0 0;color:inherit;font-size:clamp(34px,4.4vw,58px);line-height:1.08;letter-spacing:-.04em}
+.ap-hero p {margin:0;color:#d6e7dd;font-size:clamp(.95rem,2vw,1.08rem)}
+.ap-crumbs {display:flex;align-items:center;gap:12px;font-size:.83rem;color:#d6e7dd}
+.ap-crumbs a {color:inherit}
+.ap-hero-period {flex:none;border-left:1px solid #a8d3bb65;padding-left:18px;white-space:nowrap}
+.ap-hero-period span,.ap-hero-period time {display:block;font-size:.8rem;color:#c8ddd0}
+.ap-hero-period strong {display:block;margin:3px 0;font-size:1.15rem;color:#fff}
+.ap-body {position:relative;margin-top:-32px;padding-bottom:64px}
+.ap-controls {position:relative;z-index:2;display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:16px 20px;background:#fff;border:1px solid var(--ap-line);border-radius:15px;box-shadow:0 8px 25px #122c2010}
+.ap-control-label {display:block;margin:0 0 6px;padding:0;color:var(--ap-ink);font-size:.8rem;font-weight:700}
+.ap-date-picker {position:relative;flex:0 1 310px}
+.ap-date-trigger {display:flex;min-height:48px;align-items:center;gap:12px;width:100%;padding:5px 12px;text-align:left;background:#fff;color:var(--ap-ink);border:1px solid #cadacf;border-radius:9px;cursor:pointer}
+.ap-date-trigger>i {color:var(--ap-green)}
+.ap-date-trigger>i:last-child {margin-left:auto;font-size:.75rem}
+#apDateText strong,#apDateText small {display:block}
+#apDateText small {color:var(--ap-muted);font-size:.72rem}
+.ap-date-menu {position:absolute;top:calc(100% + 8px);left:0;width:min(440px,calc(100vw - 44px));border:1px solid var(--ap-line);border-radius:12px;background:#fff;box-shadow:0 14px 30px #182d2630;overflow:hidden}
+.ap-date-head {display:flex;justify-content:space-between;padding:12px 13px;border-bottom:1px solid var(--ap-line)}
+.ap-date-head small,.ap-date-custom small {color:var(--ap-muted);font-size:.72rem}
+.ap-date-body {display:grid;grid-template-columns:minmax(100px,.95fr) minmax(140px,1.3fr)}
+.ap-date-presets,.ap-date-custom {display:grid;align-content:start;gap:5px;padding:10px}
+.ap-date-presets {background:#f1f6f2}
+.ap-date-presets button {border:1px solid transparent;background:transparent;color:var(--ap-ink);padding:8px;text-align:left;border-radius:7px;cursor:pointer}
+.ap-date-presets button:hover,.ap-date-presets button[aria-pressed="true"] {background:#e0efe5;border-color:#cfdfd4;color:var(--ap-green)}
+.ap-date-custom strong,.ap-date-custom label {font-size:.78rem}
+.ap-date-custom input {min-width:0;width:100%;padding:6px 8px;color:var(--ap-ink);background:#fff;border:1px solid #cadacf;border-radius:7px}
+.ap-rank-control {min-width:0;margin:0;padding:0;border:0}
+.ap-rank-options {display:flex;flex-wrap:wrap;padding:4px;background:#edf4ef;border:1px solid var(--ap-line);border-radius:9px}
+.ap-rank-options label {position:relative;cursor:pointer}
+.ap-rank-options input {position:absolute;width:1px;height:1px;opacity:0}
+.ap-rank-options span {display:block;padding:8px 12px;border-radius:6px;color:var(--ap-ink);font-size:.8rem;font-weight:650}
+.ap-rank-options input:checked+span {background:var(--ap-green);color:#fff}
+.ap-rank-options input:focus-visible+span {outline:2px solid var(--ap-green);outline-offset:2px}
+.ap-update-status {margin:10px 0 0;color:var(--ap-muted);font-size:.84rem}
+#apReport[aria-busy="true"] {opacity:.78}
+.ap-line-panel {grid-column:1/-1}
+.ap-line-box {position:relative;height:260px;margin-top:10px}
+.agency-performance-page .ap-split-charts {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-bottom:24px}
+.ap-bar-box {position:relative;height:260px;margin-top:10px}
+@media(max-width:480px) {
+  .ap-controls {gap:12px;padding:13px}
+  .ap-date-picker {flex-basis:100%}
+  .ap-line-box {height:220px}
+  .ap-bar-box {height:220px}
+}
+.agency-performance-page .ap-kpis {padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:20px 0}
+.ap-kpi,.ap-panel {min-width:0;background:#fff;border:1px solid var(--ap-line);border-radius:14px}
+.ap-kpi {display:grid;gap:4px;padding:16px 18px}
+.ap-kpi span,.ap-kpi small {color:var(--ap-muted);font-size:.8rem}
+.ap-kpi strong {font-size:clamp(1.45rem,4vw,2.25rem);line-height:1.15;letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+.ap-kpi:first-child {background:#e4f1e8;border-color:#d4e9da}
+.agency-performance-page .ap-charts {padding:0;display:grid;grid-template-columns:minmax(0,1.85fr) minmax(250px,1fr);gap:16px;margin-bottom:24px}
+.ap-panel {padding:20px}
+.ap-panel h2,.ap-table-panel h2 {margin:0;font-size:1.2rem;line-height:1.3}
+.ap-panel p,.ap-table-panel p {margin:4px 0 0;color:var(--ap-muted);font-size:.83rem}
+.ap-chart-list {display:grid;align-content:start;gap:12px;max-height:400px;overflow:auto;list-style:none;margin:18px 0 0;padding:0 6px 0 0;scrollbar-color:#afd0bd transparent}
+.ap-chart-row {display:grid;grid-template-columns:minmax(105px,1.05fr) minmax(85px,1.4fr) 36px;align-items:center;gap:10px;min-height:23px;padding-bottom:8px;border-bottom:1px solid #eef3ef;font-size:.82rem}
+.ap-chart-row:last-child {border-bottom:0}
+.ap-chart-label {overflow-wrap:anywhere;line-height:1.25}
+.ap-chart-total {font-weight:700;text-align:right;font-variant-numeric:tabular-nums}
+.ap-track {height:10px;display:flex;gap:0;overflow:hidden;border-radius:20px;background:#edf3ee}
+.ap-sale-fill,.ap-rent-fill {display:block;height:100%;flex:none}
+.ap-sale-fill {background:var(--ap-green)}
+.ap-rent-fill {background:var(--ap-gold)}
+.ap-legend {display:flex;gap:14px;flex-wrap:wrap;list-style:none;padding:0;margin:15px 0 0}
+.ap-legend li,.ap-mix-line {display:flex;align-items:center;gap:7px;color:var(--ap-muted);font-size:.8rem}
+.ap-swatch {display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--ap-green);flex:none}
+.ap-swatch.rent {background:var(--ap-gold)}
+.ap-donut {display:grid;place-items:center;width:min(164px,75%);aspect-ratio:1;margin:18px auto 14px;border-radius:50%;background:conic-gradient(var(--ap-green) 0 var(--ap-share),var(--ap-gold) var(--ap-share) 100%)}
+.ap-donut.is-empty {background:#edf3ee}
+.ap-donut-center {display:grid;place-content:center;place-items:center;width:76%;aspect-ratio:1;background:#fff;border-radius:50%}
+.ap-donut-center strong {font-size:1.9rem;line-height:1.15}
+.ap-donut-center small {color:var(--ap-muted);font-size:.72rem}
+.ap-mix-line {justify-content:space-between;padding:9px 0;border-top:1px solid var(--ap-line)}
+.ap-mix-line span {display:flex;align-items:center;gap:7px}
+.ap-mix-line strong {color:var(--ap-ink)}
+.ap-status {margin:15px 0;color:var(--ap-muted);font-size:.82rem}
+.ap-alert {margin:17px 0;padding:12px 15px;border:1px solid #e4cc9e;border-radius:10px;color:#704d16;background:#fff8e9}
+.agency-performance-page .ap-table-panel {padding:0;overflow:hidden}
+.ap-table-head {padding:17px 20px}
+.ap-table-wrap {overflow-x:auto}
+.ap-rank-table {width:100%;min-width:520px;border-collapse:collapse;text-align:left}
+.ap-rank-table th,.ap-rank-table td {padding:11px 15px;border-top:1px solid var(--ap-line)}
+.ap-rank-table th {background:#edf4ef;color:#374e41;font-size:.76rem}
+.ap-rank-table td {font-size:.88rem}
+.ap-rank-table tbody tr:nth-child(even) {background:#f9fbf9}
+.ap-rank-table .num {text-align:right;font-variant-numeric:tabular-nums}
+.ap-rank-table tbody .num:last-child {font-weight:700;color:var(--ap-green)}
+.ap-rank-table th:first-child,.ap-rank-table td:first-child {width:55px;text-align:center}
+@media(max-width:750px) {
+  .ap-hero {padding-top:calc(var(--hdr,72px) + 30px);padding-bottom:62px}
+  .ap-hero-inner {display:grid;gap:18px}
+  .ap-hero-period {padding-left:12px}
+  .agency-performance-page .ap-charts {grid-template-columns:1fr}
+  .agency-performance-page .ap-split-charts {grid-template-columns:1fr}
+}
+@media(max-width:480px) {
+  .ap-body {padding-bottom:36px}
+  .agency-performance-page .ap-kpis {gap:6px}
+  .ap-kpi {padding:10px 8px}
+  .ap-kpi span,.ap-kpi small {font-size:.7rem}
+  .ap-panel {padding:14px}
+  .ap-rank-table {min-width:0}
+  .ap-rank-table th,.ap-rank-table td {padding:8px 6px;line-height:1.3}
+  .ap-rank-table th:first-child,.ap-rank-table td:first-child {width:auto}
+  .ap-rank-table th,.ap-rank-table td {font-size:.72rem}
+}
 </style>
 <main id="main" class="agency-performance-page">
-  <section class="agency-performance-hero"><div class="wrap"><div class="crumbs"><a href="home">Home</a><span>/</span><a href="agencies">Agencies</a><span>/</span><span>Performance</span></div><span class="kicker">Agency intelligence</span><h1>Performance backed by ERP records.</h1><p class="lede">Compare authorized agency sales and rental activity from SGC and Zalmi ERP records. Select companies to focus the report or explore the top performers.</p></div></section>
-  <section class="ap-content"><div class="wrap">
-    <form class="ap-filter" method="get" action="agency-performance" id="apFilter" aria-label="Filter agency performance">
-      <input type="hidden" name="company_filter" value="1">
-      <input type="hidden" name="range" id="apRange" value="<?= e($range) ?>">
-      <input type="hidden" name="date_from" id="apDateFrom" value="<?= e($dateFromValue) ?>">
-      <input type="hidden" name="date_to" id="apDateTo" value="<?= e($dateToValue) ?>">
-      <div class="ap-field"><label id="apCompanyLabel">Companies</label><div class="ap-multiselect">
-        <button class="ap-multi-trigger" type="button" id="apMultiToggle" aria-haspopup="true" aria-expanded="false" aria-labelledby="apCompanyLabel apMultiText"><span id="apMultiText">All companies</span><i class="fa-solid fa-chevron-down" aria-hidden="true"></i></button>
-        <div class="ap-multi-menu" id="apMultiMenu" hidden>
-          <input class="ap-search" id="apCompanySearch" type="search" placeholder="Search companies" autocomplete="off" aria-label="Search companies">
-          <div class="ap-multi-actions"><button type="button" id="apSelectAll">Select all</button><button type="button" id="apSelectNone">Clear selection</button></div>
-          <div class="ap-company-list" id="apCompanyList">
-            <?php foreach($agencyOptions as$option): ?><label class="ap-company-option" data-company-option><input type="checkbox" name="companies[]" value="<?= (int)$option['id'] ?>"<?= isset($selectedSet[$option['id']])?' checked':'' ?>><span><?= e($option['name']) ?></span></label><?php endforeach; ?>
-          </div>
-        </div>
-      </div></div>
-      <div class="ap-field"><label for="apPurpose">Activity</label><select name="purpose" id="apPurpose"><option value="all"<?= $purpose==='all'?' selected':'' ?>>Sales and rentals</option><option value="sale"<?= $purpose==='sale'?' selected':'' ?>>Sales</option><option value="rent"<?= $purpose==='rent'?' selected':'' ?>>Rentals</option></select></div>
-      <div class="ap-field ap-period-field"><label id="apPeriodLabel">Reporting period</label><div class="ap-date-picker">
-        <button class="ap-date-trigger" type="button" id="apDateToggle" aria-haspopup="dialog" aria-expanded="false" aria-labelledby="apPeriodLabel apDateText"><i class="fa-regular fa-calendar" aria-hidden="true"></i><span id="apDateText"><b><?= e($periodLabel) ?></b><small><?= e($periodDisplay) ?></small></span><i class="fa-solid fa-chevron-down" aria-hidden="true"></i></button>
-        <div class="ap-date-menu" id="apDateMenu" role="dialog" aria-label="Choose reporting date range" hidden>
-          <div class="ap-date-head"><strong>Date range</strong><span>Asia/Karachi</span></div>
+  <section class="ap-hero">
+    <div class="wrap ap-hero-inner">
+      <div>
+        <nav class="ap-crumbs" aria-label="Breadcrumb"><a href="home">Home</a><span aria-hidden="true">/</span><a href="agencies">Agencies</a></nav>
+        <h1>Agency Performance</h1>
+        <p>Rank agencies by sales bookings and rental check-ins.</p>
+      </div>
+      <div class="ap-hero-period">
+        <span>Reporting period</span>
+        <strong id="apHeroPeriodLabel"><?= e($periodLabel) ?></strong>
+        <span id="apHeroPeriodDisplay"><?= e($periodDisplay) ?></span>
+      </div>
+    </div>
+  </section>
+
+  <div class="wrap ap-body">
+    <div class="ap-controls" aria-label="Reporting period and agency ranking">
+      <div class="ap-date-picker">
+        <span class="ap-control-label" id="apDateLabel">Date range</span>
+        <button class="ap-date-trigger" type="button" id="apDateToggle" aria-haspopup="dialog" aria-expanded="false" aria-controls="apDateMenu" aria-labelledby="apDateLabel apDateText">
+          <i class="fa-regular fa-calendar" aria-hidden="true"></i>
+          <span id="apDateText"><strong><?= e($periodLabel) ?></strong><small><?= e($periodDisplay) ?></small></span>
+          <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
+        </button>
+        <div class="ap-date-menu" id="apDateMenu" role="dialog" aria-label="Choose date range" hidden>
+          <div class="ap-date-head"><strong>Date range</strong><small>Asia/Karachi</small></div>
           <div class="ap-date-body">
             <div class="ap-date-presets">
-              <?php foreach($periodPresets as$key=>[$label,$from,$to]): ?><button type="button" class="ap-date-preset<?= $range===$key?' active':'' ?>" data-range="<?= e($key) ?>" data-date-from="<?= e($from->format('Y-m-d')) ?>" data-date-to="<?= e($to->format('Y-m-d')) ?>" data-label="<?= e($label) ?>"><?= e($label) ?></button><?php endforeach; ?>
-              <button type="button" class="ap-date-preset<?= $range==='custom'?' active':'' ?>" data-custom-range>Custom range</button>
+              <?php foreach ($periodPresets as $value => [$label]): ?>
+                <button type="button" data-ap-range="<?= e($value) ?>" aria-pressed="<?= $range === $value ? 'true' : 'false' ?>"><?= e($label) ?></button>
+              <?php endforeach; ?>
             </div>
-            <div class="ap-date-custom"><span>Custom range</span><div class="ap-date-inputs"><label>From<input type="date" id="apCustomFrom" value="<?= e($dateFromValue) ?>" max="<?= e($today->format('Y-m-d')) ?>"></label><label>To<input type="date" id="apCustomTo" value="<?= e($dateToValue) ?>" max="<?= e($today->format('Y-m-d')) ?>"></label></div><button type="button" class="ap-date-apply" id="apDateApply">Apply custom range</button></div>
+            <div class="ap-date-custom">
+              <strong>Custom range</strong>
+              <label for="apFrom">From</label>
+              <input id="apFrom" type="date" value="<?= e($dateFromValue) ?>" max="<?= e($today->format('Y-m-d')) ?>">
+              <label for="apTo">To</label>
+              <input id="apTo" type="date" value="<?= e($dateToValue) ?>" max="<?= e($today->format('Y-m-d')) ?>">
+              <small id="apDateWarning" role="status" hidden>Choose a valid date range.</small>
+            </div>
           </div>
         </div>
-      </div></div>
-      <button class="btn btn-solid" type="submit"><i class="fa-solid fa-sliders" aria-hidden="true"></i> Apply filters</button>
-      <div class="ap-rank-choice" role="group" aria-labelledby="apRankLabel">
-        <span id="apRankLabel">Show ranked companies</span>
+      </div>
+      <fieldset class="ap-rank-control">
+        <legend class="ap-control-label">Agency ranking</legend>
         <div class="ap-rank-options">
-          <?php foreach([5,10,15] as$rankSize): ?><label><input type="radio" name="top" value="<?= $rankSize ?>"<?= $top===$rankSize?' checked':'' ?>><span>Top <?= $rankSize ?></span></label><?php endforeach; ?>
+          <?php foreach (['5'=>'Top 5','10'=>'Top 10','15'=>'Top 15','all'=>'All'] as $value => $label): ?>
+            <label><input type="radio" name="top" value="<?= $value ?>"<?= $top === (string)$value ? ' checked' : '' ?>><span><?= e($label) ?></span></label>
+          <?php endforeach; ?>
         </div>
-      </div>
-    </form>
-    <?php if(!$selectedAgencyIds): ?><div class="ap-empty" role="status">Select at least one company to display the performance charts.</div><?php elseif(!$agencyOptions): ?><div class="ap-empty" role="status">No active mapped agencies are available.</div><?php else: ?>
-      <div class="ap-report-head"><div><span>Agency performance report</span><h2>Verified activity overview</h2></div><span class="ap-period-chip"><i class="fa-regular fa-calendar" aria-hidden="true"></i><?= e($periodDisplay) ?></span></div>
-      <section class="ap-kpis" aria-label="Selected agency totals">
-        <?php if($purpose!=='rent'): ?><article class="ap-kpi"><span>Sale bookings</span><b><?= number_format($grandSales) ?></b><small>Across <?= count($selectedAgencyIds) ?> selected companies</small></article><?php endif; ?>
-        <?php if($purpose==='sale'): ?><article class="ap-kpi"><span>Seller / buyer entries</span><b><?= number_format(array_sum(array_column($ranking,'sale_parties'))) ?></b><small>Agency linked ledger entries</small></article><?php endif; ?>
-        <?php if($purpose!=='sale'): ?><article class="ap-kpi"><span>Rental check-ins</span><b><?= number_format($grandRentals) ?></b><small>Across <?= count($selectedAgencyIds) ?> selected companies</small></article><?php endif; ?>
-        <article class="ap-kpi"><span>Total activity</span><b><?= number_format($grandActivities) ?></b><small>Bookings plus rental check-ins</small></article>
-      </section>
-      <div class="ap-chart-grid">
-        <article class="ap-chart-card"><div class="ap-chart-head"><div><h2>Sales and rentals by company</h2><p>Line comparison · selected top <?= min($top,count($ranking)) ?> companies<?= $previewMode?' · preview values':'' ?></p></div><i class="fa-solid fa-chart-line" style="color:#155f43" aria-hidden="true"></i></div><div class="ap-chart-box"><canvas id="apLineChart" role="img" aria-label="Line chart comparing sales bookings and rental check-ins by company"></canvas></div></article>
-        <article class="ap-chart-card"><div class="ap-chart-head"><div><h2>Top agency activity</h2><p>Bar ranking · bookings plus check-ins<?= $previewMode?' · preview values':'' ?></p></div><i class="fa-solid fa-chart-column" style="color:#c6a15e" aria-hidden="true"></i></div><div class="ap-chart-box"><canvas id="apBarChart" role="img" aria-label="Bar chart ranking agency activity"></canvas></div></article>
-      </div>
-      <div class="ap-summary-row"><div><h2>Top <?= $top ?> companies</h2><p>Ranked by sale bookings plus rental check-ins. Totals above include every selected company.</p></div><div class="ap-source-tags"><?php foreach($succeededSources as$code): ?><span class="ap-source-tag"><?= e($code) ?> ERP · verified</span><?php endforeach; ?><?php foreach($failedSources as$code): ?><span class="ap-source-tag pending"><?= e($code) ?> ERP · preview</span><?php endforeach; ?></div></div>
-      <div class="ap-table-wrap"><table class="ap-rank-table"><thead><tr><th>#</th><th>Company</th><?php if($purpose!=='rent'): ?><th class="num">Sale bookings</th><?php endif; ?><?php if($purpose!=='sale'): ?><th class="num">Rental check-ins</th><?php endif; ?><th class="num">Total activity</th></tr></thead><tbody>
-        <?php foreach($topRows as$index=>$row): ?><tr><td><?= $index+1 ?></td><td><?= e($row['name']) ?></td><?php if($purpose!=='rent'): ?><td class="num"><?= number_format($row['sales']) ?></td><?php endif; ?><?php if($purpose!=='sale'): ?><td class="num"><?= number_format($row['rentals']) ?></td><?php endif; ?><td class="num"><?= number_format($row['sales']+$row['rentals']) ?></td></tr><?php endforeach; ?>
-      </tbody></table></div>
-      <p class="ap-footnote"><?= $previewMode?'Zero values are shown only to preview the dashboard layout while ERP data is unavailable. ':'Counts come from agency-linked ERP sales bookings and rental check-ins. ' ?>The line chart compares company totals; it is not a date-wise trend because the performance endpoint currently supplies aggregate counts. Customer names, contact details and individual booking records are not published.</p>
+      </fieldset>
+    </div>
+    <p id="apUpdateStatus" class="ap-update-status" role="status" hidden></p>
+    <div id="apReport">
+<?php endif; ?>
+
+    <?php if ($failedSources): ?>
+      <p class="ap-alert" role="status"><?= e(implode(', ', $failedSources)) ?> ERP data is temporarily unavailable. The report covers the available sources.</p>
     <?php endif; ?>
-  </div></section>
+    <?php if (!$ranking || !$succeededSources): ?>
+      <p class="ap-status" role="status">No agency performance data is available for this report.</p>
+    <?php else: ?>
+      <section class="ap-kpis" aria-label="Activity totals">
+        <article class="ap-kpi"><span>Total activity</span><strong><?= number_format($grandActivities) ?></strong><small>All mapped agencies</small></article>
+        <article class="ap-kpi"><span>Sale bookings</span><strong><?= number_format($grandSales) ?></strong></article>
+        <article class="ap-kpi"><span>Rental check-ins</span><strong><?= number_format($grandRentals) ?></strong></article>
+      </section>
+
+      <section class="ap-charts" aria-label="Agency activity charts">
+        <article class="ap-panel ap-line-panel">
+          <h2>Sales and rentals by rank</h2>
+          <p>Compare agency activity in ranking order.</p>
+          <div class="ap-line-box"><canvas id="apLineChart" role="img" aria-label="Line chart comparing sales and rentals by agency rank"></canvas></div>
+        </article>
+        <article class="ap-panel">
+          <h2>Activity by agency</h2>
+          <p><?= count($topRows) ?> agencies ranked by total activity</p>
+          <ul class="ap-legend"><li><span class="ap-swatch"></span>Sales</li><li><span class="ap-swatch rent"></span>Rentals</li></ul>
+          <ol class="ap-chart-list" aria-label="Stacked activity chart">
+            <?php foreach ($topRows as $row): ?>
+              <li class="ap-chart-row">
+                <span class="ap-chart-label"><?= e($row['name']) ?></span>
+                <span class="ap-track" title="<?= (int)$row['sales'] ?> sales, <?= (int)$row['rentals'] ?> rentals"
+                      role="img" aria-label="<?= (int)$row['sales'] ?> sales and <?= (int)$row['rentals'] ?> rentals">
+                  <span class="ap-sale-fill" style="width:<?= round(100 * $row['sales'] / $chartMax, 3) ?>%"></span>
+                  <span class="ap-rent-fill" style="width:<?= round(100 * $row['rentals'] / $chartMax, 3) ?>%"></span>
+                </span>
+                <span class="ap-chart-total"><?= number_format($row['sales'] + $row['rentals']) ?></span>
+              </li>
+            <?php endforeach; ?>
+          </ol>
+        </article>
+        <article class="ap-panel">
+          <h2>Sales and rentals</h2>
+          <p>Activity share across all mapped agencies</p>
+          <div class="ap-donut<?= $grandActivities === 0 ? ' is-empty' : '' ?>" style="--ap-share:<?= round($saleShare, 3) ?>%" aria-hidden="true">
+            <div class="ap-donut-center"><strong><?= number_format($grandActivities) ?></strong><small>Total activity</small></div>
+          </div>
+          <div class="ap-mix-line"><span><i class="ap-swatch" aria-hidden="true"></i>Sale bookings</span><strong><?= number_format($grandSales) ?><?= $grandActivities ? ' · '.round($saleShare).'%' : '' ?></strong></div>
+          <div class="ap-mix-line"><span><i class="ap-swatch rent" aria-hidden="true"></i>Rental check-ins</span><strong><?= number_format($grandRentals) ?><?= $grandActivities ? ' · '.round(100 - $saleShare).'%' : '' ?></strong></div>
+        </article>
+      </section>
+
+      <section class="ap-split-charts" aria-label="Separate sales and rentals charts">
+        <article class="ap-panel">
+          <h2>Sales by agency</h2>
+          <p>Verified sale bookings per agency</p>
+          <div class="ap-bar-box"><canvas id="apSaleChart" role="img" aria-label="Bar chart showing verified sales by agency"></canvas></div>
+        </article>
+        <article class="ap-panel">
+          <h2>Rentals by agency</h2>
+          <p>Verified rental check-ins per agency</p>
+          <div class="ap-bar-box"><canvas id="apRentChart" role="img" aria-label="Bar chart showing verified rentals by agency"></canvas></div>
+        </article>
+      </section>
+
+      <section class="ap-panel ap-table-panel" aria-labelledby="apRankingTitle">
+        <div class="ap-table-head">
+          <h2 id="apRankingTitle">Agency ranking</h2>
+          <p><?= e($top === 'all' ? 'All agencies' : 'Top '.$top) ?> · <?= e(implode(' and ', $succeededSources)) ?> ERP records</p>
+        </div>
+        <div class="ap-table-wrap">
+          <table class="ap-rank-table">
+            <thead><tr><th scope="col">Rank</th><th scope="col">Agency</th><th scope="col" class="num">Sale bookings</th><th scope="col" class="num">Rental check-ins</th><th scope="col" class="num">Total</th></tr></thead>
+            <tbody>
+              <?php foreach ($topRows as $index => $row): ?>
+                <tr><td><?= $index + 1 ?></td><td><?= e($row['name']) ?></td><td class="num"><?= number_format($row['sales']) ?></td><td class="num"><?= number_format($row['rentals']) ?></td><td class="num"><?= number_format($row['sales'] + $row['rentals']) ?></td></tr>
+              <?php endforeach; ?>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    <?php endif; ?>
+    <script id="apReportData" type="application/json"><?= json_encode($reportData, JSON_HEX_TAG|JSON_HEX_AMP|JSON_HEX_APOS|JSON_HEX_QUOT|JSON_THROW_ON_ERROR) ?></script>
+<?php if ($fragment) exit; ?>
+    </div>
+  </div>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <script>
-(()=>{
-  const toggle=document.getElementById('apMultiToggle'),menu=document.getElementById('apMultiMenu'),list=document.getElementById('apCompanyList'),text=document.getElementById('apMultiText');
-  if(toggle&&menu&&list){
-    document.body.appendChild(menu);
-    const boxes=[...list.querySelectorAll('input[type="checkbox"]')],all=boxes.length;
-    const update=()=>{const n=boxes.filter(x=>x.checked).length;text.textContent=n===all?'All companies':n===0?'No companies selected':`${n} companies selected`;};update();
-    const placeMenu=()=>{const r=toggle.getBoundingClientRect(),w=Math.min(440,window.innerWidth-24);menu.style.width=`${w}px`;menu.style.left=`${Math.max(12,Math.min(r.left,window.innerWidth-w-12))}px`;menu.style.top=`${Math.max(12,Math.min(r.bottom+8,window.innerHeight-menu.offsetHeight-12))}px`;};
-    toggle.addEventListener('click',()=>{menu.hidden=!menu.hidden;toggle.setAttribute('aria-expanded',String(!menu.hidden));if(!menu.hidden){placeMenu();document.getElementById('apCompanySearch')?.focus();}});
-    document.getElementById('apSelectAll')?.addEventListener('click',()=>{boxes.forEach(x=>x.checked=true);update();});
-    document.getElementById('apSelectNone')?.addEventListener('click',()=>{boxes.forEach(x=>x.checked=false);update();});
-    boxes.forEach(x=>x.addEventListener('change',update));
-    document.getElementById('apCompanySearch')?.addEventListener('input',e=>{const q=e.target.value.trim().toLocaleLowerCase();list.querySelectorAll('[data-company-option]').forEach(row=>row.hidden=!row.textContent.toLocaleLowerCase().includes(q));});
-    document.addEventListener('click',e=>{if(!e.target.closest('.ap-multiselect')&&!e.target.closest('#apMultiMenu')){menu.hidden=true;toggle.setAttribute('aria-expanded','false');}});
-    window.addEventListener('resize',()=>{if(!menu.hidden)placeMenu();});window.addEventListener('scroll',()=>{if(!menu.hidden){menu.hidden=true;toggle.setAttribute('aria-expanded','false');}},{passive:true});
-    document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!menu.hidden){menu.hidden=true;toggle.setAttribute('aria-expanded','false');toggle.focus();}});
-  }
-  const dateToggle=document.getElementById('apDateToggle'),dateMenu=document.getElementById('apDateMenu'),filter=document.getElementById('apFilter');
-  if(dateToggle&&dateMenu&&filter){
-    document.body.appendChild(dateMenu);
-    const placeDateMenu=()=>{const r=dateToggle.getBoundingClientRect(),w=Math.min(540,window.innerWidth-24);dateMenu.style.width=`${w}px`;dateMenu.style.left=`${Math.max(12,Math.min(r.left,window.innerWidth-w-12))}px`;dateMenu.style.top=`${Math.max(12,Math.min(r.bottom+8,window.innerHeight-dateMenu.offsetHeight-12))}px`;};
-    const closeDateMenu=()=>{dateMenu.hidden=true;dateToggle.setAttribute('aria-expanded','false');};
-    dateToggle.addEventListener('click',()=>{dateMenu.hidden=!dateMenu.hidden;dateToggle.setAttribute('aria-expanded',String(!dateMenu.hidden));if(!dateMenu.hidden)placeDateMenu();});
-    dateMenu.querySelectorAll('[data-range]').forEach(button=>button.addEventListener('click',()=>{document.getElementById('apRange').value=button.dataset.range;document.getElementById('apDateFrom').value=button.dataset.dateFrom;document.getElementById('apDateTo').value=button.dataset.dateTo;filter.requestSubmit();}));
-    dateMenu.querySelector('[data-custom-range]')?.addEventListener('click',()=>document.getElementById('apCustomFrom')?.focus());
-    document.getElementById('apDateApply')?.addEventListener('click',()=>{const from=document.getElementById('apCustomFrom').value,to=document.getElementById('apCustomTo').value;if(!from||!to||from>to)return;document.getElementById('apRange').value='custom';document.getElementById('apDateFrom').value=from;document.getElementById('apDateTo').value=to;filter.requestSubmit();});
-    document.addEventListener('click',e=>{if(!e.target.closest('.ap-date-picker')&&!e.target.closest('#apDateMenu'))closeDateMenu();});
-    window.addEventListener('resize',()=>{if(!dateMenu.hidden)placeDateMenu();});window.addEventListener('scroll',()=>{if(!dateMenu.hidden)closeDateMenu();},{passive:true});
-    document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!dateMenu.hidden){closeDateMenu();dateToggle.focus();}});
-  }
-  document.querySelectorAll('.ap-rank-options input[name="top"]').forEach(radio=>radio.addEventListener('change',()=>document.getElementById('apFilter')?.requestSubmit()));
-  const data=<?= $chartJson ?>,lineCanvas=document.getElementById('apLineChart'),barCanvas=document.getElementById('apBarChart');if(!window.Chart||!lineCanvas||!barCanvas||!data.labels.length)return;
-  Chart.defaults.font.family="Inter, system-ui, sans-serif";Chart.defaults.font.size=11;Chart.defaults.color='#68766e';Chart.defaults.maintainAspectRatio=false;
-  const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const common={responsive:true,maintainAspectRatio:false,animation:reduce?false:{duration:650},plugins:{legend:{position:'bottom',labels:{usePointStyle:true,boxWidth:8,padding:16}},tooltip:{mode:'index',intersect:false}}};
-  const lineDatasets=[];
-  <?php if($purpose!=='rent'): ?>lineDatasets.push({label:'Sale bookings',data:data.sales,borderColor:'#155f43',backgroundColor:'rgba(21,95,67,.10)',pointBackgroundColor:'#155f43',pointRadius:3,tension:.34,fill:true});<?php endif; ?>
-  <?php if($purpose!=='sale'): ?>lineDatasets.push({label:'Rental check-ins',data:data.rentals,borderColor:'#c6a15e',backgroundColor:'rgba(198,161,94,.08)',pointBackgroundColor:'#c6a15e',pointRadius:3,tension:.34,fill:true});<?php endif; ?>
-  new Chart(lineCanvas,{type:'line',data:{labels:data.labels,datasets:lineDatasets},options:{...common,interaction:{mode:'nearest',axis:'x',intersect:false},scales:{x:{grid:{display:false},ticks:{maxRotation:35,minRotation:0,autoSkip:true}},y:{beginAtZero:true,grid:{color:'rgba(30,36,33,.07)'},ticks:{precision:0}}}}});
-  new Chart(barCanvas,{type:'bar',data:{labels:data.labels,datasets:[{label:'Total activity',data:data.total,backgroundColor:data.total.map((_,i)=>i===0?'#c6a15e':'#155f43'),borderRadius:6,maxBarThickness:25}]},options:{...common,indexAxis:'y',plugins:{...common.plugins,legend:{display:false}},scales:{x:{beginAtZero:true,grid:{color:'rgba(30,36,33,.07)'},ticks:{precision:0}},y:{grid:{display:false}}}}});
-})();
+(function () {
+    const toggle = document.getElementById('apDateToggle');
+    const menu = document.getElementById('apDateMenu');
+    const from = document.getElementById('apFrom');
+    const to = document.getElementById('apTo');
+    const warning = document.getElementById('apDateWarning');
+    const report = document.getElementById('apReport');
+    const status = document.getElementById('apUpdateStatus');
+    const topOptions = [...document.querySelectorAll('input[name="top"]')];
+    const presets = [...menu.querySelectorAll('[data-ap-range]')];
+    let current;
+    let desired;
+    let request;
+    let customTimer;
+    let lineChart;
+    let saleChart;
+    let rentChart;
+
+    function drawLine(data) {
+        lineChart?.destroy();
+        const canvas = document.getElementById('apLineChart');
+        if (!window.Chart || !canvas || data.length === 0) return;
+        const chartFont = {family:'Inter, system-ui, sans-serif', size:11};
+        function series(label, key, color) {
+            return {label, data:data.map(row => row[key]), borderColor:color, backgroundColor:color,
+                borderWidth:2, tension:.25, pointRadius:data.length > 15 ? 0 : 3, pointHoverRadius:5};
+        }
+        lineChart = new Chart(canvas, {
+            type:'line',
+            data:{labels:data.map(row => row.name),datasets:[series('Sales','sales','#176449'),series('Rentals','rentals','#bc812c')]},
+            options:{
+                responsive:true,maintainAspectRatio:false,animation:false,
+                interaction:{mode:'index',intersect:false},
+                scales:{
+                    x:{grid:{display:false},ticks:{font:chartFont,maxRotation:0,maxTicksLimit:innerWidth < 550 ? 4 : 8,
+                        callback:function(value) {
+                            const label=this.getLabelForValue(value);
+                            return label.length>14 ? label.slice(0,13)+'…' : label;
+                        }}},
+                    y:{beginAtZero:true,grid:{color:'#e8eee9'},ticks:{font:chartFont,precision:0}}
+                },
+                plugins:{legend:{position:'bottom',labels:{font:chartFont,usePointStyle:true,boxWidth:8}}}
+            }
+        });
+    }
+
+    function drawSeparateCharts(data) {
+        saleChart?.destroy();
+        saleChart = null;
+        rentChart?.destroy();
+        rentChart = null;
+        const saleCanvas = document.getElementById('apSaleChart');
+        const rentCanvas = document.getElementById('apRentChart');
+        if (!window.Chart || data.length === 0) return;
+        const chartFont = {family:'Inter, system-ui, sans-serif', size:11};
+        function barConfig(title, key, color, hoverColor) {
+            return {
+                type: 'bar',
+                data: {
+                    labels: data.map(row => row.name),
+                    datasets: [{
+                        label: title,
+                        data: data.map(row => row[key]),
+                        backgroundColor: color,
+                        hoverBackgroundColor: hoverColor,
+                        borderRadius: 6,
+                        borderSkipped: false,
+                        maxBarThickness: 36
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: false,
+                    interaction: { mode: 'index', intersect: false },
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            ticks: {
+                                font: chartFont,
+                                maxRotation: 0,
+                                maxTicksLimit: innerWidth < 550 ? 4 : 8,
+                                callback: function(value) {
+                                    const label = this.getLabelForValue(value);
+                                    return label.length > 14 ? label.slice(0, 13) + '…' : label;
+                                }
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: '#e8eee9' },
+                            ticks: { font: chartFont, precision: 0 }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { font: chartFont, usePointStyle: true, boxWidth: 8 }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ' ' + context.dataset.label + ': ' + context.parsed.y;
+                                }
+                            }
+                        }
+                    }
+                }
+            };
+        }
+        if (saleCanvas) {
+            saleChart = new Chart(saleCanvas, barConfig('Sale Bookings', 'sales', '#176449', '#1e7a5a'));
+        }
+        if (rentCanvas) {
+            rentChart = new Chart(rentCanvas, barConfig('Rental Check-ins', 'rentals', '#bc812c', '#d49437'));
+        }
+    }
+
+    function syncControls(state) {
+        const dateText = document.getElementById('apDateText');
+        dateText.querySelector('strong').textContent = state.periodLabel;
+        dateText.querySelector('small').textContent = state.periodDisplay;
+        document.getElementById('apHeroPeriodLabel').textContent = state.periodLabel;
+        document.getElementById('apHeroPeriodDisplay').textContent = state.periodDisplay;
+        from.value = state.dateFrom;
+        to.value = state.dateTo;
+        presets.forEach(button => button.setAttribute('aria-pressed', String(button.dataset.apRange === state.range)));
+        topOptions.forEach(option => { option.checked = option.value === state.top; });
+    }
+
+    function setMenu(open, focusBack = false) {
+        menu.hidden = !open;
+        toggle.setAttribute('aria-expanded', String(open));
+        if (open) menu.querySelector('[aria-pressed="true"]')?.focus();
+        if (focusBack) toggle.focus();
+    }
+
+    function buildUrl(state) {
+        const url = new URL(location.pathname, location.origin);
+        url.searchParams.set('range', state.range);
+        url.searchParams.set('top', state.top);
+        if (state.range === 'custom') {
+            url.searchParams.set('date_from', state.dateFrom);
+            url.searchParams.set('date_to', state.dateTo);
+        }
+        return url;
+    }
+
+    async function updateReport(state, historyMode = 'push') {
+        desired = state;
+        request?.abort();
+        const controller = new AbortController();
+        request = controller;
+        const url = buildUrl(state);
+        const endpoint = new URL(url);
+        endpoint.searchParams.set('_report', '1');
+        report.setAttribute('aria-busy', 'true');
+        status.hidden = false;
+        status.textContent = 'Updating report…';
+        try {
+            const response = await fetch(endpoint, {signal:controller.signal,headers:{Accept:'text/html'},cache:'no-store'});
+            if (!response.ok) throw new Error('Report unavailable');
+            const parsed = new DOMParser().parseFromString(await response.text(), 'text/html');
+            const data = parsed.querySelector('#apReportData');
+            if (!data) throw new Error('Invalid report');
+            const next = JSON.parse(data.textContent);
+            if (!next.available && current.available) throw new Error('Report unavailable');
+            if (request !== controller) return;
+            lineChart?.destroy();
+            lineChart = null;
+            saleChart?.destroy();
+            saleChart = null;
+            rentChart?.destroy();
+            rentChart = null;
+            report.replaceChildren(...parsed.body.childNodes);
+            current = desired = next;
+            syncControls(current);
+            drawLine(current.chart);
+            drawSeparateCharts(current.chart);
+            const canonical = buildUrl(current);
+            if (historyMode === 'push' && canonical.href !== location.href) history.pushState(null, '', canonical);
+            status.hidden = true;
+        } catch (error) {
+            if (error.name === 'AbortError' || request !== controller) return;
+            desired = current;
+            syncControls(current);
+            if (historyMode === 'none') history.replaceState(null, '', buildUrl(current));
+            status.textContent = 'Report could not be updated. Please try again.';
+        } finally {
+            if (request === controller) report.removeAttribute('aria-busy');
+        }
+    }
+
+    toggle.addEventListener('click', () => setMenu(menu.hidden));
+    document.addEventListener('click', event => {
+        if (!menu.hidden && !event.target.closest('.ap-date-picker')) setMenu(false);
+    });
+    document.addEventListener('keydown', event => {
+        if (event.key === 'Escape' && !menu.hidden) setMenu(false, true);
+    });
+    presets.forEach(button => button.addEventListener('click', () => {
+        clearTimeout(customTimer);
+        warning.hidden = true;
+        setMenu(false, true);
+        updateReport({...desired,range:button.dataset.apRange});
+    }));
+    topOptions.forEach(option => option.addEventListener('change', () => {
+        if (option.checked) updateReport({...desired,top:option.value});
+    }));
+    function updateCustomDates() {
+        clearTimeout(customTimer);
+        const valid = from.value && to.value && from.validity.valid && to.validity.valid && from.value <= to.value;
+        warning.hidden = !!valid;
+        if (!valid) return;
+        customTimer = setTimeout(() => updateReport({...desired,range:'custom',dateFrom:from.value,dateTo:to.value}), 250);
+    }
+    [from,to].forEach(input => input.addEventListener('change', updateCustomDates));
+    window.addEventListener('popstate', () => {
+        clearTimeout(customTimer);
+        const query = new URLSearchParams(location.search);
+        updateReport({range:query.get('range') || 'this_month',top:query.get('top') || '5',
+            dateFrom:query.get('date_from') || '',dateTo:query.get('date_to') || ''}, 'none');
+    });
+
+    current = desired = JSON.parse(document.getElementById('apReportData').textContent);
+    drawLine(current.chart);
+    drawSeparateCharts(current.chart);
+}());
 </script>
 <?php require __DIR__.'/includes/footer.php'; ?>
 </body></html>

@@ -64,12 +64,14 @@ foreach (live_listings() as $l) if ($l['project']) $liveCount[$l['project']] = (
 window.JsonProjectPreview = <?= json_encode([
     'api' => \App\Libraries\PortalLinks::portal('api/projects'),
     'livePage' => true,
+    'inventoryEnabled' => \App\Services\ProjectInventoryService::enabled(),
+    'inventoryBase' => \App\Libraries\PortalLinks::portal('project-inventory'),
     'metrics' => array_map(static fn ($slug) => [
         'monthly' => market_count($officialMarket['available'] ? (int) ($monthTx[$slug] ?? 0) : null),
         'listings' => (int) ($liveCount[$slug] ?? 0),
     ], array_combine(array_keys($projects), array_keys($projects))),
 ], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_THROW_ON_ERROR) ?>;
 </script>
-<script src="<?= e(\App\Libraries\PortalLinks::portal('assets/projects/projects-json-preview.js')) ?>?v=2"></script>
+<script src="<?= e(\App\Libraries\PortalLinks::portal('assets/projects/projects-json-preview.js')) ?>?v=3"></script>
 </body>
 </html>

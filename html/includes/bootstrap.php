@@ -8,7 +8,8 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/config.php';
 require_once dirname(__DIR__,2).'/vendor/autoload.php';
-if(!defined('PORTAL_CLASSIC_AUTHORIZED')){
+$_portalStandaloneRequest = !defined('PORTAL_CLASSIC_AUTHORIZED') && !defined('PORTAL_CI_RENDER');
+if($_portalStandaloneRequest){
     ini_set('display_errors','0');
     // Keep a failed render from flushing its header, partial HTML or an incorrect HTTP 200.
     $publicBufferLevel=ob_get_level();
@@ -45,7 +46,7 @@ require_once __DIR__ . '/subprojects.php';
 require_once dirname(__DIR__,2).'/app/Services/ErpVisibility.php';
 require_once dirname(__DIR__,2).'/app/Libraries/PortalCatalogStore.php';
 
-if (!defined('PORTAL_CLASSIC_AUTHORIZED') && session_status() !== PHP_SESSION_ACTIVE) {
+if ($_portalStandaloneRequest && session_status() !== PHP_SESSION_ACTIVE) {
     session_name('shalimar_sess');
     session_set_cookie_params(['httponly' => true, 'samesite' => 'Lax']);
     session_start();

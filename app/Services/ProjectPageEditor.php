@@ -147,7 +147,19 @@ final class ProjectPageEditor
         $pattern = $image
             ? '~\A(?:assets/images/[a-zA-Z0-9_./-]+\.(?:webp|png|jpe?g|svg)|project-image:[a-f0-9]{64})\z~D'
             : '~\A(?:[a-zA-Z0-9_/-]+\.php(?:[?#][a-zA-Z0-9_/?=&%+.#:-]*)?|#[a-zA-Z0-9_-]+)\z~D';
-        if (!preg_match($pattern, $value)) {
+        $isSafeExtensionlessRoute = false;
+        if (!$image) {
+            // Public pages also use clean extensionless URLs (for example,
+            // projects?project=gulberg-city#units). Keep destinations allowlisted
+            // and query values limited to URL-safe characters/valid percent escapes.
+            $queryAtom = '(?:[A-Za-z0-9._\\~+-]|%[A-Fa-f0-9]{2})*';
+            $queryParam = '[A-Za-z][A-Za-z0-9_-]*(?:=' . $queryAtom . ')?';
+            $routePattern = '~\A(?:home|projects|buy|rent|insights|agencies|agency-performance)'
+                . '(?:\?' . $queryParam . '(?:&' . $queryParam . ')*)?'
+                . '(?:#[A-Za-z0-9_-]+)?\z~D';
+            $isSafeExtensionlessRoute = preg_match($routePattern, $value) === 1;
+        }
+        if (!preg_match($pattern, $value) && !$isSafeExtensionlessRoute) {
             throw new InvalidArgumentException('Enter a safe local path or HTTPS URL.');
         }
         return $value;

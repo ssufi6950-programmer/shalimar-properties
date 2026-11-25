@@ -1,11 +1,9 @@
 <?php
 // $directory contains only local, currently authorized public directory records.
-$search=get_str('q');$city=get_str('city');$cities=[];
-foreach($directory as$agency)if($agency['city']!=='')$cities[$agency['city']]=$agency['city'];
-natcasesort($cities);
-$agencies=array_values(array_filter($directory,static function($agency)use($search,$city){
+$search=get_str('q');
+$agencies=array_values(array_filter($directory,static function($agency)use($search){
     if($search!==''&&mb_stripos($agency['name'].' '.$agency['city'].' '.$agency['address'],$search)===false)return false;
-    return $city===''||strcasecmp($agency['city'],$city)===0;
+    return true;
 }));
 ?>
 <style>
@@ -25,9 +23,8 @@ $agencies=array_values(array_filter($directory,static function($agency)use($sear
   <p class="lede">Explore agencies currently authorized by SGC or Zalmi.</p>
   <form class="filters" method="get" action="agencies">
     <input type="search" name="q" value="<?= e($search) ?>" placeholder="Search agency or area" aria-label="Search agencies" style="flex:1 1 220px">
-    <select name="city" aria-label="City"><option value="">All cities</option><?php foreach($cities as$c): ?><option value="<?= e($c) ?>" <?= strcasecmp($city,$c)===0?'selected':'' ?>><?= e($c) ?></option><?php endforeach ?></select>
     <button class="btn btn-solid" type="submit">Find agencies</button>
-    <?php if($search!==''||$city!==''): ?><a class="btn btn-ghost" href="agencies">Reset</a><?php endif ?>
+    <?php if($search!==''): ?><a class="btn btn-ghost" href="agencies">Reset</a><?php endif ?>
   </form>
 </div></section>
 <section class="sec-tight public-agency-directory" style="padding-top:8px"><div class="wrap">

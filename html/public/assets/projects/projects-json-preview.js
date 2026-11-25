@@ -174,6 +174,12 @@
         for (const [index, action] of (document.actions || []).entries()) {
             actions.append(link(action.url, action.label, index === 0 ? 'btn btn-solid btn-sm' : 'btn btn-ghost btn-sm'));
         }
+        if (livePage && window.JsonProjectPreview.inventoryEnabled === true && typeof window.JsonProjectPreview.inventoryBase === 'string') {
+            const inventory = link(window.JsonProjectPreview.inventoryBase.replace(/\/$/, '') + '/' + encodeURIComponent(project.slug), 'Available Units', 'btn btn-ghost btn-sm');
+            inventory.prepend(node('i', 'fa-solid fa-table-cells-large'));
+            inventory.setAttribute('aria-label', 'Available units for ' + document.name);
+            actions.append(inventory);
+        }
         if (actions.childElementCount) info.append(actions);
         article.append(media, info);
         container.append(article);

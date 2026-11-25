@@ -91,8 +91,9 @@ final class CustomerResaleCompletionApi extends BaseController
 
                 $oldAgency = $oldRepresentative['agency_id'];
                 $oldDealer = $oldRepresentative['dealer_id'];
-                $sameRepresentative = $oldAgency !== null && $oldDealer !== null && $newAgency !== null && $newDealer !== null
-                    && hash_equals($oldAgency, $newAgency) && hash_equals($oldDealer, $newDealer);
+                $sameRepresentative = ($oldAgency === null && $oldDealer === null && $newAgency === null && $newDealer === null)
+                    || ($oldAgency !== null && $oldDealer !== null && $newAgency !== null && $newDealer !== null
+                        && hash_equals($oldAgency, $newAgency) && hash_equals($oldDealer, $newDealer));
                 $now = date('Y-m-d H:i:s', (int) $input['occurred_at']);
                 $outcome = $sameRepresentative ? 'sold' : 'superseded';
                 $status = $sameRepresentative ? 'sold' : 'unlisted';
